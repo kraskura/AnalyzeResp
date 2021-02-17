@@ -7,6 +7,8 @@
 #'
 #' @return generated csv file, automatically saved
 
+
+
 # txt_csv_convert<-function(txt_file, N_Ch = 4, path = ".", save = FALSE){
 #
 #   if(N_Ch == 4 | N_Ch==2){

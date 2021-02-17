@@ -1,12 +1,15 @@
 
 #' Title
 #'
-#' @param create
+#' @param create folders to create to organise local export datafiles
 #'
-#' @return
+#' @return None, saved folder
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' organize_MR_analysis(create="none")
+#' }
 organize_MR_analysis <- function (create = c("AUTO", "MANUAL", "Full", "BACTERIAL_RESP", "SDA")) {
 
   if(create == "AUTO"){
