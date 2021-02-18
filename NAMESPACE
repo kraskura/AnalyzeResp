@@ -2,4 +2,6 @@
 
 export(hello)
 export(organize_MR_analysis)
+export(sample_raw_data_read)
 importFrom(tibble,as_data_frame)
+importFrom(utils,read.delim)
