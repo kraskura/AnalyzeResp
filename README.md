@@ -5,6 +5,9 @@
 
 <!-- badges: start -->
 
+[![Travis build
+status](https://travis-ci.com/kraskura/respMR.svg?branch=master)](https://travis-ci.com/kraskura/respMR)
+[![R-CMD-check](https://github.com/kraskura/respMR/workflows/R-CMD-check/badge.svg)](https://github.com/kraskura/respMR/actions)
 <!-- badges: end -->
 
 The goal of respMR is to …

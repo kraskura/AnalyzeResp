@@ -2,3 +2,4 @@
 
 export(hello)
 export(organize_MR_analysis)
+importFrom(tibble,as_data_frame)

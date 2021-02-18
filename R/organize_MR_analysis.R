@@ -7,6 +7,7 @@
 #' @export
 #'
 #' @examples
+#'
 #' \dontrun{
 #' organize_MR_analysis(create="none")
 #' }
