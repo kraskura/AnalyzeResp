@@ -1,4 +1,4 @@
 library(testthat)
-library(respMR)
+library(AnalyzeResp)
 
-test_check("respMR")
+test_check("AnalyzeResp")

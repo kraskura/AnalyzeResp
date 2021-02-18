@@ -7,7 +7,7 @@
 sample_raw_data_read(path)
 }
 \arguments{
-\item{path}{}
+\item{path}{specifies the path to the internally available data}
 }
 \value{
 a \code{tibble}
@@ -16,6 +16,6 @@ a \code{tibble}
 Read text file and then start the data analysis sequence
 }
 \examples{
-txt = system.file("extdata", "raw_txt_data_MMR.txt", package = "respMR")
+txt = system.file("extdata", "raw_txt_data_MMR.txt", package = "AnalyzeResp")
 sample_raw_data_read(txt)
 }

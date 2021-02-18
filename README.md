@@ -1,24 +1,24 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# respMR
+# AnalyzeResp
 
 <!-- badges: start -->
 
 [![Travis build
-status](https://travis-ci.com/kraskura/respMR.svg?branch=master)](https://travis-ci.com/kraskura/respMR)
-[![R-CMD-check](https://github.com/kraskura/respMR/workflows/R-CMD-check/badge.svg)](https://github.com/kraskura/respMR/actions)
+status](https://travis-ci.com/kraskura/AnalyzeResp.svg?branch=master)](https://travis-ci.com/kraskura/AnalyzeResp)
+[![R-CMD-check](https://github.com/kraskura/AnalyzeResp/workflows/R-CMD-check/badge.svg)](https://github.com/kraskura/AnalyzeResp/actions)
 <!-- badges: end -->
 
-The goal of respMR is to …
+The goal of AnalyzeResp is to …
 
 ## Installation
 
-You can install the released version of respMR from
+You can install the released version of AnalyzeResp from
 [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
-install.packages("respMR")
+install.packages("AnalyzeResp")
 ```
 
 ## Example
@@ -26,7 +26,7 @@ install.packages("respMR")
 This is a basic example which shows you how to solve a common problem:
 
 ``` r
-library(respMR)
+library(AnalyzeResp)
 ## basic example code
 ```
 

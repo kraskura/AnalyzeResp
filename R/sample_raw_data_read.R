@@ -8,7 +8,7 @@
 #' @export
 #' @importFrom utils read.delim
 #' @examples
-#' txt = system.file("extdata", "raw_txt_data_MMR.txt", package = "respMR")
+#' txt = system.file("extdata", "raw_txt_data_MMR.txt", package = "AnalyzeResp")
 #' sample_raw_data_read(txt)
 sample_raw_data_read<-function(path){
   utils::read.delim(path, skip=19)
