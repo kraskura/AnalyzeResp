@@ -1,18 +1,18 @@
+# Hello, world!
+#
+# This is an example function named 'hello' 
+# which prints 'Hello, world!'.
+#
+# You can learn more about package authoring with RStudio at:
+#
+#   http://r-pkgs.had.co.nz/
+#
+# Some useful keyboard shortcuts for package authoring:
+#
+#   Install Package:           'Cmd + Shift + B'
+#   Check Package:             'Cmd + Shift + E'
+#   Test Package:              'Cmd + Shift + T'
 
-
-#' Title
-#' @param x the name
-#' @return from \code{\link{print}}
-#' @export
-#' @importFrom tibble as_data_frame
-#' @examples
-#' hello("Bradley")
-
-#' \dontrun{
-#' hello("Krista")
-#' }
-#'
-hello <- function(x) {
-  print(paste0("Hello, world!", x, "this is the function!"))
-  as_data_frame(matrix(ncol=2, nrow=1))
+hello <- function() {
+  print("Hello, world!")
 }

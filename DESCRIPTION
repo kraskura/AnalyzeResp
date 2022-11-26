@@ -1,22 +1,11 @@
 Package: AnalyzeResp
 Type: Package
-Title: Analyses respirometry data using Firesting
+Title: What the Package Does (Title Case)
 Version: 0.1.0
-Author: Krista <kkraskura@ucsb.edu>
-Maintainer: Krista <kkraskura@ucsb.edu>
-Description: This is the the package to analyse respirometry data
-    This function will take raw text files, analyse them,
-    and will estimate SMR, MMR, AS, EPOC and SDA and more.. 
-License: GPL-3
+Author: Who wrote it
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1 
-URL: https://github.com/kraskura/AnalyzeResp
-BugReports: https://github.com/kraskura/AnalyzeResp/issues
-Suggests: 
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0)
-VignetteBuilder: knitr
-Imports: tibble
-Config/testthat/edition: 3
