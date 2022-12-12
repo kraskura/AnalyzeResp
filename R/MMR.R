@@ -13,7 +13,7 @@
 #' @param clean_Ch3 See mmr_Ch1 argument for description. This applies to Channel 3
 #' @param clean_Ch4 See mmr_Ch1 argument for description. This applies to Channel 4
 #' @param N_Ch The number of FireSting channels. Options include 2, 4, and 8. This argument can be ignored if 2-Channel FireSting was used.
-#' @param path Specify the working directory for all output files. This argument has two options, i) files can be automatically organized in newly created local directories. Any character may be used.
+#' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param date_format The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")
 #' @param inv.data The name of an inventory data dataframe that provides dertails in "cleaning"
 #'
@@ -26,7 +26,6 @@
 #' @import graphics
 #' @import grDevices
 #' @import scales
-#' @import chron
 #' @import ggplot2
 #' @import utils
 #' @import stringr
@@ -34,10 +33,8 @@
 #' @importFrom dplyr summarize
 #' @importFrom pryr %<a-%
 #' @importFrom plotrix ablineclip
-#' @examples
-#' \dontrun{
-#' MMR(data.MMR = "data.csv", cycles = 1, cycle_start = c(0), cycle_end = c(5))
-#' }
+#'
+#'
 MMR<-function(data.MMR,
               cycles,
               cycle_start,
@@ -46,15 +43,39 @@ MMR<-function(data.MMR,
               mmr_Ch2=0,
               mmr_Ch3=0,
               mmr_Ch4=0,
-              clean_Ch1=c(0,0), clean_Ch2=c(0,0), clean_Ch3=c(0,0), clean_Ch4=c(0,0),
-              N_Ch = 4, path = ".", date_format = "m/d/y",
-              inv.data = NA){
+              clean_Ch1=c(0,0),
+              clean_Ch2=c(0,0),
+              clean_Ch3=c(0,0),
+              clean_Ch4=c(0,0),
+              N_Ch = 4,
+              local_path = TRUE,
+              date_format = c("%m/%d/%Y %H:%M:%S", "GMT"),
+              inv.data = NULL){
 
   #  binding global variables locally to the function.
   p<-p1<-p2<-p3<-p4<-p_null<-NULL
 
+  if(!length(as.vector(date_format))==2){
+    stop_function<-TRUE
+    if(stop_function) {
+      stop("Argument 'date_format' is not properly stated. \n It must be a vector of two stating: i) the date time format and ii) timezone. \n Default is: c(\"%m/%d/%Y %H:%M:%S\", \"GMT\"). Argument is passed to strptime() ")
+    }
+  }
 
-  Channel_mmr<-function(data.MMR, dataMMR, cycle_start, cycle_end, clean_start_mmr, clean_end_mmr, Ch_list, cycles, j, rows, rows_temp, newdata_mmr, path, inv.data.clean){
+  Channel_mmr<-function(data.MMR,
+                        dataMMR,
+                        cycle_start,
+                        cycle_end,
+                        clean_start_mmr,
+                        clean_end_mmr,
+                        Ch_list,
+                        cycles,
+                        j,
+                        rows,
+                        rows_temp,
+                        newdata_mmr,
+                        local_path,
+                        inv.data.clean){
 
 		if(!Ch_list[j]==0){
 			mmr_start<-clean_start_mmr[j]
@@ -77,21 +98,12 @@ MMR<-function(data.MMR,
 
 			### is there cleaning?
   		if(nrow(inv.data.clean)>0){
-  		   message(paste("Ch",j, ": INVENTORY data, adjusting non-MMR cycle times", sep=""))
+  		   message(paste("Clean: Ch",j, ",time adjusted time of non-MMR measurement cycle", sep=""))
   	      # find cycle 2 cleaning
-  		   # print(clean_cycle2)
   	      if(any(inv.data.clean$cycle==2)){
   	         clean_cycle2<-"Y"
-  	         # print(clean_cycle2)
-  	         # if(!inv.data.clean[which(inv.data.clean$cycle==2),"start"] == 0){
   	           start_c2<-inv.data.clean[which(inv.data.clean$cycle==2),"start"] # min start
   	           end_c2<-inv.data.clean[which(inv.data.clean$cycle==2),"end"]
-  	         # }
-  	         # else{
-  	         #   start_c2<-cycle_start[2]
-  	         #   end_c2<-cycle_end[2]
-  	         # }
-  	         # print(start_c2)
   	      }
   		   # find cycle 3 cleaning
   	      if(any(inv.data.clean$cycle==3)){
@@ -179,11 +191,11 @@ MMR<-function(data.MMR,
 				b.4<-round(lm_coef.4[1],2)
 			}
 
-  		if (path == "."){
-         plotname<-paste( gsub('.{4}$', '', data.MMR),"_", substr(colnames(d[r]), start=1, stop=3), ".png", sep="")#
 
+  		if (local_path | !dir.exists("MANUAL")){
+         plotname<-paste( gsub('.{4}$', '', data.MMR),"_", substr(colnames(d[r]), start=1, stop=3), ".png", sep="")#
       	}else{
-      	 plotname<-paste("../channel_plots/", gsub('.{4}$', '', data.MMR),"_", substr(colnames(d[r]), start=1, stop=3), ".png", sep="")#
+      	 plotname<-paste("./MANUAL/channel_plots/", gsub('.{4}$', '', data.MMR),"_", substr(colnames(d[r]), start=1, stop=3), ".png", sep="")#
     	}
 
 
@@ -208,11 +220,7 @@ MMR<-function(data.MMR,
 				colnames(values_mmr)<-c("cycle_type","cycle_start","cycle_end",  "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max", "t_mean", "Ch", "DateTime_start")
 				newdata_mmr<-rbind(newdata_mmr, values_mmr)
 
-
-				print(newdata_mmr)
-				newdata_mmr<-slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, path)
-				print(newdata_mmr)
-
+				newdata_mmr<-slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, local_path)
 
 				newdata_mmr60<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 60),]
 				newdata_mmr90<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 90),]
@@ -268,7 +276,7 @@ MMR<-function(data.MMR,
 				colnames(values_mmr)<-c("cycle_type","cycle_start","cycle_end", "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max", "t_mean", "Ch", "DateTime_start")
 				newdata_mmr<-rbind(newdata_mmr, values_mmr)
 
-				newdata_mmr<-slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, path)
+				newdata_mmr<-slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, local_path)
 
 				newdata_mmr60<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 60),]
 				newdata_mmr90<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 90),]
@@ -322,7 +330,7 @@ MMR<-function(data.MMR,
 				colnames(values_mmr)<-c("cycle_type","cycle_start","cycle_end",  "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max", "t_mean", "Ch", "DateTime_start")
 				newdata_mmr<-rbind(newdata_mmr, values_mmr)
 
-				newdata_mmr<-slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, path)
+				newdata_mmr<-slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, local_path)
 				newdata_mmr60<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 60),]
 				newdata_mmr90<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 90),]
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
@@ -375,7 +383,7 @@ MMR<-function(data.MMR,
 				colnames(values_mmr)<-c("cycle_type","cycle_start","cycle_end",  "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max", "t_mean", "Ch", "DateTime_start")
 				newdata_mmr<-rbind(newdata_mmr, values_mmr)
 
-				newdata_mmr<-slidingSlope(d, Ch, data.MMR,r, r_temp, newdata_mmr, path)
+				newdata_mmr<-slidingSlope(d, Ch, data.MMR,r, r_temp, newdata_mmr, local_path)
 				newdata_mmr60<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 60),]
 				newdata_mmr90<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 90),]
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
@@ -450,7 +458,7 @@ MMR<-function(data.MMR,
   			  newdata_mmr<-rbind(newdata_mmr, values_mmr)
 				}else{
 				  if(start_c2==0 & end_c2 ==0){
-				    message(paste("Take out cycle 2 from MMR trends - Channel: ", j))
+				    message(paste("Clean: exclude cycle 2 Channel: ", j))
 				  }else{
             values_mmr<-as.data.frame(t(c(cycle_type, start_c2, end_c2,  cycle_mmr, r2.2, m.2, b.2,
                                           round(min(d2[,r_temp]),4),
@@ -494,7 +502,7 @@ MMR<-function(data.MMR,
           newdata_mmr<-rbind(newdata_mmr, values_mmr)
 				}else{
 				  if(start_c3==0 & end_c3 ==0){
-				    message(paste("Take out cycle 3 from MMR trends - Channel: ", j))
+				    message(paste("Clean: exclude cycle 3 Channel: ", j))
 				  }else{
 				    values_mmr<-as.data.frame(t(c(cycle_type, start_c3, end_c3, cycle_mmr, r2.3, m.3, b.3,
 				                                  round(min(d3[,r_temp]),4),
@@ -538,7 +546,7 @@ MMR<-function(data.MMR,
 				  newdata_mmr<-rbind(newdata_mmr, values_mmr)
 				}else{
 				  if(start_c4==0 & end_c4 ==0){
-				    message(paste("Take out cycle 4 from MMR trends - Channel: ", j))
+				    message(paste("Clean: exclude cycle 2 Channel: ", j))
 				  }else{
 				    values_mmr<-as.data.frame(t(c(cycle_type, start_c4, end_c4,  cycle_mmr, r2.4, m.4, b.4,
 				                                  round(min(d4[,r_temp]),4),
@@ -641,15 +649,10 @@ MMR<-function(data.MMR,
 				}
 
 			dev.off()
-			#
-			#  save file now -- write code
+
 		}else{
-				message(paste("NO Channel - ",j, sep=""))
+				message(paste("Exclude channel - ",j, sep=""))
 		}
-
-	#~ 	assign("newdata_mmr", newdata_mmr, envir=.GlobalEnv)
-
-		# Channel_mmr<-newdata_mmr
 		return(newdata_mmr)
 
 	}# end of Channel_mmr function
@@ -660,18 +663,57 @@ MMR<-function(data.MMR,
 	colnames(newdata_mmr)<-c("cycle_type", "cycle_start","cycle_end",  "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max", "t_mean", "Ch", "DateTime_start")
 
 
-	if (path == "."){
+	if (local_path | !dir.exists("MANUAL")){
     filename<-paste( gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='')
     filename2<-paste( gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final MMR and full EPOC analysis
-
 	}else{
-	  filename<-paste("../csv_analyzed/", gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='')
-    filename2<-paste("../../MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final MMR and full EPOC analysis
-
+	  filename<-paste("./MANUAL/csv_analyzed/", gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='')
+    filename2<-paste("./MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final MMR and full EPOC analysis
 	}
 
 
-	dataMMR<-read.csv(data.MMR)
+
+  if(file.exists(data.MMR) | file.exists(paste("./csv_files/", data.MMR, sep=""))){
+	  if(file.exists(paste("./csv_files/", data.MMR, sep=""))){
+      dataMMR<-read.csv(paste("./csv_files/", data.MMR, sep=""))
+    }
+    if(file.exists(data.MMR)){
+      dataMMR<-read.csv(data.MMR)
+    }
+	}else{
+    stop_function<-TRUE
+    if(stop_function){
+      stop("Cannot locate the indicated data.MMR data file.")
+    }
+  }
+
+
+# 	if(local_path | dir.exists("csv_files")){
+#   	if(local_path | !dir.exists("csv_files")){
+#
+#   	  if(file.exists(data.MMR)){
+#         dataMMR<-read.csv(data.MMR)
+#   	  }else{
+#         stop_function<-TRUE
+#         if(stop_function) {
+#           stop("Cannot locate the indicated data_MMR file.")
+#         }
+#   	  }
+#
+#   	}else{
+#
+#   	  if(!file.exists(paste("./csv_files/", data.MMR, sep = ""))){
+#         stop_function<-TRUE
+#         if(stop_function) {
+#           stop("Cannot locate the indicated data_MMR file. Is it the local directory? -- yes, use local_path = TRUE")
+#         }
+#   	  }else{
+#   	    dataMMR<-read.csv(paste("./csv_files/", data.MMR, sep = ""))
+#   	  }
+#   	}
+# 	}
+
+
 	if(as.character(dataMMR$Ch1_O2[1])=="--- " || as.character(dataMMR$Ch1_O2[1])=="---"){
 		dataMMR$Ch1_O2<-0
 	}
@@ -690,21 +732,12 @@ MMR<-function(data.MMR,
 
 	dataMMR$date<-as.character(dataMMR$date)
 	dataMMR$time<-as.character(dataMMR$time)
+  DateTime<-strptime(paste(dataMMR$date, dataMMR$time), format=date_format[1], tz=date_format[2])
+  dataMMR$DateTime<-DateTime
 
-	if (date_format== "m/d/y"){
-  	DateTime<- chron(dates.=dataMMR$date,times.=dataMMR$time,format=c('m/d/y','h:m:s')) # Eliason Lab firesting date format
-#~ 	DateTime<- chron(dates=dataMMR$date,times=dataMMR$time,format=c('y-m-d','h:m:s')) # Healy firesting date format
-	}
-	if (date_format== "d/m/y"){
-    # 8 channel firesting with date (day first) European style
-    DateTime<- chron(dates.=dataMMR$date,times.=dataMMR$time,format=c('d/m/y','h:m:s')) # Eliason Lab firesting date format
-	}
-	if (date_format== "y-m-d"){
-    # 8 channel firesting with date (day first) European style
-    DateTime<- chron(dates.=dataMMR$date,times.=dataMMR$time,format=c('Y-m-d','h:m:s')) # Eliason Lab firesting date format
+  if(is.na(DateTime[1])){
+    message(paste("DateTime is NA, is the provided date_format correct: is it", date_format[1], "?"))
   }
-
-	dataMMR$DateTime<-DateTime
 
 	dataMMR$hr<-round(dataMMR$time_sec/3600,2)
 	dataMMR$hr2<-round(dataMMR$time_sec/3600,0)
@@ -787,18 +820,37 @@ MMR<-function(data.MMR,
 
 
 
-      Box_n_data<-(which(!is.na(str_locate(data.MMR, c("box", "BOX", "Box"))))[2])
+    Box_n_data<-(which(!is.na(str_locate(data.MMR, c("box", "BOX", "Box"))))[2])
 
-      if(!is.na(inv.data)){
-        data2<-read.csv(inv.data)
-
-        # print(data2)
+    if(!is.null(inv.data)){
+      if(file.exists(inv.data) | file.exists(paste("./csv_files/", inv.data, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+    	  if(file.exists(paste("./csv_files/", inv.data, sep=""))){
+          data2<-read.csv(paste("./csv_files/", inv.data, sep=""))
+        }
+        if(file.exists(inv.data)){
+          data2<-read.csv(inv.data)
+        }
+    	}else{
+        stop_function<-TRUE
+        if(stop_function){
+          stop("Cannot locate the indicated inv.data data file.")
+        }
       }
+    }
+
+      #   if(!file.exists(inv.data)){
+      #     stop_function<-TRUE
+      #     if(stop_function){
+      #       stop("Cannot locate the inventory data file, be sure it is in the local directory, or proovide a full path to it")
+      #     }
+      #   }
+      #   data2<-read.csv(inv.data)
+      # }
 
       	for (j in 1:4){
 
 
-      	  if(!is.na(inv.data)){
+      	  if(!is.null(inv.data)){
 
 
         	   if(j==1){inv.data.clean<-data2[which(grepl(substr(data.MMR, start=1, stop=5), as.character(data2$date)) & as.numeric(data2$channel)==1 &
@@ -823,7 +875,7 @@ MMR<-function(data.MMR,
       	    inv.data.clean<-as.data.frame(matrix(nrow=0, ncol=0))
       	  }
 
-      		newdata_mmr<-Channel_mmr(data.MMR, dataMMR, cycle_start, cycle_end, clean_start_mmr, clean_end_mmr, Ch_list, cycles, j, rows, rows_temp, newdata_mmr, path, inv.data.clean)
+      		  newdata_mmr<-Channel_mmr(data.MMR, dataMMR, cycle_start, cycle_end, clean_start_mmr, clean_end_mmr, Ch_list, cycles, j, rows, rows_temp, newdata_mmr, local_path, inv.data.clean)
       	}
 
 

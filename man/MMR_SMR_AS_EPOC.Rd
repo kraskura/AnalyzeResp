@@ -5,8 +5,8 @@
 \title{Title}
 \usage{
 MMR_SMR_AS_EPOC(
-  data.MMR,
-  data.SMR,
+  data.MMR = NULL,
+  data.SMR = NULL,
   AnimalID,
   BW.animal,
   resp.V,
@@ -18,28 +18,28 @@ MMR_SMR_AS_EPOC(
   common_mass = 1,
   mo2_val_for_calc = "mo2_1kg",
   plot_smr_quantile = 15,
-  mmr_type = "min",
-  date_format = "m/d/y",
+  date_format = c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT"),
   N_Ch = 4,
   drop_ch = NULL,
   MLND = TRUE,
+  verbose.MLND = FALSE,
   epoc_threshold = 1,
   recovMMR_threshold = 0.5,
-  end_EPOC_Ch = NA,
-  background_prior = NA,
-  background_post = NA,
+  end_EPOC_Ch = c(NA, NA, NA, NA),
+  background_prior = NULL,
+  background_post = NULL,
   background_slope = NULL,
   background.V = NULL,
   background_linear_gr = FALSE,
   match_background_Ch = FALSE,
   mmr_background = "SAME_slope",
-  path = "."
+  local_path = TRUE
 )
 }
 \arguments{
-\item{data.MMR}{The name of the MMR data file (“…analyzed.csv”; a character string); an output file from the MMR function. When unavailable, enter "none"}
+\item{data.MMR}{The name of the MMR data file (“…analyzed.csv”; a character string); an output file from the MMR function.}
 
-\item{data.SMR}{The name of the SMR data file (“…analyzed.csv”; a character string); an output file from the SMR function. When unavailable, enter "none"}
+\item{data.SMR}{The name of the SMR data file (“…analyzed.csv”; a character string); an output file from the SMR function.}
 
 \item{AnimalID}{Indicates individual ID; must be a vector of 4 characters. When missing, enter "NA"}
 
@@ -63,8 +63,6 @@ MMR_SMR_AS_EPOC(
 
 \item{plot_smr_quantile}{Indicating what percentile lower MO2 values to plot; must be 10, 15, or 20}
 
-\item{mmr_type}{Currently an unused argument}
-
 \item{date_format}{The date format used in the original FireSting data files. Must specify one of the following: "m/d/y", "d/m/y", "y-m-d"}
 
 \item{N_Ch}{The number of channels of the FireSting. It must be either 4 or 8.}
@@ -72,6 +70,8 @@ MMR_SMR_AS_EPOC(
 \item{drop_ch}{Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)}
 
 \item{MLND}{Logical argument. If TRUE, SMR is estimated also using Mean Lowest Normal Distribution analysis. More details in Chabot et al 2016.}
+
+\item{verbose.MLND}{From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).}
 
 \item{epoc_threshold}{Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to epoc_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as a recovery threshold, enter epoc_threshold = 1.2.}
 
@@ -93,7 +93,7 @@ MMR_SMR_AS_EPOC(
 
 \item{mmr_background}{Specifies what background value should be used to correct MMR value. Options: i) "back_prior" takes background respiration rate value estimated from the background_prior file only, ii)"SAME_slope" takes background respiration rate value that is applied to the entire trial (MMR and SMR, indistinguishable), and iii) a defined respiration rate value mgO2 L-1 h-1.}
 
-\item{path}{Defines the directory to save output files. Two options: i) exports are saved in the currently set working directory, or ii) prior-defined directories as created by function organize_MR_analysis}
+\item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 }
 \value{
 The output from \code{\link{print}}

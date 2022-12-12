@@ -18,9 +18,9 @@ MMR(
   clean_Ch3 = c(0, 0),
   clean_Ch4 = c(0, 0),
   N_Ch = 4,
-  path = ".",
-  date_format = "m/d/y",
-  inv.data = NA
+  local_path = TRUE,
+  date_format = c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT"),
+  inv.data = NULL
 )
 }
 \arguments{
@@ -50,7 +50,7 @@ MMR(
 
 \item{N_Ch}{The number of FireSting channels. Options include 2, 4, and 8. This argument can be ignored if 2-Channel FireSting was used.}
 
-\item{path}{Specify the working directory for all output files. This argument has two options, i) files can be automatically organized in newly created local directories. Any character may be used.}
+\item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
 \item{date_format}{The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")}
 
@@ -61,9 +61,4 @@ The output from \code{\link{print}}
 }
 \description{
 Title
-}
-\examples{
-\dontrun{
-MMR(data.MMR = "data.csv", cycles = 1, cycle_start = c(0), cycle_end = c(5))
-}
 }

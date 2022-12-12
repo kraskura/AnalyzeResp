@@ -3,7 +3,7 @@ Title: Analyze Oxygen Uptake Rate data in Aquatic Animals
 Version: 0.0.1
 Depends: R (>= 3.6.2)
 Author: Krista Kraskura <k.kraskura@gmail.com>
-Maintainer: The package maintainer <yourself@somewhere.net>
+Maintainer: The package maintainer <k.kraskura@gmail.com>
 Description: Functions used to analyze experimentally collected oxygen uptake data of aquatic animals to obtain estimates of metabolism. 
 License: GPL-3
 Encoding: UTF-8
@@ -12,7 +12,6 @@ RoxygenNote: 7.2.2
 Imports:
   stats,
   ggplot2,
-  chron,
   scales,
   grDevices,
   graphics,

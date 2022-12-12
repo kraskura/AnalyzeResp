@@ -4,7 +4,7 @@
 \alias{slidingSlope}
 \title{Title}
 \usage{
-slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, path)
+slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, local_path)
 }
 \arguments{
 \item{d}{Dataframe with each measurement present (O2 observed each second )}
@@ -19,7 +19,7 @@ slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, path)
 
 \item{newdata_mmr}{The ongoing dataframe of mmr that will be row-bind building as export}
 
-\item{path}{Specifies the working directory for all output files. This argument has two options, i) files can be automatically organized in newly created local directories. Any character may be used.}
+\item{local_path}{Logical. If TRUE (no default) all returned files will be saved in the local working directory. Can also provide a path if this function is run independently}
 }
 \value{
 The output from \code{\link{print}}

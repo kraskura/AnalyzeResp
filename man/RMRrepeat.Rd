@@ -11,10 +11,10 @@ RMRrepeat(
   chop_start,
   chop_end,
   N_Ch = 4,
-  inventory_data = NA,
-  flush_plot = FALSE,
-  path = ".",
-  date_format = c("m/d/y", "d/m/y", "y-m-d"),
+  date_format = c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT"),
+  inventory_data = NULL,
+  flush_plot = NULL,
+  local_path = TRUE,
   plot_temp = FALSE
 )
 }
@@ -31,13 +31,13 @@ RMRrepeat(
 
 \item{N_Ch}{The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel Firesting has 4 temperature and 4 oxygen sensors}
 
-\item{inventory_data}{The inventory file (.csv file; must be in the same working directory as the indicated data file)}
+\item{date_format}{The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")}
+
+\item{inventory_data}{The inventory file (.csv file), default = NULL}
 
 \item{flush_plot}{Plotting of additional figures where full cycle (measure:flush) is presented.}
 
-\item{path}{Local directory to save output files. Two options, either all files will be saved in the current working directory, or the other option requires the folders created by organize_MR_analysis}
-
-\item{date_format}{The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")}
+\item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
 \item{plot_temp}{Logical argument. Indicates whether or not temperature trends for each cycle will be plotted and saved    TRUE}
 }
