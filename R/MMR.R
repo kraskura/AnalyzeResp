@@ -192,10 +192,10 @@ MMR<-function(data.MMR,
 			}
 
 
-  		if (local_path | !dir.exists("MANUAL")){
+  		if (local_path | !dir.exists("MMR")){
          plotname<-paste( gsub('.{4}$', '', data.MMR),"_", substr(colnames(d[r]), start=1, stop=3), ".png", sep="")#
       	}else{
-      	 plotname<-paste("./MANUAL/channel_plots/", gsub('.{4}$', '', data.MMR),"_", substr(colnames(d[r]), start=1, stop=3), ".png", sep="")#
+      	 plotname<-paste("./MMR/channel_plots/", gsub('.{4}$', '', data.MMR),"_", substr(colnames(d[r]), start=1, stop=3), ".png", sep="")#
     	}
 
 
@@ -662,16 +662,13 @@ MMR<-function(data.MMR,
 	newdata_mmr<-matrix(ncol=12,nrow=0)
 	colnames(newdata_mmr)<-c("cycle_type", "cycle_start","cycle_end",  "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max", "t_mean", "Ch", "DateTime_start")
 
-
-	if (local_path | !dir.exists("MANUAL")){
+	if (local_path | !dir.exists("MMR")){
     filename<-paste( gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='')
     filename2<-paste( gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final MMR and full EPOC analysis
 	}else{
-	  filename<-paste("./MANUAL/csv_analyzed/", gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='')
+	  filename<-paste("./MMR/csv_analyzed/", gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='')
     filename2<-paste("./MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data.MMR), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final MMR and full EPOC analysis
 	}
-
-
 
   if(file.exists(data.MMR) | file.exists(paste("./csv_files/", data.MMR, sep=""))){
 	  if(file.exists(paste("./csv_files/", data.MMR, sep=""))){
@@ -686,32 +683,6 @@ MMR<-function(data.MMR,
       stop("Cannot locate the indicated data.MMR data file.")
     }
   }
-
-
-# 	if(local_path | dir.exists("csv_files")){
-#   	if(local_path | !dir.exists("csv_files")){
-#
-#   	  if(file.exists(data.MMR)){
-#         dataMMR<-read.csv(data.MMR)
-#   	  }else{
-#         stop_function<-TRUE
-#         if(stop_function) {
-#           stop("Cannot locate the indicated data_MMR file.")
-#         }
-#   	  }
-#
-#   	}else{
-#
-#   	  if(!file.exists(paste("./csv_files/", data.MMR, sep = ""))){
-#         stop_function<-TRUE
-#         if(stop_function) {
-#           stop("Cannot locate the indicated data_MMR file. Is it the local directory? -- yes, use local_path = TRUE")
-#         }
-#   	  }else{
-#   	    dataMMR<-read.csv(paste("./csv_files/", data.MMR, sep = ""))
-#   	  }
-#   	}
-# 	}
 
 
 	if(as.character(dataMMR$Ch1_O2[1])=="--- " || as.character(dataMMR$Ch1_O2[1])=="---"){
@@ -817,8 +788,6 @@ MMR<-function(data.MMR,
 	if (cycle_end[length(cycle_end)]>dataMMR$time_min[nrow(dataMMR)]){
 		cycle_end[length(cycle_end)]<-dataMMR$time_min[nrow(dataMMR)]
 	}
-
-
 
     Box_n_data<-(which(!is.na(str_locate(data.MMR, c("box", "BOX", "Box"))))[2])
 

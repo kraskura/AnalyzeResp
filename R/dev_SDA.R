@@ -1,17 +1,41 @@
-# Nov 30 notes:
-# add -- >
-# channel specific delays (the same concept as MMR putting one fish in the channel at the time)
-# specify channel specific start and stop times for the SDA portion.
-# data.SMR= the raw csv file to be analyzed for SMR
-
+#' Title
+#'
+#' @param AnimalID Indicates individual ID; must be a vector of 4 characters. When missing, enter "NA"
+#' @param BW.animal Indicates individual mass; must be a vector of 4 characters. When missing, enter "0"
+#' @param resp.V Indicated the volume (L) of respirometer chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
+#' @param r2_threshold_smr R2 threshold for SMR, measurements below the threshold are excluded
+#' @param sda_threshold_level
+#' @param scaling_exponent_smr Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
+#' @param date_format The date format used in the original FireSting data files. Must specify one of the following: "m/d/y", "d/m/y", "y-m-d"
+#' @param data.SDA The name of the SDA data file (“…analyzed.csv”; a character string); an output file from the SMR function.
+#' @param analyzed_MR The name of the data file with estimated SMR values
+#' @param SMR_calc
+#' @param SMR_vals
+#' @param N_Ch The number of channels of the FireSting. It must be either 4 or 8.
+#' @param drop_ch Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)
+#' @param end_SDA_Ch Manually assigned end time (min) of digestion (SDA). The time can be assigned for each channel independently; use a numerical vector of 4 variables, one for each channel (e.g., c(120, 120, NA, 180), for 2 h, 2h, SMR level, and 3 h SDA end times, respectively)
+#' @param MLND Logical argument. If TRUE, SMR is estimated also using Mean Lowest Normal Distribution analysis. More details in Chabot et al 2016.
+#' @param verbose.MLND From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).
+#' @param background_prior The name of the analyzed background “…analyzed.csv” file, an output file from the SMR function (respiration in an empty respirometer measured before the respirometry trial).
+#' @param background_post The same as background_prior, only post respirometry trial
+#' @param background_slope Manually assigned background slope used to correct metabolic rate in all individuals. Provide numeric value in mgO2 L-1 h-1v
+#' @param background.V Manually assigned respirometer volumes (L). A vector with 4 numeric variables, one for each channel.
+#' @param background_gr Specify whether to assume that bacterial growth (thus respiration rates) changed linearly or in exponentially across the duration of the respirometry trial. Must specify either "linear" or "exp": metabolic rate values across the given trial are corrected using the estimated background values from the indicated growth curve. Both background_prior and background_post must be provided to enable this.
+#' @param match_background_Ch Logical. If TRUE, the background respiration is estimated and applied channel-specific. The background_prior and background_post are used to estimate background respiration specific to each channel (or individual), which then is used to correct each individual’s MO2 independently. By default, the mean background respiration rate from all channels is calculated and applied to correct all individual’s MO2
+#' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
+#' @param handling_delay in hours
+#' @param begin_smr_hr_zero logical
+#'
+#' @return The output from \code{\link{print}}
+#' @export
+#'
 SDA<-function(AnimalID,
               BW.animal,
               resp.V,
               r2_threshold_smr,
               sda_threshold_level,
-              scaling_exponent_mmr = 1,
               scaling_exponent_smr = 1,
-              date_format = c("%m/%d/%Y %H:%M:%S", "GMT"), # herehere
+              date_format = c("%Y-%m-%d %H:%M:%S", "GMT"),
               data.SDA = NULL,
               analyzed_MR = NULL,
               SMR_calc = TRUE,
@@ -20,69 +44,67 @@ SDA<-function(AnimalID,
               N_Ch = 4,
               end_SDA_Ch = NA,
               MLND = TRUE,
-              background_prior = NULL, # herehere
-              background_post = NULL,# herehere
+              verbose.MLND = FALSE,
+              background_prior = NULL,
+              background_post = NULL,
               background_slope = NULL,
               background.V = NULL,
               match_background_Ch = FALSE,
-              background_linear_gr = FALSE,
-              local_path = FALSE, # herehere
+              background_gr = NULL,
+              local_path = TRUE,
               handling_delay = 0,
               begin_smr_hr_zero=FALSE){
 
+  if(!length(as.vector(date_format))==2){
+    stop_function<-TRUE
+    if(stop_function) {
+      stop("Argument 'date_format' is not properly stated. \n It must be a vector of two stating: i) the date time format and ii) timezone. \n Default is: c(\"%Y-%m-%d %H:%M:%S\", \"GMT\"). Argument is passed to strptime() ")
+    }
+  }
+
   SDA.spar<-function(spar,d, SDAdata, b, sda_threshold, end_SDA, begin_smr_hr_zero){
-  d$hour<-as.numeric(as.character(d$hour))
 
-  fit<-smooth.spline(d$hour,d$mo2_min, spar=spar)
-  f = function(x) {predict(fit, x)$y}
+    sda_threshold<-as.numeric(sda_threshold)
+    d$hour<-as.numeric(as.character(d$hour))
 
-  end<-round(d$hour[nrow(d)],1)
-  newx<-seq(0,end, by=0.1)
-  newy<-predict(fit, newx, deriv=0)
-  lapply(newy, as.numeric)
-  newVal<-data.frame(Reduce(cbind,newy)) # creating dummy dataset with predicted values
+    fit<-smooth.spline(d$hour,d$mo2_min, spar=spar)
+    f = function(x) {predict(fit, x)$y}
 
+    end<-round(d$hour[nrow(d)],1)
+    newx<-seq(0,end, by=0.1)
+    newy<-predict(fit, newx, deriv=0)
+    newy<-lapply(newy, as.numeric)
+    newVal<-data.frame(Reduce(cbind,newy)) # creating dummy dataset with predicted values
 
-  SDAdata.temp<-matrix(ncol=15, nrow=0)
-  colnames(SDAdata)<-c("ID","SMR","spar", "SDA_integrated", "end_SDA_estim_hr", "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full", "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type")
+    SDAdata.temp<-matrix(ncol=15, nrow=0)
+    colnames(SDAdata)<-c("ID","SMR","spar", "SDA_integrated", "end_SDA_estim_hr", "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full", "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type")
 
-
-  #2-1- establish SMR threshold m1 and b1 for SMR (b1= y intercept, m1=slope)
-  m0 <- 0 # slope
-  f.smr <- function(x)(m0*x)+b # smr function
+    #2-1- establish SMR threshold m1 and b1 for SMR (b1= y intercept, m1=slope)
+    m0 <- 0 # slope
+    f.smr <- function(x)(m0*x)+b # smr function
 
   # Calculate the area under the SMR for all types of SMR calculated in the MMr_SMR_analyze function
   #2-2 the EPOC cuttoff in the smoothed function / this is used also for the SMR block
   # providing end_SDA value manually (in minutes)
   if(is.na(end_SDA)){
-
     if (begin_smr_hr_zero==TRUE){
       end_SDA <- newVal$init[(which(round(newVal$V2[2:nrow(newVal)], 3)<=b))[1]] # force the function to look beyond te first value, which is set to SMR level
     }else{
       end_SDA <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]]
     }
-
-
-    if(is.na(end_SDA) & spar==0.1){
-      if (begin_smr_hr_zero==TRUE){
-        end_SDA <- newVal$init[(which(round(newVal$V2[2:nrow(newVal)], 3)<=b))[1]] # force the function to look beyond te first value, which is set to SMR level
-      }else{
-        end_SDA<-newVal$init[nrow(newVal)]
-        message("Respiration post digestion does not reach the chosen SMR levels: ",b, "  - suggest changing the sda_threshold")
-      }
-
-    }
-
     if(is.na(end_SDA)){
       end_SDA<-newVal$init[nrow(newVal)]
+      message("Respiration post digestion does not reach the chosen SMR levels: ",b, ": assume SDA continues until the end of the trial")
     }
   }
 
 
-  if(end_SDA > max(newVal$init)){
-    message("The SDA end value is greater than the duration of respirometry trial | end_SDA set to the last value")
-    end_SDA<-newVal$init[nrow(newVal)]
-  }
+  # if(end_SDA > max(newVal$init)){
+  #   message("The SDA end value is greater than the duration of respirometry trial | end_SDA set to the last value")
+  #   end_SDA<-newVal$init[nrow(newVal)]
+  # }
+
+
 
   #3 integrate recovery curve with to the provided end EPOC time
   f.int = function(x) {integrate(f, lower=0, upper=end_SDA)$value}
@@ -94,21 +116,11 @@ SDA<-function(AnimalID,
   SDA_full<-round(full-SMR,3) # the costs of digestion
   MO2_full<-round(newVal$V2[which(newVal$init==end_SDA)],3)
 
-  end_SDA_row<-which(d$hour==round(end_SDA,0))
-  # print(c(end_SDA_row, end_SDA))
-  # print(d[end_SDA_row,])
-  # find peak SDA - use min values
-
-  # 		if(end_SDA == d$hour[nrow(d)]){
-  #   		peak_SDA<-max(d$mo2_min)
-  #   		peak_SDA_max<-max(d$mo2_max)
-  #   		peak_SDA_mean<-max(d$mo2_mean)
-  # }else{
+  # end_SDA_row<-which(round(d$hour)==round(end_SDA))[1]
+  end_SDA_row <- which(abs(d$hour - end_SDA) == min(abs(d$hour - end_SDA)))[1]
   peak_SDA<-max(d$mo2_min[1:end_SDA_row])[1]
-  # print(max(d$mo2_min[1:end_SDA_row])[1])
   peak_SDA_max<-max(d$mo2_max[1:end_SDA_row])[1]
   peak_SDA_mean<-max(d$mo2_mean[1:end_SDA_row])[1]
-  # }
 
   time_peak_SDA<-d$hour[which(d$mo2_min==peak_SDA)]
   time_peak_SDA_max<-d$hour[which(d$mo2_max==peak_SDA_max)[1]]
@@ -121,18 +133,12 @@ SDA<-function(AnimalID,
                             peak_SDA_max, time_peak_SDA_max, peak_SDA_mean, time_peak_SDA_mean,  sda_threshold)))
 
 
-
-  # print(c(peak_SDA_max, peak_SDA_mean, peak_SDA, time_peak_SDA_mean, time_peak_SDA, time_peak_SDA_max, SMR, spar))
-  # print(c(b, MO2_full, SDA_full, sda_threshold, percentSMR_peak_SDA))
-  # if MO2_full and b are the same(ish - that's indicating that something is not right)
   colnames(values)<-c("ID","SMR","spar", "SDA_integrated", "end_SDA_estim_hr",
                       "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full",
                       "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type")
 
   SDAdata.temp<-rbind(SDAdata.temp,values)
-
   scale<-c(0.02,0.07,0.12,0.17,0.22)
-
 
   plot(x=range(newVal$init), xlim=c(0,max(d$hour, na.rm=TRUE)+2), ylim=c(0,max(d$mo2_min, na.rm=TRUE)+2),type='n', ylab="MO2", xlab="time (h)")
   points(d$hour,d$mo2_min, main=spar, col="grey50", pch=21)
@@ -163,73 +169,88 @@ SDA<-function(AnimalID,
 
 
   # background file manipulation
+  if((is.null(background.V) & !is.null(background_slope)) |(!is.null(background.V) & is.null(background_slope))) {
+    stop_function <- TRUE
+    if(stop_function) stop("Must provide background unique slope and volume together, or provide a background file with same volumes as animal respirometers")
+  }
+
+	if(c(is.null(background_prior) & is.null(background_post)) & match_background_Ch){
+    stop_function <- TRUE
+	  if(stop_function) stop("If match_background_Ch = TRUE, must provide at least one datafiles, either background measured before or after the respirometry trial")
+	}
+
   # 1. find what channels recorded background
-  if (!is.na(background_post) | !is.na(background_prior) ) {
-    # 2 calculate mean for each background channel
-    if((is.null(background.V) & !is.null(background_slope) ) |(!is.null(background.V) & is.null(background_slope))) {
-      stop_function <- TRUE
-      if(stop_function) stop("If using manually input background slopes, must provide both, a unique slope and volume of the repirometer")
+  if (!is.null(background_post) | !is.null(background_prior)) {
+
+    if(!is.null(background_prior)){
+
+      if(file.exists(background_prior) | file.exists(paste("./SDA/csv_input_files/", background_prior, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+      	  if(file.exists(paste("./SDA/csv_input_files/", background_prior, sep=""))){
+            back_prior<-read.csv(paste("./SDA/csv_input_files/", background_prior, sep=""))
+          }
+          if(file.exists(background_prior)){
+            back_prior<-read.csv(background_prior)
+          }
+      	}else{
+          stop_function<-TRUE
+          if(stop_function){
+            stop("Cannot locate the indicated background_prior data file.")
+          }
+      }
+      back_ch<-length(unique(back_prior$Ch))
     }
 
+    if(!is.null(background_post)){
+      if(file.exists(background_post) | file.exists(paste("./SDA/csv_input_files/", background_post, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+    	  if(file.exists(paste("./SDA/csv_input_files/", background_post, sep=""))){
+          back_post<-read.csv(paste("./SDA/csv_input_files/", background_post, sep=""))
+        }
+        if(file.exists(background_post)){
+          back_post<-read.csv(background_post)
+        }
+    	}else{
+        stop_function<-TRUE
+        if(stop_function){
+          stop("Cannot locate the indicated background_post data file.")
+        }
+      }
 
-    back_prior<-read.csv(background_prior)
-    back_post<-read.csv(background_post)
-    back_ch<-length (unique(back_post$Ch))
+      back_ch<-length(unique(back_post$Ch))
+    }
+
+    back_ch<-length(unique(back_post$Ch))
 
     # Jan 4 2020: make linear regression over time and correct background based on a predicted value
     # create
-    if (background_linear_gr==TRUE){
+    if (!is.null(background_gr)){
       if(!exists("back_prior") | !exists("back_post")){
         stop("Missing a file to model the growth of bacteria, must provide both: \"back_prior\" \"and back_post\" files")
       }
 
-      if (!dir.exists("../plots_background")){
-        dir.create(file.path("../plots_background"), recursive = TRUE)
+      if (!dir.exists("plots_background") | !dir.exists("./SDA/plots_background")){
+        if(local_path & !dir.exists("plots_background")){
+          dir.create(file.path("./plots_background"), recursive = TRUE)
+        }
+        if(local_path == FALSE &!dir.exists("./SDA/plots_background")){
+          dir.create(file.path("./SDA/plots_background"), recursive = TRUE)
+        }
       }
 
-      # message("Background: assuming a linear growth of bacteria over time | Using channel specific growth slopes")
-
-      # getting the right date and time format
-      back_prior$DateTime_start<-as.character(gsub("(", "", back_prior$DateTime_start, fixed=TRUE))
-      back_prior$DateTime_start<-as.character(gsub(")", "", back_prior$DateTime_start, fixed=TRUE))
-      back_post$DateTime_start<-as.character(gsub("(", "", back_post$DateTime_start, fixed=TRUE))
-      back_post$DateTime_start<-as.character(gsub(")", "", back_post$DateTime_start, fixed=TRUE))
-
-      if (date_format== "m/d/y"){
-        back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format="%m/%d/%y %H:%M:%OS")
-        back_post$DateTime_start<- strptime(back_post$DateTime_start, format="%m/%d/%y %H:%M:%OS")
-      }
-      if (date_format== "d/m/y"){
-        back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format="%d/%m/%y %H:%M:%OS")
-        back_post$DateTime_start<- strptime(back_post$DateTime_start, format="%d/%m/%y %H:%M:%OS")
-      }
-      if (date_format== "y-m-d"){
-        # DateTime<- chron(dates=back_$date,times=back_$time,format=c('y-m-d','h:m:s'))
-        back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format="%y-%m-%d %H:%M:%OS")
-        back_post$DateTime_start<- strptime(back_post$DateTime_start, format="%y-%m-%d %H:%M:%OS")
-      }
+      back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[1], tz = date_format[2])
+  	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[1], tz = date_format[2])
 
       back_all<- rbind(back_prior, back_post)
       back_all$DateTime_start<- as.POSIXct(back_all$DateTime_start)
 
-      back_regression_plot<-ggplot(data=back_all, aes(x=DateTime_start, y=m, colour=Ch, group=Ch))+
-        geom_point()+
-        geom_smooth(method="lm", se=FALSE)+
-        theme_bw()+
-        theme(axis.text.x = element_text(angle = 45))+
-        facet_grid(Ch~.)
-
-      if (path == "."){
-        plotname.backgr.analysis<-paste( filename.SMR,"_PLOT_BACKGROUND_regressions.png", sep="")
-        plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
-      }else{
-        plotname.backgr.analysis<-paste("../plots_background/", filename.SMR,"_PLOT_BACKGROUND_regressions.png", sep="")
-        plotname.backgr<-paste("../plots_background/", filename.SMR,"_PLOT_BACKGROUND.png", sep="")
-
-      }
-      png(plotname.backgr.analysis, width=4, height=7, res=300, units="in")
-      print(back_regression_plot)
-      dev.off()
+      # back_regression_plot<-ggplot(data=back_all, aes(x=DateTime_start, y=m, colour=Ch, group=Ch))+
+      #   geom_point()+
+      #   geom_smooth(method="lm", se=FALSE)+
+      #   theme_bw()+
+      #   theme(axis.text.x = element_text(angle = 45))+
+      #   facet_grid(Ch~.)
+      # png(plotname.backgr.analysis, width=4, height=7, res=300, units="in")
+      #   print(back_regression_plot)
+      # dev.off()
 
 
       if (match_background_Ch==TRUE){
@@ -240,7 +261,22 @@ SDA<-function(AnimalID,
           Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3)
 
           back_regression_name<- paste("back_regression", Ch, sep="") # channel names with a channel # at the end
-          regression<- lm(m~DateTime_start, data = back_ch_d)
+
+          if(background_gr == "linear"){
+            regression<- lm(m~DateTime_start, data = back_ch_d)
+            if(i==1){
+              message("Background: linear change of bacterial respiration. Regressions are specific to the channel (respirometer)")
+            }
+          }
+          if(background_gr == "exp"){
+            # print(head(back_ch_d))
+            regression<- lm(log(m)~DateTime_start, data = back_ch_d)
+            if(i==1){
+              message("Background: exponential change of bacterial respiration. Regressions are specific to the channel (respirometer)")
+            }
+          }
+
+          # regression<- lm(m~DateTime_start, data = back_ch_d)
           assign(back_regression_name, regression)
           back_ch_regressions[[i]] <- assign(back_regression_name, regression)
 
@@ -250,15 +286,21 @@ SDA<-function(AnimalID,
 
       }else{# end for ch specific regressions
         # get one background slope based on all datapoints collected
-        back_regression<- lm(m~DateTime_start, data = back_all)
-        message("Background: assuming a linear growth of bacteria over time | Using one mean slope for all channels")
+        if(background_gr == "linear"){
+          back_regression<- lm(m~DateTime_start, data = back_all)
+          message("Background: linear change of bacterial respiration rates. One regression for all channels")
+        }
+        if(background_gr == "exp"){
+          back_regression<- lm(log(m)~DateTime_start, data = back_all)
+          message("Background: exponential change of bacterial respiration rates. One regression for all channels")
+        }
       }
 
 
     } # end for getting linear regressions for the background
 
-    if (background_linear_gr==FALSE){
-      if (!is.na(background_prior)){
+    if (is.null(background_gr)){ # no growth of bacteria
+      if (!is.null(background_prior)){
         back_ch_prior<-list()
         back_ch_prior_names<-list()
 
@@ -276,7 +318,7 @@ SDA<-function(AnimalID,
 
       }
       # 3. estiamte one background slope mean to be used in MR corrections
-      if (!is.na(background_post)){
+      if (!is.null(background_post)){
 
         back_ch_post<-list()
         back_ch_post_names<-list()
@@ -298,8 +340,7 @@ SDA<-function(AnimalID,
       }
 
       # get a list of our values
-
-      ## should look for possible variables:
+      # should look for possible variables:
       # back_m_post1
       # back_m_post2
       # back_m_post3
@@ -321,7 +362,6 @@ SDA<-function(AnimalID,
         if (!is.na(background_post)){
           ch_available<-as.numeric(substr(as.character(unique(back_post$Ch)),start=3, stop=3))
         }
-
 
         for (i in 1:back_ch){
 
@@ -383,10 +423,8 @@ SDA<-function(AnimalID,
         }
 
         if(!is.na(background_post) | is.na(background_prior)){
-
           post_mean<-sum(as.numeric(back_ch_post)) / (length (unique(back_post$Ch)))
           back_m<-post_mean
-
         }
 
         if(!is.na(background_post) & !is.na(background_prior)){
@@ -413,13 +451,30 @@ SDA<-function(AnimalID,
                         "smr_mlnd", "smr_CVmlnd", "smr_Nmlnd")#3
 
   cols = c(4:17)
-  newdata.smr[,cols] %<>% lapply(function(x) as.numeric(as.character(x)))
+  newdata.smr[,cols] <- lapply(newdata.smr[,cols], as.character)
+  newdata.smr[,cols] <- lapply(newdata.smr[,cols], as.numeric)
   cols2 = c(1:3)
-  newdata.smr[,cols2] %<>% lapply(function(x) as.character(x))
+  newdata.smr[,cols2] <- lapply(newdata.smr[,cols2], as.character)
 
   # print(ncol(newdata.smr))
 
-  d_SMR<-read.csv(data.SDA)
+  if(file.exists(data.SDA) | file.exists(paste("./SDA/csv_input_files/", data.SDA, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+  	  if(file.exists(paste("./SDA/csv_input_files/", data.SDA, sep=""))){
+        d_SMR<-read.csv(paste("./SDA/csv_input_files/", data.SDA, sep=""))
+      }
+      if(file.exists(data.SDA)){
+        d_SMR<-read.csv(data.SDA)
+      }
+  	}else{
+      stop_function<-TRUE
+      if(stop_function){
+        stop("Cannot locate the indicated data.SDA data file.")
+      }
+  }
+  # d_SMR<-read.csv(data.SDA)
+
+
+
   # drop any unwanted channels
   if(!is.null(drop_ch[1])){
     n_ch_drop<-length(drop_ch)
@@ -430,13 +485,12 @@ SDA<-function(AnimalID,
   d_SMR$Ch<-factor(d_SMR$Ch)
 
 
-  if (path == "."){
-    plotname.freq<-paste( filename.SMR,"_PLOT_SMR_analyses.png", sep="")
-    plotname.smr.meth<-paste( filename.SMR,"_PLOT_SMR_methodsALL.png", sep="")
-
-  }else{
-    plotname.freq<-paste("../plots_min_values_SMR/", filename.SMR,"_PLOT_SMR_analyses.png", sep="")
-    plotname.smr.meth<-paste("../plots_methods_sum_SMR/", filename.SMR,"_PLOT_SMR_methodsALL.png", sep="")
+  if (local_path | !dir.exists("SDA")){
+		plotname.freq<-paste( filename.SMR,"_PLOT_SMR_analyses.png", sep="")
+		plotname.smr.meth<-paste( filename.SMR,"_PLOT_SMR_methodsALL.png", sep="")
+	}else{
+		plotname.freq<-paste("./SDA/plots_min_values_SMR/", filename.SMR,"_PLOT_SMR_analyses.png", sep="")
+		plotname.smr.meth<-paste("./SDA/plots_methods_sum_SMR/", filename.SMR,"_PLOT_SMR_methodsALL.png", sep="")
   }
 
 
@@ -448,19 +502,23 @@ SDA<-function(AnimalID,
 
   ## choose what to keep and what not for the SMR
   # 2) keep only > 2 min sections for SMR calculations any type  selected above (SMR, pre-, post-shallow slopes) and exclude "SMR-cut", "SMR-cut1", "SMR-cut2"
-  d_SMR.1<-d_SMR[d_SMR$n_min>=1,]
-  if (nrow(d_SMR.1)==0){
-    warning("!! SMR measurements shorter than 1 min !!")
-  }else{
+	d_SMR.1<-d_SMR[d_SMR$n_min>=1,]
+	if (nrow(d_SMR.1)==0){
+	  warning("All SMR measurements shorter than 1 min !!")
+   }else{
     d_SMR<-d_SMR[d_SMR$n_min>=1,]
-    message("Not using SMR measurements < 1 min")
-  }
+    d_SMR.2<-d_SMR[d_SMR$n_min<=1,]
+      if(nrow(d_SMR.2)==0){
+          # message("All SMR/RMR measurements are > 1 min")
+        }else{
+          message(paste("Using only SMR measurements > 1 min: ", "Not using", nrow(d_SMR.2), " cycles", sep=""))
+      }
+	}
 
 
   # 3) keep only sections with cycles above a set threshold of R2
   if(nrow(d_SMR[d_SMR$r2>=r2_threshold_smr,])<1){
     message(paste("All SMR slope R2 are below the specified threshold. Lower the threshold and rerun the function. NOTE that the lowest R2 is ", min(d_SMR$r2), sep=""))
-
   }else{
     d_SMR<-d_SMR[d_SMR$r2>=r2_threshold_smr,]
   }
@@ -498,35 +556,24 @@ SDA<-function(AnimalID,
   # 1.2 if match_background_Ch=TRUE then use back_m[Ch] to correct each mo2 value for each channel
   #  2. if background files are NOT provided we DONT acount for any background respiration
 
-
-  d_SMR$DateTime_start<-as.character(gsub("(", "", d_SMR$DateTime_start, fixed=TRUE))
-  d_SMR$DateTime_start<-as.character(gsub(")", "", d_SMR$DateTime_start, fixed=TRUE))
-
-  if (date_format== "m/d/y"){
-    d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format="%m/%d/%y %H:%M:%OS")
-  }
-  if (date_format== "d/m/y"){
-    d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format="%d/%m/%y %H:%M:%OS")
-  }
-  if (date_format== "y-m-d"){
-    # DateTime<- chron(dates=back_$date,times=back_$time,format=c('y-m-d','h:m:s'))
-    d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format="%y-%m-%d %H:%M:%OS")
-  }
-
+	d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format[1], tz = date_format[2])
 
   # 000 Jan 4 addition - account for background using linear regression
   # making predictions
-  if(background_linear_gr==TRUE & match_background_Ch==FALSE){
+  if(!is.null(background_gr) & match_background_Ch==FALSE){
     background_slopes<-data.frame(DateTime_start = d_SMR$DateTime_start)
-    background_slopes$back_m<-predict(back_regression, background_slopes)
 
-    if (path == "."){
-      plotname.backgr.analysis<-paste( filename.SMR,"_PLOT_BACKGROUND_regressions.png", sep="")
+    if(background_gr == "linear"){
+      background_slopes$back_m<-predict(back_regression, background_slopes)
+    }
+    if(background_gr == "exp"){
+      background_slopes$back_m<-exp(predict(back_regression, background_slopes))
+    }
+
+    if (local_path | !dir.exists("./SDA/plots_background")){
       plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
     }else{
-      plotname.backgr.analysis<-paste("../plots_background/", filename.SMR,"_PLOT_BACKGROUND_regressions.png", sep="")
-      plotname.backgr<-paste("../plots_background/", filename.SMR,"_PLOT_BACKGROUND.png", sep="")
-
+      plotname.backgr<-paste("./SDA/plots_background/", filename.SMR,"_PLOT_BACKGROUND.png", sep="")
     }
 
     for (i in 1:nrow(d_SMR)){
@@ -543,16 +590,20 @@ SDA<-function(AnimalID,
 
     # plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
     png(plotname.backgr, width=4, height=8, res=300, units="in")
-    print(background_slope_plot)
+      print(background_slope_plot)
     dev.off()
 
-    d_SMR$background_slope<- background_slopes$back_m
+    d_SMR$background_slope <- background_slopes$back_m
 
   }
 
+  if(!is.null(background_gr) & match_background_Ch==TRUE){
 
-
-  if(background_linear_gr==TRUE & match_background_Ch==TRUE){
+    if (local_path | !dir.exists("./SDA/plots_background")){
+      plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
+    }else{
+      plotname.backgr<-paste("./SDA/plots_background/", filename.SMR,"_PLOT_BACKGROUND.png", sep="")
+    }
 
     message("SMR corrected for background: using Ch specific average background")
     background_slopes<-data.frame(DateTime_start = d_SMR$DateTime_start)
@@ -561,29 +612,53 @@ SDA<-function(AnimalID,
 
       # print(c(d_SMR$bw[1],d_SMR$Ch[i]))
       if(substr(d_SMR$Ch[i], start=3, stop=3) == "1"){
-        background_slopes$back_m[i]<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-        back_m1<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	      if(background_gr == "linear"){
+    	      background_slopes$back_m[i]<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+            back_m1<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	      }
+  	      if(background_gr == "exp"){
+    	      background_slopes$back_m[i]<-exp(predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+            back_m1<-exp(predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+  	      }
         d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m1 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         # message("Channel: 1,  bacterial respiration slope: ", back_m1)
       }
 
       if(substr(d_SMR$Ch[i], start=3, stop=3) == "2"){
-        background_slopes$back_m[i]<-predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-        back_m2<-predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	     if(background_gr == "linear"){
+    	      background_slopes$back_m[i]<-predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+            back_m2<-predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	      }
+  	      if(background_gr == "exp"){
+    	      background_slopes$back_m[i]<-exp(predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+            back_m2<-exp(predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+  	      }
         d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m2 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         # message("Channel: 2,  bacterial respiration slope: ", back_m2)
       }
 
       if(substr(d_SMR$Ch[i], start=3, stop=3) == "3"){
-        background_slopes$back_m[i]<-predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-        back_m3<-predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	     if(background_gr == "linear"){
+    	      background_slopes$back_m[i]<-predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+            back_m3<-predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	      }
+  	      if(background_gr == "exp"){
+    	      background_slopes$back_m[i]<-exp(predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+            back_m3<-exp(predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+  	      }
         d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m3 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         # message("Channel: 3,  bacterial respiration slope: ", back_m3)
       }
 
       if(substr(d_SMR$Ch[i], start=3, stop=3) == "4"){
-        background_slopes$back_m[i]<-predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-        back_m4<-predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	     if(background_gr == "linear"){
+    	      background_slopes$back_m[i]<-predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+            back_m4<-predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	      }
+  	      if(background_gr == "exp"){
+    	      background_slopes$back_m[i]<-exp(predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+            back_m4<-exp(predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+  	      }
         d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m4 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         # message("Channel: 4,  bacterial respiration slope: ", back_m4)
       }
@@ -599,15 +674,15 @@ SDA<-function(AnimalID,
     # WORK - SAVE this plot
     # plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
     png(plotname.backgr, width=4, height=8, res=300, units="in")
-    print(background_slope_plot)
+      print(background_slope_plot)
     dev.off()
 
     d_SMR$background_slope<- background_slopes$back_m
   }
 
-
   # 1.1 if background files (either prior or post, or both) are provided and its one overall mean value (back_m)
-  if ((( !is.na(background_post) | !is.na(background_prior)) & match_background_Ch==FALSE) & is.null(background_slope) & background_linear_gr==FALSE){
+  if ((( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==FALSE) &
+      is.null(background_slope) & is.null(background_gr)){
     message("SMR corrected for background: used a mean (prior and/or post) background measurements | mean bacterial respiration slope: ", back_m, " ~" , round((back_m*100)/(mean(d_SMR[d_SMR$m <= quantile(d_SMR$m, 0.5, na.rm=TRUE), "m"], na.rm=TRUE)), 2), " %")
 
     for (i in 1:nrow(d_SMR)){
@@ -616,8 +691,6 @@ SDA<-function(AnimalID,
 
     d_SMR$background_slope<- back_m
   }
-
-
 
   ## if background slope and volume are specifically provided, then use those! this alos overrides the background prior and post argument.
   # all channels with the same slope
@@ -629,9 +702,9 @@ SDA<-function(AnimalID,
     d_SMR$background_slope<- paste(round(background_slope,2), "_BackVol=", background.V, sep="")
   }
 
-
   # 1.2 if background files are provided and its channel specific
-  if ((!is.na(background_post) | !is.na(background_prior)) & match_background_Ch==TRUE & background_linear_gr==FALSE){
+  if ((!is.null(background_post) | !is.null(background_prior)) &
+      match_background_Ch==TRUE & is.null(background_gr)){
     message("SMR corrected for background: using Ch specific average background")
 
     for (i in 1:nrow(d_SMR)){
@@ -665,7 +738,7 @@ SDA<-function(AnimalID,
   }
 
   # 2. if background files are not provided
-  if ((is.na(background_post) & is.na(background_prior)) & is.null(background_slope)){
+  if ((is.null(background_post) & is.null(background_prior)) & is.null(background_slope)){
     message("SMR/RMR: NO correction for background respiration")
 
     for (i in 1:nrow(d_SMR)){
@@ -716,8 +789,8 @@ SDA<-function(AnimalID,
     geom_point(size=1)+
     geom_point(data=a00, aes(x=min_start, y=mo2), color="red", pch=19, size=3)+
     geom_point(data=min10_MO2, aes(x=min_start, y=mo2), colour="green4",size=3, alpha=0.7)+
-    geom_line(size=0.5, alpha=0.)+
-    theme_classic()+
+    geom_line(linewidth=0.5, alpha=0.)+
+		theme_light()+
     ggtitle("lowest 10 VALUES  excluding 5 smallest")+
     theme(legend.position="top")+
     facet_grid(Ch~.)
@@ -734,11 +807,8 @@ SDA<-function(AnimalID,
     quant15<-quantile(split_temp$mo2, 0.15, na.rm=FALSE)
     quant20<-quantile(split_temp$mo2, 0.2, na.rm=FALSE)
 
-    # colnames(a2)<-c("Ch","quantiles", "mo2_perc")
     a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "10%", as.numeric(quant10)))))
-    # colnames(a2)<-c("Ch","quantiles", "mo2_perc")
     a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "15%", as.numeric(quant15)))))
-    # colnames(a2)<-c("Ch","quantiles", "mo2_perc")
     a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "20%", as.numeric(quant20)))))
   }
 
@@ -771,45 +841,69 @@ SDA<-function(AnimalID,
   row_ch3_20perc<-which(a2$Ch=="Ch3" & a2$quantiles=="20%")
   row_ch4_20perc<-which(a2$Ch=="Ch4" & a2$quantiles=="20%")
 
-  min10_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
-    geom_point(size=1)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_10perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_10perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_10perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_10perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-    geom_line(size=0.5, alpha=0.5)+
-    theme_classic()+
-    ggtitle("10 PERCENTILE")+
-    theme(legend.position="top")+
-    facet_grid(Ch~.)
+  # min10_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
+  #   geom_point(size=1)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_10perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_10perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_10perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_10perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
+  #   geom_line(size=0.5, alpha=0.5)+
+  #   theme_classic()+
+  #   ggtitle("10 PERCENTILE")+
+  #   theme(legend.position="top")+
+  #   facet_grid(Ch~.)
+  #
+  # min15_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
+  #   geom_point(size=1)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_15perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_15perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_15perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_15perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+  #   geom_line(size=0.5, alpha=0.5)+
+  #   theme_classic()+
+  #   ggtitle("15 PERCENTILE")+
+  #   theme(legend.position="top")+
+  #   facet_grid(Ch~.)
+  #
+  # min20_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
+  #   geom_point(size=1)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_20perc]),], aes(x=min_start, y=mo2), colour="deepskyblue2",size=3)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_20perc]),], aes(x=min_start, y=mo2), colour="deepskyblue2",size=3)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_20perc]),], aes(x=min_start, y=mo2), colour="deepskyblue2",size=3)+
+  #   geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_20perc]),], aes(x=min_start, y=mo2), colour="deepskyblue2",size=3)+
+  #   geom_line(size=0.5, alpha=0.5)+
+  #   theme_classic()+
+  #   ggtitle("20 PERCENTILE")+
+  #   theme(legend.position="top")+
+  #   facet_grid(Ch~.)
 
-  min15_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
-    geom_point(size=1)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_15perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_15perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_15perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_15perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-    geom_line(size=0.5, alpha=0.5)+
-    theme_classic()+
-    ggtitle("15 PERCENTILE")+
-    theme(legend.position="top")+
-    facet_grid(Ch~.)
+  mo2_lab<-bquote(MO[2]~(mgO[2]~min^-1~ kg^-1))
 
-  min20_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
-    geom_point(size=1)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_20perc]),], aes(x=min_start, y=mo2), colour="deepskyblue2",size=3)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_20perc]),], aes(x=min_start, y=mo2), colour="deepskyblue2",size=3)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_20perc]),], aes(x=min_start, y=mo2), colour="deepskyblue2",size=3)+
-    geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_20perc]),], aes(x=min_start, y=mo2), colour="deepskyblue2",size=3)+
-    geom_line(size=0.5, alpha=0.5)+
-    theme_classic()+
-    ggtitle("20 PERCENTILE")+
-    theme(legend.position="top")+
-    facet_grid(Ch~.)
+  min_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
+			geom_point(size=1)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+		  # geom_p# geom_line(size=0.5, alpha=0.5)+
+			theme_light()+
+			# ggtitle("10th percentile")+
+			theme(legend.position="top")+
+		  ylab(mo2_lab)+
+		  xlab("Time in trial (min)")+
+			facet_grid(Ch~.)
 
-  png(plotname.freq, width = 15, height = 10, units="in", res=200)
-  grid.arrange(p_freq, min10_plot, min10_percPlot, min15_percPlot, ncol=2, nrow=2)
-  dev.off()
+		png(plotname.freq, width = 10, height = 10, units="in", res=200)
+			grid.arrange( min10_plot, min_percPlot, ncol=1, nrow=2)
+		dev.off()
 
   # MLND algorhytm from suppl JFB issue 88 Chabot, Steffensen, and Farrell 2016
   # SMR dataframes split based on the channel
@@ -840,24 +934,23 @@ SDA<-function(AnimalID,
     N_mo2<-length(mo2)
 
     Y.Ch<-as.character(Y0$Ch[1])
-    if (path == "."){
-      plotname.mlnd<-paste( filename.SMR,"_", Y.Ch, "_SMR_analyzed.png", sep="")
-
-    }else{
-      plotname.mlnd<-paste("../plots_mlnd_SMR/", filename.SMR,"_", Y.Ch, "_SMR_analyzed.png", sep="")
-    }
+		if (local_path | !dir.exists("SDA")){
+      plotname.mlnd<-paste( filename.SMR,"_", Y.Ch, "_MLND_SMR_analysed.png", sep="")
+  	}else{
+      plotname.mlnd<-paste("./SDA/plots_mlnd_SMR/", filename.SMR,"_", Y.Ch, "_MLND_SMR_analysed.png", sep="")
+  	}
 
 
     # START -->>> MLND
     # loop for MLND function
-    if(MLND==TRUE){
+    if(MLND){
 
-      mlnd.m1<-Mclust(mo2, G=1:4)
-      m1<-densityMclust(mo2, verbose=TRUE) # same as mlnd
+      mlnd.m1<-Mclust(mo2, G=1:4, verbose = verbose.MLND)
+      m1<-densityMclust(mo2, verbose = verbose.MLND) # same as mlnd
       clas.m1<-m1$classification #
       clas.m1.t <- as.data.frame(table(clas.m1))
       clas.m1.t$clas.m1 <- as.numeric(levels(clas.m1.t$clas.m1))
-      boot1 <- MclustBootstrap(m1, nboot = 1000, type = "bs")
+      boot1 <- MclustBootstrap(m1, nboot = 1000, type = "bs", verbose = verbose.MLND)
 
 
       valid <- clas.m1.t$Freq>=0.1*length(mo2)   # assuming that the lower class contains 10% of the MO2 values recorded
@@ -989,12 +1082,12 @@ SDA<-function(AnimalID,
       Nmlnd <- 0
 
     }
-
     # END -- >>> MNLD
     # https://cran.r-project.org/web/packages/mclust/vignettes/mclust.html#classification
     # mclust: R package for model-based clustering, classification, and density estimation based on finite normal mixture modelling. It provides functions for parameter estimation via the EM algorithm for normal mixture models with a variety of covariance structures, and functions for simulation from these models.
-
     # read about EM http://www.statisticshowto.com/em-algorithm-expectation-maximization/
+
+
 
 
     values_smr<-as.data.frame(t(c(filename.SMR, ID, Y.Ch, BW, t_min, t_max, t_mean, N_mo2,
@@ -1010,10 +1103,7 @@ SDA<-function(AnimalID,
 
   }# end of MNLND calculatons. Loops throgh every channel
 
-
-
   pd<-as.data.frame(newdata.smr[,c(3,9, 12,13,14,15, 8, 17)])
-
 
   df.1 <- data.frame(Ch=unlist(pd[,1], use.names=FALSE), smr_val=unlist(pd[,2], use.names=FALSE), smr_method="smr_mean10minVal", N_mo2=unlist(pd[,7], use.names=FALSE))
   df.2 <- data.frame(Ch=unlist(pd[,1], use.names=FALSE), smr_val=unlist(pd[,3], use.names=FALSE), smr_method="SMR_low10quant", N_mo2=unlist(pd[,7], use.names=FALSE))
@@ -1043,18 +1133,17 @@ SDA<-function(AnimalID,
           panel.border = element_rect(size=0.9,linetype = "solid",fill=NA, colour = "black"))
 
   png(plotname.smr.meth, width=6, height=5, units="in", res=200)
-  print(smr_meth_p)
+    print(smr_meth_p)
   dev.off()
 
 
-
   # save data:
-  if (path == "."){
+  if (local_path | !dir.exists("SDA")){
     filename.smr<-paste( gsub('.{12}$', '', data.SDA), "SMR_analyzed.csv", sep='')
     filename.MR<-paste( gsub('.{12}$', '', data.SDA), "MR_analyzed.csv", sep='')
   }else{
-    filename.smr<-paste("../csv_analyzed_SMR/",gsub('.{12}$', '', data.SDA), "SMR_analyzed.csv", sep='')
-    filename.MR<-paste("../csv_analyzed_MR/", gsub('.{12}$', '', data.SDA), "MR_analyzed.csv", sep='')
+    filename.smr<-paste("./SDA/csv_analyzed_SMR/",gsub('.{12}$', '', data.SDA), "SMR_analyzed.csv", sep='')
+    filename.MR<-paste("./SDA/csv_analyzed_MR/", gsub('.{12}$', '', data.SDA), "MR_analyzed.csv", sep='')
   }
 
 
@@ -1063,70 +1152,74 @@ SDA<-function(AnimalID,
 
   write.csv(file=filename.smr, d_SMR, row.names=FALSE)
   write.csv(file=filename.MR, newdata.smr, row.names=FALSE)
-  message("Save SMR, and MR files")
+
+  # message("Save SMR, and MR files")
   # print(head(newdata.smr))
   # print(head(d_SMR))
-
   # return(newdata.smr)
 
   # --- >>> end of SMR_clac == TRUE
 
 
   if (SMR_calc==FALSE & (is.null(analyzed_MR))){
-    stop("Need to provide analyzed MR file or specific SMR values")
+    stop("SMR analysis: must provide analyzed MR file or specific SMR values")
   }
 
 
   if (SMR_calc==FALSE){
-    newdata.smr<-read.csv(analyzed_MR)
-    message("Use SMR values from previosly analyzed data")
+
+    if(file.exists(analyzed_MR) | file.exists(paste("./SDA/csv_input_files/", analyzed_MR, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+    	  if(file.exists(paste("./SDA/csv_input_files/", analyzed_MR, sep=""))){
+          newdata.smr<-read.csv(paste("./SDA/csv_input_files/", analyzed_MR, sep=""))
+        }
+        if(file.exists(analyzed_MR)){
+          newdata.smr<-read.csv(analyzed_MR)
+        }
+    	}else{
+        stop_function<-TRUE
+        if(stop_function){
+          stop("SMR analysis: cannot locate the indicated analyzed_MR data file with SMR values.")
+        }
+    }
+
+    # newdata.smr<-read.csv(analyzed_MR)
+    message("SMR analysis: using estimated SMR values from previosly analyzed provided data")
   }
 
   # SDA
   # 1. get the mean of each hour
   d_SMR$hour<-as.factor(floor(d_SMR$min_start/60))
-  # d_SMR$hour[which(as.numeric(as.character(d_SMR$hour))<1)]<-0
-  # print(str(d_SMR))
   d_SMR$ID<-as.factor(as.character(d_SMR$ID))
-  # d_SMR$resp.V<-as.factor(as.character(d_SMR$resp.V))
-  # d_SMR$bw<-as.factor(as.character(d_SMR$bw))
-  # d_SMR$hour<-as.factor(as.character(d_SMR$hour))
-
-  # print(d_SMR$hour)
 
   d_SMRsum<-d_SMR %>%
     group_by(Ch, ID, resp.V, bw, hour) %>%
-    summarize(mo2_mean = mean(mo2, na.rm=TRUE), mo2_sd = sd(mo2, na.rm=TRUE), mo2_min = min(mo2, na.rm=TRUE), t_mean=mean(t_mean), n=length (mo2), mo2_max = max(mo2, na.rm=TRUE))
-
-  # d_SMRsum<-d_SMR %>%
-  #   group_by(Ch,hour) %>%
-  #   select(Ch, hour, ID, resp.V, bw, mo2, t_mean) %>%
-  #   summarize(mo2_mean = mean(mo2, na.rm=TRUE), mo2_sd = sd(mo2, na.rm=TRUE), mo2_min = min(mo2, na.rm=TRUE), t_mean=mean(t_mean), n=length (mo2), mo2_max = max(mo2, na.rm=TRUE))
-
-
-  # print(d_SMRsum)
+    summarize(mo2_mean = mean(mo2, na.rm=TRUE),
+              mo2_sd = sd(mo2, na.rm=TRUE),
+              mo2_min = min(mo2, na.rm=TRUE),
+              t_mean=mean(t_mean),
+              n=length (mo2),
+              mo2_max = max(mo2, na.rm=TRUE),
+              .groups = "keep")
 
   d_SMRsum$hour<-as.numeric(as.character(d_SMRsum$hour))
   d_SMRsum$ID<-as.factor(as.character(d_SMRsum$ID))
   d_SMRsum$resp.V<-as.numeric(as.character(d_SMRsum$resp.V))
   d_SMRsum$bw<-as.numeric(as.character(d_SMRsum$bw))
 
-  n_id<-length(unique(levels( d_SMRsum$ID)))
+  n_id<-length(unique(levels(d_SMRsum$ID)))
   # d_SMRsum$hour<-as.numeric(as.character(d_SMRsum$hour))
 
-
-  if (path == "."){
+  if (local_path | !dir.exists("SDA")){
     plotname.sda.data<-	paste(gsub('.{4}$', '', data.SDA),"_SDA_hourly_PLOT.png", sep='')
     SDAdata_name<-paste(gsub('.{4}$', '', data.SDA),"_SDA_analyzed.csv", sep='')
     SDAhrlydata_name<-paste(gsub('.{4}$', '', data.SDA),"_SDA_hrly_analyzed.csv", sep='')
     SDAhrlydata_name_wDELAY<-paste(gsub('.{4}$', '', data.SDA),"_SDA_hrly_wDELAY_analyzed.csv", sep='')
 
-
   }else{
-    plotname.sda.data<-	paste("../plots_SDA_hourly/",gsub('.{4}$', '', data.SDA),"_SDA_hourly_PLOT.png", sep='')
-    SDAdata_name<-paste("../csv_analyzed_SDA/", gsub('.{4}$', '', data.SDA),"_SDA_analyzed.csv", sep='')
-    SDAhrlydata_name<-paste("../csv_analyzed_SDA_hrly/", gsub('.{4}$', '', data.SDA),"_SDA_hrly_analyzed.csv", sep='')
-    SDAhrlydata_name_wDELAY<-paste("../csv_analyzed_SDA_hrly/", gsub('.{4}$', '', data.SDA),"_SDA_hrly_wDELAY_analyzed.csv", sep='')
+    plotname.sda.data<-	paste("./SDA/plots_SDA_hourly/",gsub('.{4}$', '', data.SDA),"_SDA_hourly_PLOT.png", sep='')
+    SDAdata_name<-paste("./SDA/csv_analyzed_SDA/", gsub('.{4}$', '', data.SDA),"_SDA_analyzed.csv", sep='')
+    SDAhrlydata_name<-paste("./SDA/csv_analyzed_SDA_hrly/", gsub('.{4}$', '', data.SDA),"_SDA_hrly_analyzed.csv", sep='')
+    SDAhrlydata_name_wDELAY<-paste("./SDA/csv_analyzed_SDA_hrly/", gsub('.{4}$', '', data.SDA),"_SDA_hrly_wDELAY_analyzed.csv", sep='')
   }
 
 
@@ -1140,9 +1233,6 @@ SDA<-function(AnimalID,
   }
 
   # SDA analysis function on hourly data frame
-  #######
-
-
 
   SDAdata<-matrix(ncol=15, nrow=0)
   colnames(SDAdata)<-c("ID","SMR","spar", "SDA_integrated", "end_SDA_estim_hr", "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full", "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type" )
@@ -1175,10 +1265,10 @@ SDA<-function(AnimalID,
     # peak_SDA_max<-max(Y0.full$mo2)[1] # if more than one value is "max" then take the first one, that is also used for time calculations
     # time_peak_SDA_max<-Y0.full$min_start[which(Y0.full$mo2==peak_SDA_max)] # in minutes
 
-    if (path == "."){
+    if(local_path | !dir.exists("SDA")){
       SDAplot_name <-	paste(data.SDA, "_", d$Ch[1], "_SDA_PLOT.png", sep='')
     }else{
-      SDAplot_name <-	paste("../plots_ch_SDA/", data.SDA, "_", d$Ch[1], "_SDA_PLOT.png", sep='')
+      SDAplot_name <-	paste("./SDA/plots_ch_SDA/", data.SDA, "_", d$Ch[1], "_SDA_PLOT.png", sep='')
     }
 
     # Find the smr value to use for SDA calculations
@@ -1190,7 +1280,8 @@ SDA<-function(AnimalID,
       # either SMR_calc=TRUE in which case the newdata.smr will be the newly analyzed dataframe
       # or SMR_calc=FALSE in which case the newdata.smr will be the imported data frame (data.MR)
       smr.row<-newdata.smr[which(as.character(newdata.smr$Ch)==as.character(d$Ch[1])),]
-      smr.row[,c(4:ncol(smr.row))] %<>% lapply(function(x) as.numeric(as.character(x)))
+      smr.row[,c(4:ncol(smr.row))] <- lapply(smr.row[,c(4:ncol(smr.row))], as.character)
+      smr.row[,c(4:ncol(smr.row))] <- lapply(smr.row[,c(4:ncol(smr.row))], as.numeric)
 
       ID<-smr.row["ID"]
 
@@ -1207,7 +1298,7 @@ SDA<-function(AnimalID,
       if(sda_threshold_level[1]=="SMR_low20quant"){
         b<-as.numeric(round(smr.row["SMR_low20quant"],2))
       }
-      if(MLND == TRUE & sda_threshold_level[1]=="smr_mlnd"){
+      if(MLND & sda_threshold_level[1]=="smr_mlnd"){
         b<-as.numeric(round(smr.row["smr_mlnd"],2))
       }
 
@@ -1221,43 +1312,46 @@ SDA<-function(AnimalID,
       stop("provide usable SMR value to use for SDA calculations")
     }
 
-    if(i==1){message(paste("SDA data: ",Y0$n[1], " MO2 measurements each hour;  ", N_mo2, " total hours", sep=""))}
-    message(paste("SMR value for ", d$Ch[1], " is: ", b))
-    ##
+    if(i==1){
+      message(paste("SDA data: ",Y0$n[1], " MO2 measurements each hour;  ", N_mo2, " total hours", sep=""))
+    }
+    message(paste(d$Ch[1],": SMR value = ", b, sep =""))
 
-    ### Calculate the area under the curve using a point by point, direct integrals.
+    # Calculate the area under the curve using a point by point, direct integrals.
     # use the defined end SDA end value, or when it first hits the SMR defined value
 
-    spars <- seq(0.1,1, by=0.1)
-    zero.row<-d[1,]
-    d<-d[d$hour>=handling_delay,]
-    if(begin_smr_hr_zero==TRUE){
+    spars <- c(0.1,0.2,0.3)
+    zero.row<-d[1,] # the first row of the data (experimentally typical)
+    d<-d[d$hour>=handling_delay,] # take the experimental data that is passed the handling delay if any
+
+    d$hour<-d$hour+0.5 # make a half hour because the first measurement and the first hour mean are both 0, fitting smooth spline one will be dropped
+
+    if(begin_smr_hr_zero){ # starting measurement at the beginning of the file
       # zero.row<-d[1,]
       zero.row$mo2_mean<-b # replacing with the selected SMR value
       zero.row$mo2_min<-b # replacing with the selected SMR value
       zero.row$hour<-0 # replacing with the selected SMR value
 
-      # print(head(d))
-
       d<-rbind(zero.row, d)
+
       if(i==1){
         d_SMRsum_wDELAY<-d
       }else{
-        d_SMRsum_wDELAY<-rbind( d_SMRsum_wDELAY,d)
+        d_SMRsum_wDELAY<-rbind(d_SMRsum_wDELAY,d)
       }
 
     }
 
-    if(nrow(d) == 4 || nrow(d)>4){
+    if(nrow(d)>=4){
       for (n in 1:length(spars)){
         # if (b<1) {next}
         if (n == 1) {
-          png(SDAplot_name, width = 8, height = 12, units="in", res=200)
-          par(mfrow=c(5,2), mar=c(2,4,2,1)+0.1)
+					png(SDAplot_name, width = 6, height = length(spars)*4, units="in", res=200)
+					par(mfrow=c(length(spars),1), mar=c(4,4,3,1)+0.1)
         }
-        # print(c(spars[n], d, SDAdata, b, sda_threshold_level[1], end_SDA, begin_smr_hr_zero))
-        SDAdata <- SDA.spar(spars[n], d, SDAdata, b, sda_threshold_level[1], end_SDA, begin_smr_hr_zero)
-        ncol(SDAdata)
+        # spar,d, SDAdata, b, sda_threshold, end_SDA, begin_smr_hr_zero
+        SDAdata <- SDA.spar(spar = spars[n], d, SDAdata = SDAdata, b, sda_threshold = sda_threshold_level[2], end_SDA = end_SDA, begin_smr_hr_zero = begin_smr_hr_zero)
+        # ncol(SDAdata)
         if (n == length(spars)){
           # print(SDAdata)
           dev.off()
@@ -1266,7 +1360,6 @@ SDA<-function(AnimalID,
 
     }else{
       message("Not enough points to do smoothing & integration for SDA (n < 4)")
-
     }
 
     if(is.na(end_SDA_Ch[i])){
@@ -1283,11 +1376,8 @@ SDA<-function(AnimalID,
       end_SDA_absolute<-end_SDA_Ch[i]
       end_row<-which(d$hour== end_SDA_absolute)
     }
-    message(paste("SDA ends at hour: ", d$hour[end_row], sep=""))
+    message(paste("   SDA ends at ", d$hour[end_row], " h", sep=""))
 
-    #
-    # print(SDAdata)
-    # print(str(SDAdata))
     ### INTEGRATION CODE
     Full_SDA<-AUC(x=d$hour[1:end_row], y=d$mo2_min[1:end_row], method="trapezoid")
     SMRchunk<-AUC(x=d$hour[1:end_row], y=rep(b, end_row), method="trapezoid")
@@ -1338,20 +1428,20 @@ SDA<-function(AnimalID,
 
   # 	  print(SDAdata_stepIntegral)
 
-  plotDF<-SDAdata_stepIntegral
-  plotDF$mo2_min<-NA ### add mo2values
-  # print(colnames(d_SMR))
-  colnames(plotDF)[names(plotDF) == "end_SDA_estim_hr"]<-"hour"
-  plotDF$hour<-as.numeric(as.character(plotDF$hour))
-
-  plotDF$ID<-as.character(plotDF$ID)
+  # plotDF<-SDAdata_stepIntegral
+  # plotDF$mo2_min<-NA ### add mo2values
+  # # print(colnames(d_SMR))
+  # colnames(plotDF)[names(plotDF) == "end_SDA_estim_hr"]<-"hour"
+  # plotDF$hour<-as.numeric(as.character(plotDF$hour))
+  #
+  # plotDF$ID<-as.character(plotDF$ID)
   d_SMRsum$ID<-as.character(d_SMRsum$ID)
-
-  plotDF<- plotDF %>% left_join(d_SMRsum[,c("ID", "mo2_min", "hour")], by= c("ID", "hour"))
-  colnames(plotDF)  <- c("ID","SMR","spar", "SDA_integrated", "hour", "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full", "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type", "" , "mo2_min")
-  plotDF$hour<-as.numeric(as.character(plotDF$hour))
-  plotDF$mo2_min<-as.numeric(as.character(plotDF$mo2_min))
-
+#
+#   plotDF<- plotDF %>% left_join(d_SMRsum[,c("ID", "mo2_min", "hour")], by= c("ID", "hour"))
+#   colnames(plotDF) <- c("ID","SMR","spar", "SDA_integrated", "hour", "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full", "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type", "" , "mo2_min")
+#   plotDF$hour<-as.numeric(as.character(plotDF$hour))
+#   plotDF$mo2_min<-as.numeric(as.character(plotDF$mo2_min))
+# print(plotDF)
   sda_hr_plot<-ggplot(data=d_SMRsum, aes(y=mo2_mean, x=hour))+
     geom_point(size=2, pch=21, fill="grey", alpha=0.9, colour="black")+
     geom_point(data=d_SMRsum, aes(y=mo2_min, x=hour), pch=21, size=3, fill="black", alpha=0.7)+
@@ -1359,8 +1449,8 @@ SDA<-function(AnimalID,
     geom_errorbar(ymin=d_SMRsum$mo2_mean-d_SMRsum$mo2_sd, ymax = d_SMRsum$mo2_mean+d_SMRsum$mo2_sd, alpha=0.5 )+
     theme_classic()+
     geom_hline(aes(yintercept=SMR), data=d_SMRsum, lty=1)+
-    geom_hline(aes(yintercept=SMR*0.9), data=d_SMRsum, lty=2, colour="grey")+
-    geom_hline(aes(yintercept=SMR*1.1), data=d_SMRsum, lty=2, colour="grey")+
+    # geom_hline(aes(yintercept=SMR*0.9), data=d_SMRsum, lty=2, colour="grey")+
+    # geom_hline(aes(yintercept=SMR*1.1), data=d_SMRsum, lty=2, colour="grey")+
     ggtitle(paste(sda_threshold_level[1], " proportionally adjusted to the level (%): ", as.numeric(sda_threshold_level[2])*100, sep=""))+
     ylab("grey = MO2 mean +/- SEM, black = hourly MO2 min ")+
     # geom_points(aes(x=
@@ -1368,18 +1458,21 @@ SDA<-function(AnimalID,
   if(begin_smr_hr_zero==TRUE){
     sda_hr_plot<- sda_hr_plot + geom_point(data=d_SMRsum_wDELAY, aes(y=mo2_min, x=hour), pch=21, size=1, fill="red", alpha=0.7)
     sda_hr_plot<- sda_hr_plot + geom_line(data=d_SMRsum_wDELAY, aes(y=mo2_min, x=hour), colour="red", alpha=0.7)
-    sda_hr_plot<- sda_hr_plot +	geom_point(data=plotDF, aes(y=mo2_min, x=hour), colour="green", pch=8)
+    # sda_hr_plot<- sda_hr_plot +	geom_point(data=plotDF, aes(y=mo2_min, x=hour), colour="green", pch=8)
   }
 
   png(plotname.sda.data, width=6, height=10, units="in", res=200)
-  print(sda_hr_plot)
+    print(sda_hr_plot)
   dev.off()
 
   lst <- lapply(SDAdata, unlist)
   colnames(SDAdata_stepIntegral)<-colnames(SDAdata)
   SDAdata <- (data.frame(lapply(lst, `length<-`, max(lengths(lst)))))
   SDAdata<-rbind(SDAdata_stepIntegral, SDAdata)
-  write.csv(file = SDAdata_name, SDAdata, row.names=FALSE)
+
+
+
+  write.csv(file = SDAdata_name, SDAdata, row.names=FALSE) ## herehere
 
 }
 

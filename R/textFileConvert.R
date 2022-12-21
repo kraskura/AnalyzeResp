@@ -11,7 +11,17 @@
 #'
 #' @importFrom utils read.delim
 #'
-textFileConvert<-function(txt_file, nrowSkip, N_Ch=4, local_path = TRUE, exclude_first_measurement_s = 0){
+textFileConvert<-function(txt_file,
+                          nrowSkip,
+                          N_Ch = 4,
+                          local_path = TRUE,
+                          exclude_first_measurement_s = 0,
+                          convert_units = FALSE,
+                          units_from = NULL,
+                          units_to = NULL,
+                          channels = c(1,2,3,4),
+                          salinity = 0,
+                          atm_pressure = 1){
 
   if(!is.numeric(nrowSkip)){
     stop("Must provide how many rows to skip from raw datafile; e.g. 4-Ch and 2-Ch fireSting commonly need 19, 8-Ch Firesting needs 26")
@@ -42,7 +52,6 @@ textFileConvert<-function(txt_file, nrowSkip, N_Ch=4, local_path = TRUE, exclude
   	new_csv$Ch4_O2<-d[,8]
   } # end od N_Ch == 2
 
-
   if(N_Ch==8){
     new_csv<-as.data.frame(matrix(nrow=0, ncol=11))
   	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2", "Ch2_temp", "Ch3_temp", "Ch4_temp")
@@ -71,6 +80,88 @@ textFileConvert<-function(txt_file, nrowSkip, N_Ch=4, local_path = TRUE, exclude
   	new_csv$Ch4_O2<-d[,8]
   }
 
+  if(N_Ch==4){
+    temp_ch1 <- new_csv$Ch1_temp
+    temp_ch2 <- new_csv$Ch1_temp
+    temp_ch3 <- new_csv$Ch1_temp
+    temp_ch4 <- new_csv$Ch1_temp
+  }
+  if(N_Ch==2){
+    temp_ch1 <- new_csv$Ch1_temp
+    temp_ch2 <- new_csv$Ch1_temp
+  }
+  if(N_Ch==8){
+    temp_ch1 <- new_csv$Ch1_temp
+    temp_ch2 <- new_csv$Ch2_temp
+    temp_ch3 <- new_csv$Ch3_temp
+    temp_ch4 <- new_csv$Ch4_temp
+  }
+
+  if(convert_units){
+    if(is.null(units_from) | is.null(units_to)){
+      stop_function<-TRUE
+      if(stop_function){
+        stop("If converting units, must provide 'units_from' and 'units_to'")
+      }
+    }
+    message(paste("Unit conversion parameters:","\n",
+            " units_from: ", units_from, "\n",
+            " units_to: ", units_to, "\n",
+            " salinity: ", salinity, "\n",
+            " atm_pressure: ", atm_pressure, sep =""))
+
+    if(any(channels == 1)){
+      # new_csv$Ch1_O2 <- conv_o2 (o2 = new_csv$Ch1_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch1, sal = salinity, atm_pres = atm_pressure)
+
+      new_csv$Ch1_O2 <- rMR::DO.unit.convert(new_csv$Ch1_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+                    bar.press=1, temp.C = temp_ch1, bar.units.out = "atm",
+                    salinity = salinity, salinity.units = "pp.thou")
+
+    }
+
+    if(any(channels == 2)){
+      # new_csv$Ch2_O2 <- conv_o2 (o2 = new_csv$Ch2_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch2, sal = salinity, atm_pres = atm_pressure)
+      if (N_Ch!= 8){
+          new_csv$Ch2_O2 <-  rMR::DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+                      bar.press=1, temp.C = temp_ch1, bar.units.out = "atm",
+                      salinity = salinity, salinity.units = "pp.thou")
+
+      }else{
+          new_csv$Ch2_O2 <- rMR::DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+                      bar.press=1, temp.C = temp_ch2, bar.units.out = "atm",
+                      salinity = salinity, salinity.units = "pp.thou")
+      }
+
+    }
+
+    if(any(channels == 3)){
+      # new_csv$Ch3_O2 <- conv_o2 (o2 = new_csv$Ch3_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch3, sal = salinity, atm_pres = atm_pressure)
+      if (N_Ch!= 8){
+        new_csv$Ch3_O2 <- rMR::DO.unit.convert(new_csv$Ch3_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+                      bar.press=1, temp.C = temp_ch1, bar.units.out = "atm",
+                      salinity = salinity, salinity.units = "pp.thou")
+      }else{
+        new_csv$Ch3_O2 <- rMR::DO.unit.convert(new_csv$Ch3_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+                                                    bar.press=1, temp.C = temp_ch3, bar.units.out = "atm",
+                                                    salinity = salinity, salinity.units = "pp.thou")
+      }
+    }
+
+    if(any(channels == 4)){
+      # print(new_csv)
+      # new_csv$Ch4_O2 <- conv_o2 (o2 = new_csv$Ch4_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch4, sal = salinity, atm_pres = atm_pressure)
+      if (N_Ch!= 8){
+        new_csv$Ch4_O2 <- rMR::DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+                      bar.press=1, temp.C = temp_ch1, bar.units.out = "atm",
+                      salinity = salinity, salinity.units = "pp.thou")
+      }else{
+        new_csv$Ch4_O2 <- rMR::DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+                                                    bar.press=1, temp.C = temp_ch4, bar.units.out = "atm",
+                                                    salinity = salinity, salinity.units = "pp.thou")
+      }
+    }
+  }
+
 	# save in the current directory (default)
   if(local_path | !dir.exists("csv_files")){
     write.csv(file=paste(gsub('.{4}$', '', txt_file), ".csv", sep=''), new_csv, row.names=FALSE)
@@ -81,6 +172,7 @@ textFileConvert<-function(txt_file, nrowSkip, N_Ch=4, local_path = TRUE, exclude
 
 	if(dir.exists("csv_files")){
     write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), ".csv", sep=''), new_csv, row.names=FALSE)
+	 message("Return csv files saved in \"./csv_files\" local directory")
 	}
 
 }

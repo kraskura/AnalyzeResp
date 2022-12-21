@@ -24,9 +24,9 @@
 #' @param background_post The same as background_prior, only post respirometry trial
 #' @param background_slope Manually assigned background slope used to correct metabolic rate in all individuals. Provide numeric value in mgO2 L-1 h-1v
 #' @param background.V Manually assigned respirometer volumes (L). A vector with 4 numeric variables, one for each channel.
-#' @param background_linear_gr Logical argument. If TRUE, it is be assumed that bacterial growth (thus respiration rates) changed linearly across the duration of the respirometry trial. When TRUE, metabolic rate values across the given trial are corrected using the estimated background values from the linear growth curve. Both background_prior and background_post must be provided to apply this.
+#' @param background_gr Specify whether to assume that bacterial growth (thus respiration rates) changed linearly or in exponentially across the duration of the respirometry trial. Must specify either "linear" or "exp": metabolic rate values across the given trial are corrected using the estimated background values from the indicated growth curve. Both background_prior and background_post must be provided to enable this.
 #' @param match_background_Ch Logical. If TRUE, the background respiration is estimated and applied channel-specific. The background_prior and background_post are used to estimate background respiration specific to each channel (or individual), which then is used to correct each individual’s MO2 independently. By default, the mean background respiration rate from all channels is calculated and applied to correct all individual’s MO2
-#' @param mmr_background Specifies what background value should be used to correct MMR value. Options: i) "back_prior" takes background respiration rate value estimated from the background_prior file only, ii)"SAME_slope" takes background respiration rate value that is applied to the entire trial (MMR and SMR, indistinguishable), and iii) a defined respiration rate value mgO2 L-1 h-1.
+#' @param mmr_background Specifies what background value should be used to correct MMR value. Options: i) "back_prior" takes background respiration rate value estimated from the background_prior file only, ii)"trial_mean" takes background respiration rate value that is applied to the entire trial (MMR and SMR, indistinguishable), and iii) a defined respiration rate value mgO2 L-1 h-1.
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param verbose.MLND From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).
 #'
@@ -69,9 +69,9 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
                           background_post = NULL,
                           background_slope = NULL,
                           background.V = NULL,
-                          background_linear_gr = FALSE,
+                          background_gr = NULL,
                           match_background_Ch = FALSE,
-                          mmr_background = "SAME_slope",
+                          mmr_background = "trial_mean",
                           local_path = TRUE){
 
 
@@ -350,11 +350,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   # background file wrangling
   # 1. find what channels recorded background
   if (!is.null(background_post) | !is.null(background_prior) ) {
-    # 2 calculate mean for each background channel
-    if((is.null(background.V) & !is.null(background_slope) ) |(!is.null(background.V) & is.null(background_slope))) {
-      stop_function <- TRUE
-      if(stop_function) stop("If using manually input background slopes, must provide both, a unique slope and volume of the repirometer")
-    }
 
     if(!is.null(background_prior)){
 
@@ -371,9 +366,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
             stop("Cannot locate the indicated background_prior data file.")
           }
       }
-
-      # back_prior<-read.csv(background_prior)
-      back_ch<-length(unique(back_prior$Ch))
+      back_ch_prior<-length(unique(back_prior$Ch))
     }
 
 
@@ -392,13 +385,18 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
         }
       }
 
-      back_ch<-length(unique(back_post$Ch))
+      back_ch_post<-length(unique(back_post$Ch))
     }
 
-     # Jan 4 2020: make linear regression over time and correct background based on a predicted value
-    # create
-    if (background_linear_gr==TRUE){
+    if(!back_ch_post == back_ch_prior){
+      message("Background: unequal number of channels back_prior and back_post")
+    }
 
+    # Jan 4 2020: make linear regression over time and correct background based on a predicted value
+    # create
+    if (!is.null(background_gr)){
+
+      # if files not available toss out error -- stop
       if(is.null(background_post) | is.null(background_post)){
        stop("Missing a file to model the growth of bacteria, must provide both: \"background_prior\" \"and background_post\" files")
       }
@@ -418,23 +416,22 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	  back_all<- rbind(back_prior, back_post)
   	  back_all$DateTime_start<- as.POSIXct(back_all$DateTime_start)
 
-  	  back_regression_plot<-ggplot(data=back_all, aes(x=DateTime_start, y=m, colour=Ch, group=Ch))+
-        geom_point()+
-        geom_smooth(method="lm", se=FALSE)+
-        theme_bw()+
-        ylab("Regression slope value- mgO2/min")+
-  	    theme(axis.text.x = element_text(angle = 45))+
-  	    facet_grid(Ch~.)
+  # 	  back_regression_plot<-ggplot(data=back_all, aes(x=DateTime_start, y=m, colour=Ch, group=Ch))+
+  #       geom_point()+
+  #       geom_smooth(method="lm", se=FALSE)+
+  #       theme_bw()+
+  #       ylab("Regression slope value- mgO2/min")+
+  # 	    theme(axis.text.x = element_text(angle = 45))+
+  # 	    facet_grid(Ch~.)
 
-  	  if (local_path | !dir.exists("./MMR_SMR_AS_EPOC/plots_background")){
+
+  	 if(local_path | !dir.exists("./MMR_SMR_AS_EPOC/plots_background")){
   	    plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
   	  }else{
   	   	plotname.backgr<-paste("./MMR_SMR_AS_EPOC/plots_background/", filename.SMR,"_PLOT_BACKGROUND.png", sep="")
-  	  }
+  	 }
 
-  	 if (match_background_Ch==TRUE){
-
-  	    message("Background: assumed a linear change of bacterial respiration rates over the time of trial. Regressions are specific to the channel (respirometer)")
+  	 if(match_background_Ch==TRUE){
 
         back_ch_regressions<-list()
 
@@ -443,7 +440,20 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
           Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3)
 
           back_regression_name<- paste("back_regression", Ch, sep="") # channel names with a channel # at the end
-          regression<- lm(m~DateTime_start, data = back_ch_d)
+          if(background_gr == "linear"){
+            # print(back_ch_d[1:10,])
+            regression<- lm(m~DateTime_start, data = back_ch_d)
+            if(i==1){
+              message("Background: linear change of bacterial respiration. Regressions are specific to the channel (respirometer)")
+            }
+          }
+          if(background_gr == "exp"){
+            regression<- lm(log(m)~DateTime_start, data = back_ch_d)
+            if(i==1){
+              message("Background: exponential change of bacterial respiration. Regressions are specific to the channel (respirometer)")
+            }
+          }
+
 
           assign(back_regression_name, regression)
           back_ch_regressions[[i]] <- assign(back_regression_name, regression)
@@ -454,14 +464,18 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
       }else{# end for ch specific regressions
         # get one background slope based on all datapoints collected
-        back_regression<- lm(m~DateTime_start, data = back_all)
-  	    message("Background: assumed a linear change of bacterial respiration rates over the time of trial. One regression for all channels")
+        if(background_gr == "linear"){
+          back_regression<- lm(m~DateTime_start, data = back_all)
+          message("Background: linear change of bacterial respiration rates. One regression for all channels")
+        }
+        if(background_gr == "exp"){
+          back_regression<- lm(log(m)~DateTime_start, data = back_all)
+          message("Background: exponential change of bacterial respiration rates. One regression for all channels")
+        }
       }
+    } # end for getting regressions for the background
 
-
-    } # end for getting linear regressions for the background
-
-    if (background_linear_gr==FALSE){
+    if (is.null(background_gr)){
       if (!is.null(background_prior)){
         back_ch_prior<-list()
         back_ch_prior_names<-list()
@@ -822,184 +836,200 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	# MMR end values MR in mgO2/min/kg
 
 
-    # mmr_background = "SAME_slope" (default is to take the same value as the entire smr), must specify mmr_background = "back_prior" to have a prior slope only, or add a specific value to be substracted for mmr background
+  	d_MMR$DateTime_start<- strptime(d_MMR$DateTime_start, format="%Y-%m-%d %H:%M:%S")
 
-  	 d_MMR$DateTime_start<- strptime(d_MMR$DateTime_start, format="%Y-%m-%d %H:%M:%S")
+    if(mmr_background != "trial_mean" & !is.null(background_gr)){
 
-     if(mmr_background != "SAME_slope" & background_linear_gr==FALSE){
+      if(mmr_background == "back_prior"){
 
-        # message("MMR slope corrected using the same background slope value and methods as for all SMR slopes")
+        if(match_background_Ch != TRUE){ # if NOT channel specific
 
-        if(mmr_background == "back_prior"){
+            if(!exists("prior_mean")) stop("Incomplete request: no prior background respiration data to correct MMR measurement, must provide \"background_prior\"file")
 
-          if(match_background_Ch != TRUE){ # if NOT channel specific
-
-            if(!exists("prior_mean")) stop("Incomplete request: no prior-trail background respiration data to correct MMR measurement, must provide \"background_prior\"file")
-
-              for (i in 1:nrow(d_MMR)){
-          		  d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (prior_mean * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-              }
-
+            for (i in 1:nrow(d_MMR)){
+        		  d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (prior_mean * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+            }
             message("MMR corrected for background: using a common background from a \"background_prior\" file only (same slope for all channels) | bacterial respiration slope: ", prior_mean)
 
-            }else{ # this will be mmr slope different than smr, and is channel specific, i.e. match__background==TRUE
-              # back_m_prior1
-              # back_m_prior2
-              # back_m_prior3
-              # back_m_prior4
-             message("MMR corrected for background: using Ch specific average background values from \"background_prior\"")
-               for (i in 1:nrow(d_MMR)){
+          }else{ # this will be mmr slope different than smr, and is channel specific, i.e. match__background==TRUE
 
-        		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "1"){
-        		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m_prior1 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-        		    # message("Channel: 1,  bacterial respiration slope: ", back_m1)
-        		    }
+          message("MMR corrected for background: using Ch specific average background values from \"background_prior\"")
+          for (i in 1:nrow(d_MMR)){
+      		  if(substr(d_MMR$Ch[i], start=3, stop=3) == "1"){
+      		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m_prior1 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		    # message("Channel: 1,  bacterial respiration slope: ", back_m1)
+      		  }
+      		  if(substr(d_MMR$Ch[i], start=3, stop=3) == "2"){
+      		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m_prior2 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		      # message("Channel: 2,  bacterial respiration slope: ", back_m2)
+      		  }
+      		  if(substr(d_MMR$Ch[i], start=3, stop=3) == "3"){
+      		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m_prior3 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		      # message("Channel: 3,  bacterial respiration slope: ", back_m3)
+      		  }
+      		  if(substr(d_MMR$Ch[i], start=3, stop=3) == "4"){
+      		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m_prior4 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		      # message("Channel: 4,  bacterial respiration slope: ", back_m4)
+      		  }
+    		  }
 
-        		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "2"){
-        		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m_prior2 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-        		      # message("Channel: 2,  bacterial respiration slope: ", back_m2)
-        		    }
-
-        		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "3"){
-        		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m_prior3 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-        		      # message("Channel: 3,  bacterial respiration slope: ", back_m3)
-        		    }
-
-        		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "4"){
-        		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m_prior4 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-        		      # message("Channel: 4,  bacterial respiration slope: ", back_m4)
-        		    }
-
-        		  }
-
-          }
-
-        }else{ # else from mmr = back prior
-
-          if(!is.numeric(mmr_background)) stop("Incomplete request: must provide \"mmr_background\" slope value to manually MMR for background OR use mmr_background=\"SAME_slope\"")
-
-           for (i in 1:nrow(d_MMR)){
-        		  d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (mmr_background * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-           }
-          message("MMR corrected for background: using specified slope value, same slope for all channels | bacterial respiration slope: ", mmr_background)
         }
 
+      }else{ # else from mmr = back prior
 
-		  }else{ # ALL OF THE CORRECTION BELOW IS WITH USING SAME SLOPE AS SMR
+        if(!is.numeric(mmr_background)) stop("Incomplete request: must provide \"mmr_background\" slope value to manually MMR for background OR use mmr_background=\"trial_mean\"")
 
-		    if(background_linear_gr==TRUE){
-		        if(match_background_Ch==TRUE){
-		          message("MMR corrected for background: using Ch specific background based on estimated linear regression of bacterial growth")
-		            for (i in 1:nrow(d_MMR)){
+         for (i in 1:nrow(d_MMR)){
+      		  d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (mmr_background * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+         }
+        message("MMR corrected for background: using specified slope value, same slope for all channels | bacterial respiration slope: ", mmr_background)
+      }
 
-		              background_slopes<-data.frame(matrix(ncol=1, nrow=nrow(d_MMR)))
-		              colnames(background_slopes)<-c("back_m")
 
-          		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "1"){
-          		      background_slopes$back_m[i]<-predict(back_regression1, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
+	  }else{ # ALL OF THE CORRECTION BELOW IS WITH USING SAME SLOPE AS SMR
+
+	    if(!is.null(background_gr)){
+	        if(match_background_Ch==TRUE){
+	          message("MMR corrected for background: using Ch specific background based on estimated regression of bacterial growth")
+	            for (i in 1:nrow(d_MMR)){
+
+	              background_slopes<-data.frame(matrix(ncol=1, nrow=nrow(d_MMR)))
+	              colnames(background_slopes)<-c("back_m")
+
+        		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "1"){
+          	      if(background_gr == "linear"){
+        		        background_slopes$back_m[i]<-predict(back_regression1, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
                     back_m1<-predict(back_regression1, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
-            		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m1 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-          		      # message("Channel: 1,  bacterial respiration slope: ", back_m1)
-          		    }
-
-          		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "2"){
-          		      background_slopes$back_m[i]<-predict(back_regression2, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
-          		      back_m2<-predict(back_regression2, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
-          		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m2 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-          		      # message("Channel: 2,  bacterial respiration slope: ", back_m2)
-          		    }
-
-          		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "3"){
-          		      background_slopes$back_m[i]<-predict(back_regression3, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
-          		      back_m3<-predict(back_regression3, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
-          		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m3 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-          		      # message("Channel: 3,  bacterial respiration slope: ", back_m3)
-          		    }
-
-          		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "4"){
-                    background_slopes$back_m[i]<-predict(back_regression4, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
-          		      back_m4<-predict(back_regression4, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
-          		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m4 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-          		      # message("Channel: 4,  bacterial respiration slope: ", back_m4)
-          		    }
-          		  }# end of the looop
-		        }
-            if(match_background_Ch==FALSE){
-                background_slopes<-data.frame(DateTime_start = d_MMR$DateTime_start)
-                background_slopes$back_m<-predict(back_regression, background_slopes)
-
-            	 for (i in 1:nrow(d_MMR)){
-            	  d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (background_slopes$back_m[i] * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-            	 }
-		        }
-
-
-		    }else{
-            	# 1.1 if background files (either prior or post, or both) are provided and its one overall mean value (back_m)
-        		if ((( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==FALSE) & is.null(background_slope) ){
-
-
-        		  for (i in 1:nrow(d_MMR)){
-        		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-        		  }
-        		  # message("Correcting for average background from file - MMR corrected (same slope value as for SMR) ")
-        		  message("MMR corrected for background: using a mean (prior and/or post) background measurements | mean bacterial respiration slope: ", back_m)
-
-        		}
-
-        		## if background slope and volume are specifically provided, then use those! this alos overrides the background prior and post argument.
-        		# all channels with the same slope
-        		if (!is.null(background_slope) ){
-
-        		  for (i in 1:nrow(d_MMR)){
-        		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (background_slope * background.V)) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-        		  }
-        		  # message("Correcting for common background slope - only MMR corrected (same slope value as for SMR) ")
-        		  message("MMR corrected for background: using a common manually provided background slope for all channels | bacterial respiration slope: ", background_slope)
-        		}
-
-        		# 1.2 if background files are provided and its channel specific - MEAN SLOPE OF PRIOR AND POST
-        		if (( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==TRUE){
-        		  message("MMR: correcting for Ch specific average background (using mean slope back prior and/or post), same slope value as for SMR")
-               for (i in 1:nrow(d_MMR)){
-
-        		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "1"){
-        		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m1 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-        		    # message("Channel: 1,  bacterial respiration slope: ", back_m1)
-
+          	      }
+          	      if(background_gr == "exp"){
+        		        background_slopes$back_m[i]<-exp(predict(back_regression1, data.frame(DateTime_start = d_MMR$DateTime_start[i])))
+                    back_m1<-exp(predict(back_regression1, data.frame(DateTime_start = d_MMR$DateTime_start[i])))
+          	      }
+          		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m1 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         		    }
 
-        		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "2"){
+        		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "2"){
+          	      if(background_gr == "linear"){
+        		        background_slopes$back_m[i]<-predict(back_regression2, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
+                    back_m2<-predict(back_regression2, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
+          	      }
+          	      if(background_gr == "exp"){
+        		        background_slopes$back_m[i]<-exp(predict(back_regression2, data.frame(DateTime_start = d_MMR$DateTime_start[i])))
+                    back_m2<-exp(predict(back_regression2, data.frame(DateTime_start = d_MMR$DateTime_start[i])))
+          	      }
         		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m2 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         		      # message("Channel: 2,  bacterial respiration slope: ", back_m2)
-
         		    }
 
-        		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "3"){
+        		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "3"){
+          	      if(background_gr == "linear"){
+        		        background_slopes$back_m[i]<-predict(back_regression3, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
+                    back_m3<-predict(back_regression3, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
+          	      }
+          	      if(background_gr == "exp"){
+        		        background_slopes$back_m[i]<-exp(predict(back_regression3, data.frame(DateTime_start = d_MMR$DateTime_start[i])))
+                    back_m3<-exp(predict(back_regression3, data.frame(DateTime_start = d_MMR$DateTime_start[i])))
+          	      }
         		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m3 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         		      # message("Channel: 3,  bacterial respiration slope: ", back_m3)
-
         		    }
 
-        		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "4"){
+        		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "4"){
+          	      if(background_gr == "linear"){
+        		        background_slopes$back_m[i]<-predict(back_regression4, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
+                    back_m4<-predict(back_regression4, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
+          	      }
+          	      if(background_gr == "exp"){
+        		        background_slopes$back_m[i]<-exp(predict(back_regression4, data.frame(DateTime_start = d_MMR$DateTime_start[i])))
+                    back_m4<-exp(predict(back_regression4, data.frame(DateTime_start = d_MMR$DateTime_start[i])))
+          	      }
         		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m4 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         		      # message("Channel: 4,  bacterial respiration slope: ", back_m4)
-
         		    }
-        		  }
+        		  }# end of the looop
+	        }
+          if(match_background_Ch==FALSE){
+              if(background_gr == "linear"){
+    		        background_slopes<-data.frame(DateTime_start = d_MMR$DateTime_start)
+                background_slopes$back_m<-predict(back_regression, background_slopes)
+      	      }
+      	      if(background_gr == "exp"){
+    		        background_slopes<-data.frame(DateTime_start = d_MMR$DateTime_start)
+                background_slopes$back_m<-exp(predict(back_regression, background_slopes))
+      	      }
+
+          	 for (i in 1:nrow(d_MMR)){
+          	  d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (background_slopes$back_m[i] * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+          	 }
+	        }
+
+
+	    }else{
+          # 1.1 if background files (either prior or post, or both) are provided and its one overall mean value (back_m)
+      		if ((( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==FALSE) & is.null(background_slope) ){
+
+
+      		  for (i in 1:nrow(d_MMR)){
+      		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		  }
+      		  # message("Correcting for average background from file - MMR corrected (same slope value as for SMR) ")
+      		  message("MMR corrected for background: using a mean (prior and/or post) background measurements | mean bacterial respiration slope: ", back_m)
+
+      		}
+
+      		## if background slope and volume are specifically provided, then use those! this alos overrides the background prior and post argument.
+      		# all channels with the same slope
+      		if (!is.null(background_slope) ){
+
+      		  for (i in 1:nrow(d_MMR)){
+      		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (background_slope * background.V)) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		  }
+      		  # message("Correcting for common background slope - only MMR corrected (same slope value as for SMR) ")
+      		  message("MMR corrected for background: using a common manually provided background slope for all channels | bacterial respiration slope: ", background_slope)
+      		}
+
+      		# 1.2 if background files are provided and its channel specific - MEAN SLOPE OF PRIOR AND POST
+      		if (( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==TRUE){
+      		  message("MMR: correcting for Ch specific average background (using mean slope back prior and/or post), same slope value as for SMR")
+             for (i in 1:nrow(d_MMR)){
+
+      		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "1"){
+      		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m1 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		    # message("Channel: 1,  bacterial respiration slope: ", back_m1)
+
+      		    }
+
+      		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "2"){
+      		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m2 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		      # message("Channel: 2,  bacterial respiration slope: ", back_m2)
+
+      		    }
+
+      		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "3"){
+      		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m3 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		      # message("Channel: 3,  bacterial respiration slope: ", back_m3)
+
+      		    }
+
+      		    if(substr(d_MMR$Ch[i], start=3, stop=3) == "4"){
+      		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m4 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      		      # message("Channel: 4,  bacterial respiration slope: ", back_m4)
+
+      		    }
+      		  }
+      		}
+
+      		# 2. if background files are not provided
+      		if ((is.null(background_post) & is.null(background_prior)) & is.null(background_slope)){
+      		  message("MMR: no correction for background respiration")
+
+        		for (i in 1:nrow(d_MMR)){
+      		  	d_MMR$mo2[i]<-d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])/(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1
         		}
+      		}
+	    }
 
-
-        		# 2. if background files are not provided
-        		if ((is.null(background_post) & is.null(background_prior)) & is.null(background_slope)){
-        		  message("MMR: no correction for background respiration")
-
-          		for (i in 1:nrow(d_MMR)){
-        		  	d_MMR$mo2[i]<-d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])/(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1
-          		}
-        		}
-		    }
-		  }
+	  }
 
     # END -- >>> background corrections MMR
   	# **********************************************
@@ -1146,25 +1176,20 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		# Jan 5 2020 change - account for background using linear regression
     # making predictions
 
-# 		d_SMR$DateTime_start<-as.character(gsub("(", "", d_SMR$DateTime_start, fixed=TRUE))
-#   	d_SMR$DateTime_start<-as.character(gsub(")", "", d_SMR$DateTime_start, fixed=TRUE))
+	  d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format[1], tz = date_format[2])
 
-	   d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format[1], tz = date_format[2])
-
-#   	if (date_format== "d/m/y"){
-# 	     d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format="%d/%m/%y %H:%M:%OS")
-#   	}
-#   	if (date_format== "y-m-d"){
-#       # DateTime<- chron(dates=back_$date,times=back_$time,format=c('y-m-d','h:m:s'))
-# 	     d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format="%y-%m-%d %H:%M:%OS")
-#   	}
-
-		if(background_linear_gr==TRUE & match_background_Ch==FALSE){
-        background_slopes<-data.frame(DateTime_start = d_SMR$DateTime_start)
+		if(!is.null(background_gr) & match_background_Ch==FALSE){
+      background_slopes<-data.frame(DateTime_start = d_SMR$DateTime_start)
+      if(background_gr == "linear"){
         background_slopes$back_m<-predict(back_regression, background_slopes)
-  	   for (i in 1:nrow(d_SMR)){
-  	    d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (background_slopes$back_m[i] * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-  	   }
+      }
+      if(background_gr == "exp"){
+        background_slopes$back_m<-exp(predict(back_regression, background_slopes))
+      }
+
+	    for (i in 1:nrow(d_SMR)){
+	    d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (background_slopes$back_m[i] * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+	   }
 
       background_slopes[,3:4]<-d_SMR[,c(5,9)]
 
@@ -1178,7 +1203,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       background_slope_plot<-ggplot(data=back_all, aes(x=DateTime_start, y=m, colour=Ch, group=Ch))+
         geom_point()+
         geom_point(data= background_slopes, mapping = aes(x = DateTime_start, back_m), color = "grey30", size=1, pch=21)+
-        geom_line(data= background_slopes, mapping = aes(x = DateTime_start, back_m), color = "grey30", size=1)+
+        geom_line(data= background_slopes, mapping = aes(x = DateTime_start, back_m), color = "grey30", linewidth=1)+
         geom_text(data = gannotations, aes(x=xpos,y=ypos,hjust=hjustvar,
                                            vjust=vjustvar,label=annotateText), color="black")+
         # geom_point(aes(x=DateTime_start, back_m), colour="black", fill="grey", alpha=0.5, pch=19, size=1)+
@@ -1198,42 +1223,61 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 		}
 
-		if(background_linear_gr==TRUE & match_background_Ch==TRUE){
+		if(!is.null(background_gr) & match_background_Ch==TRUE){
 
-		  message("SMR/RMR corrected for background: using Ch specific background based on estimated linear regression of bacterial growth")
+		  message("SMR/RMR corrected for background: using Ch specific background based on estimated regression of bacterial growth")
 		  background_slopes<-data.frame(DateTime_start = d_SMR$DateTime_start)
 
-       for (i in 1:nrow(d_SMR)){
-
-		    if(substr(as.character(d_SMR$Ch[i]), start=3, stop=3) == "1"){
-		      background_slopes$back_m[i]<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-          back_m1<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-
+      for (i in 1:nrow(d_SMR)){
+  	    if(substr(as.character(d_SMR$Ch[i]), start=3, stop=3) == "1"){
+  	      if(background_gr == "linear"){
+    	      background_slopes$back_m[i]<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+            back_m1<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	      }
+  	      if(background_gr == "exp"){
+    	      background_slopes$back_m[i]<-exp(predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+            back_m1<-exp(predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+  	      }
   		    d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m1 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-		    # message("Channel: 1,  bacterial respiration slope: ", back_m1)
-		    }
-
-		    if(substr(as.character(d_SMR$Ch[i]), start=3, stop=3) == "2"){
-		      background_slopes$back_m[i]<-predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-		      back_m2<-predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-		      d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m2 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-		      # message("Channel: 2,  bacterial respiration slope: ", back_m2)
-		    }
-
-		    if(substr(as.character(d_SMR$Ch[i]), start=3, stop=3) == "3"){
-		      background_slopes$back_m[i]<-predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-		      back_m3<-predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-		      d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m3 * d_SMR$resp.V[i])) /(d_SMR$bw[i]^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-		      # message("Channel: 3,  bacterial respiration slope: ", back_m3)
-		    }
-
-		    if(substr(as.character(d_SMR$Ch[i]), start=3, stop=3) == "4"){
-          background_slopes$back_m[i]<-predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-		      back_m4<-predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
-		      d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m4 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-		      # message("Channel: 4,  bacterial respiration slope: ", back_m4)
-		    }
-		  }# end of the loop
+  	    # message("Channel: 1,  bacterial respiration slope: ", back_m1)
+  	   }
+  	    if(substr(as.character(d_SMR$Ch[i]), start=3, stop=3) == "2"){
+  	     if(background_gr == "linear"){
+    	      background_slopes$back_m[i]<-predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+            back_m2<-predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	      }
+  	      if(background_gr == "exp"){
+    	      background_slopes$back_m[i]<-exp(predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+            back_m2<-exp(predict(back_regression2, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+  	      }
+  	      d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m2 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+  	      # message("Channel: 2,  bacterial respiration slope: ", back_m2)
+  	   }
+  	    if(substr(as.character(d_SMR$Ch[i]), start=3, stop=3) == "3"){
+  	     if(background_gr == "linear"){
+    	      background_slopes$back_m[i]<-predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+            back_m3<-predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	      }
+  	      if(background_gr == "exp"){
+    	      background_slopes$back_m[i]<-exp(predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+            back_m3<-exp(predict(back_regression3, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+  	      }
+  	      d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m3 * d_SMR$resp.V[i])) /(d_SMR$bw[i]^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+  	      # message("Channel: 3,  bacterial respiration slope: ", back_m3)
+  	   }
+  	    if(substr(as.character(d_SMR$Ch[i]), start=3, stop=3) == "4"){
+  	     if(background_gr == "linear"){
+    	      background_slopes$back_m[i]<-predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+            back_m4<-predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+  	      }
+  	      if(background_gr == "exp"){
+    	      background_slopes$back_m[i]<-exp(predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+            back_m4<-exp(predict(back_regression4, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
+  	      }
+  	      d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m4 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+  	      # message("Channel: 4,  bacterial respiration slope: ", back_m4)
+  	   }
+	    }# end of the loop
 
 		  background_slopes[,3:4]<-d_SMR[,c(5,9)]
 
@@ -1247,7 +1291,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		  background_slope_plot<-ggplot(data=back_all, aes(x=DateTime_start, y=m, colour=Ch, group=Ch))+
   		    geom_point()+
   		    geom_point(data= background_slopes, mapping = aes(x = DateTime_start, back_m), color = "grey30", size=1, pch=21)+
-  		    geom_line(data= background_slopes, mapping = aes(x = DateTime_start, back_m), color = "grey30", size=1)+
+  		    geom_line(data= background_slopes, mapping = aes(x = DateTime_start, back_m), color = "grey30", linewidth=1)+
   		    geom_text(data = gannotations, aes(x=xpos,y=ypos,hjust=hjustvar,
   		                                       vjust=vjustvar,label=annotateText), color="black")+
   		    # geom_point(aes(x=DateTime_start, back_m), colour="black", fill="grey", alpha=0.5, pch=19, size=1)+
@@ -1266,7 +1310,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		}
 
 		# 1.1 if background files (either prior or post, or both) are provided and its one overall mean value (back_m)
-		if ((( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==FALSE) & is.null(background_slope) & background_linear_gr==FALSE){
+		if ((( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==FALSE) & is.null(background_slope) & is.null(background_gr)){
 		  message("SMR/RMR corrected for background: used a mean (prior and/or post) background measurements | mean bacterial respiration slope: ", back_m, " ~" , round((back_m*100)/(mean(d_SMR[d_SMR$m <= quantile(d_SMR$m, 0.5, na.rm=TRUE), "m"], na.rm=TRUE)), 2), " %")
 
 		  for (i in 1:nrow(d_SMR)){
@@ -1276,7 +1320,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		  d_SMR$background_slope <- back_m
 		}
 
-		## if background slope and volume are specifically provided, then use those! this alos overrides the background prior and post argument.
+		## if background slope and volume are specifically provided, then use those! this also overrides the background prior and post argument.
 		# all channels with the same slope
 		if (!is.null(background_slope)){
 		  message("SMR/RMR corrected for background: used a common manually provided background slope for all channels | bacterial respiration slope: ", background_slope, " ~" , round((background_slope*100)/(mean(d_SMR[d_SMR$m <= quantile(d_SMR$m, 0.5, na.rm=TRUE), "m"], na.rm=TRUE)), 2), " %")
@@ -1286,8 +1330,9 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		  d_SMR$background_slope<- paste(round(background_slope,2), "_BackVol=", background.V, sep="")
 		}
 
-		# 1.2 if background files are provided and its channel specific
-		if ((!is.null(background_post) | !is.null(background_prior)) & match_background_Ch==TRUE & background_linear_gr==FALSE){
+		# 1.2 if background files are provided and its channel specific, but not both (back prior and back pre-trial)
+		if ((!is.null(background_post) | !is.null(background_prior)) &
+		    match_background_Ch==TRUE & is.null(background_gr)){
 		  message("SMR/RMR: corrected for background: using Ch specific average background")
 
        for (i in 1:nrow(d_SMR)){
@@ -1320,7 +1365,8 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		}
 
 		# 2. if background files are not provided
-		if ((is.null(background_post) & is.null(background_prior)) & is.null(background_slope)){
+		if ((is.null(background_post) & is.null(background_prior)) &
+		    is.null(background_slope)){
 		  message("SMR/RMR: NO correction for background respiration")
 
   		for (i in 1:nrow(d_SMR)){
@@ -1413,7 +1459,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 			geom_point(size=1)+
 			geom_point(data=a00, aes(x=min_start, y=mo2), color="red", pch=19, size=3)+
 			geom_point(data=min10_MO2, aes(x=min_start, y=mo2), colour="green4",size=3, alpha=0.7)+
-			geom_line(size=0.5, alpha=0.)+
+			geom_line(linewidth=0.5, alpha=0.)+
 		  theme_light()+
 		  ggtitle("Lowest 10 values, excluding the 5 lowest values")+
 			theme(legend.position="top")+
@@ -1442,7 +1488,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 		# UPDATE
     colnames(a2)<-c("Ch","quantiles", "mo2_perc")
-    a2$mo2_perc<-as.numeric(as.character( a2$mo2_perc))
+    a2$mo2_perc<-as.numeric(as.character(a2$mo2_perc))
 
 		quantile_smr<-spread(a2, key=quantiles, value=mo2_perc) # fix
 		a2$quantiles<-as.factor(a2$quantiles)
@@ -1996,7 +2042,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
    message("No RMR/SMR: Aerobic scopes and recovery performances are not estimated.")
 
-	 if (local_path | !dir.exists("MMR_SMR_AS_EPOC")){
+	 if(local_path | !dir.exists("MMR_SMR_AS_EPOC")){
 	    filename.smr<-paste(gsub('.{4}$', '', data.SMR), "SMR_analyzed.csv", sep='')
 		  filename.MR<-paste(gsub('.{4}$', '', data.SMR), "MR_analyzed.csv", sep='')
    }else{
@@ -2090,9 +2136,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 			newdata.smr<-rbind(newdata.smr, values)
 		}
-
-
-
 
 		write.csv(file=filename.mmr, d_MMR, row.names=FALSE)
 

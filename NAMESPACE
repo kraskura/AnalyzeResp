@@ -2,7 +2,8 @@
 
 export(MMR)
 export(MMR_SMR_AS_EPOC)
-export(RMRrepeat)
+export(SDA)
+export(SMR)
 export(organizeAnalysisLocally)
 export(slidingSlope)
 export(textFileConvert)

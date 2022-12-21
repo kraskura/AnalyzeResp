@@ -28,17 +28,19 @@
 #' @importFrom dplyr summarize
 #'
 #'
-RMRrepeat<-function(data,
-                    cycle_start,
-                    cycle_end,
-                    chop_start,
-                    chop_end,
-                    N_Ch = 4,
-                    date_format = c("%m/%d/%Y %H:%M:%S", "GMT"),
-                    inventory_data = NULL,
-                    flush_plot = NULL, # to be deprecated
-                    local_path = TRUE,
-                    plot_temp = FALSE){
+SMR<-function(data,
+              cycle_start,
+              cycle_end,
+              chop_start,
+              chop_end,
+              N_Ch = 4,
+              date_format = c("%m/%d/%Y %H:%M:%S", "GMT"),
+              inventory_data = NULL,
+              flush_plot = NULL, # to be deprecated
+              local_path = TRUE,
+              plot_temp = FALSE,
+              background_data = FALSE,
+              sda_data = FALSE){
 
   if(is.character(flush_plot)){
     stop_function<-TRUE
@@ -771,7 +773,7 @@ RMRrepeat<-function(data,
 	# data1<-read.csv(data)
 
 	# current directory if no specific folders are used
-	if(local_path | !dir.exists("AUTO")){
+	if(local_path){
 	  plotname1<-paste(gsub('.{4}$', '', data), "_all_ChO2.png", sep='')
 
 	  plotname2<-paste( gsub('.{4}$', '', data), "_full.png", sep='')
@@ -785,33 +787,57 @@ RMRrepeat<-function(data,
   	filename<-paste(gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save file in the current SMR wd
 	  filename2<-paste(gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and fiull EPOC analysis
 
-	}else{
+	}
 
-	  plotname1<-paste("./AUTO/plots_summary_respo/", gsub('.{4}$', '', data), "_all_ChO2.png", sep='')
-	  plotname2<-paste("./AUTO/plots_channel/", gsub('.{4}$', '', data), "_full.png", sep='')
+	if(!local_path | background_data | sda_data){
 
-	  plotname2.1<-paste("./AUTO/plots_channel/", gsub('.{4}$', '', data), "_Ch1.png", sep='')
-  	plotname2.2<-paste("./AUTO/plots_channel/", gsub('.{4}$', '', data), "_Ch2.png", sep='')
-  	plotname2.3<-paste("./AUTO/plots_channel/", gsub('.{4}$', '', data), "_Ch3.png", sep='')
-  	plotname2.4<-paste("./AUTO/plots_channel/", gsub('.{4}$', '', data), "_Ch4.png", sep='')
+	  if(background_data){
+      plotname1<-paste("./BACK_RESP/plots_summary_respo/", gsub('.{4}$', '', data), "_all_ChO2.png", sep='')
+  	  plotname2<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_full.png", sep='')
 
-  	plotname_full<-paste("./AUTO/plots_all_together/",gsub('.{4}$', '', data), "ALL_TOGETHER.png", sep='')
+  	  plotname2.1<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_Ch1.png", sep='')
+    	plotname2.2<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_Ch2.png", sep='')
+    	plotname2.3<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_Ch3.png", sep='')
+    	plotname2.4<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_Ch4.png", sep='')
 
-  	filename<-paste("./AUTO/csv_analyzed/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save file in the current SMR wd
+    	plotname_full<-paste("./BACK_RESP/plots_all_together/",gsub('.{4}$', '', data), "ALL_TOGETHER.png", sep='')
+    	filename<-paste("./BACK_RESP/csv_analyzed/", gsub('.{4}$', '', data), "_analyzed.csv", sep='')
+        if(!sda_data){
+      	  filename2<-paste("./MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis
+        }else{
+      	  filename2<-paste("./SDA/csv_input_files/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis
+        }
 
-  	filename2<-paste("./MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis
+	  }else{
+
+      plotname1<-paste("./SMR/plots_summary_respo/", gsub('.{4}$', '', data), "_all_ChO2.png", sep='')
+  	  plotname2<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_full.png", sep='')
+
+  	  plotname2.1<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_Ch1.png", sep='')
+    	plotname2.2<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_Ch2.png", sep='')
+    	plotname2.3<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_Ch3.png", sep='')
+    	plotname2.4<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_Ch4.png", sep='')
+
+    	plotname_full<-paste("./SMR/plots_all_together/",gsub('.{4}$', '', data), "ALL_TOGETHER.png", sep='')
+    	filename<-paste("./SMR/csv_analyzed/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save file in the current SMR wd
+        if(!sda_data){
+      	  filename2<-paste("./MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis      }
+          }else{
+      	  filename2<-paste("./SDA/csv_input_files/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis      }
+        }
+	  }
 
 	}
 
 	if(plot_temp){
-	  if(local_path | !dir.exists("AUTO")){
+	  if(local_path | !dir.exists("SMR")){
       if(!dir.exists("plots_channel_temperature")){
         dir.create(file.path("./plots_channel_temperature"), recursive = TRUE)
       }
 	  }else{
-      dir.create(file.path("./AUTO/","plots_channel_temperature"), recursive = TRUE)
+      dir.create(file.path("./SMR/","plots_channel_temperature"), recursive = TRUE)
 	  }
-    message("Creating new directory: find the return files in")
+    message("Creating new directory: find the return files in subfolder: \"/plots_channel_temperature")
 	}
 
 
@@ -819,9 +845,9 @@ RMRrepeat<-function(data,
 		data2<-as.data.frame(matrix(nrow=0, ncol=0))
 	}else{
 
-	   if(file.exists(inventory_data) | file.exists(paste("./AUTO/csv_files/", inventory_data, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
-  	  if(file.exists(paste("./AUTO/csv_files/", inventory_data, sep=""))){
-        data2<-read.csv(paste("./AUTO/csv_files/", inventory_data, sep=""))
+	   if(file.exists(inventory_data) | file.exists(paste("./SMR/csv_files/", inventory_data, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+  	  if(file.exists(paste("./SMR/csv_files/", inventory_data, sep=""))){
+        data2<-read.csv(paste("./SMR/csv_files/", inventory_data, sep=""))
       }
       if(file.exists(inventory_data)){
         data2<-read.csv(inventory_data)
