@@ -52,7 +52,7 @@ SDA<-function(AnimalID,
               match_background_Ch = FALSE,
               background_gr = NULL,
               local_path = TRUE,
-              handling_delay = 0,
+              handling_delay = c(0,0,0,0),
               begin_smr_hr_zero=FALSE){
 
   if(!length(as.vector(date_format))==2){
@@ -1322,7 +1322,8 @@ SDA<-function(AnimalID,
 
     spars <- c(0.1,0.2,0.3)
     zero.row<-d[1,] # the first row of the data (experimentally typical)
-    d<-d[d$hour>=handling_delay,] # take the experimental data that is passed the handling delay if any
+    # print(Y.Ch)
+    d<-d[d$hour>=handling_delay[as.numeric(substr(Y.Ch, start = 3, stop=3))],] # take the experimental data that is passed the handling delay if any
 
     d$hour<-d$hour+0.5 # make a half hour because the first measurement and the first hour mean are both 0, fitting smooth spline one will be dropped
 
@@ -1339,7 +1340,6 @@ SDA<-function(AnimalID,
       }else{
         d_SMRsum_wDELAY<-rbind(d_SMRsum_wDELAY,d)
       }
-
     }
 
     if(nrow(d)>=4){
@@ -1410,9 +1410,13 @@ SDA<-function(AnimalID,
   }# end of for loop applying the SDA function
 
 
-  if(begin_smr_hr_zero==TRUE){
+  if(begin_smr_hr_zero){
     d_SMRsum_wDELAY<-merge(d_SMRsum_wDELAY, unique(SDAdata[,1:2]),  by.x="ID")
     d_SMRsum_wDELAY$SMR<-as.numeric(as.character(d_SMRsum_wDELAY$SMR))
+
+    lst <- lapply(d_SMRsum_wDELAY , unlist)
+    d_SMRsum_wDELAY <- (data.frame(lapply(lst, `length<-`, max(lengths(lst)))))
+    write.csv(file=SDAhrlydata_name_wDELAY, d_SMRsum_wDELAY, row.names=FALSE)
   }
 
   d_SMRsum<-merge(d_SMRsum, unique(SDAdata[,1:2]),  by.x="ID")
@@ -1422,9 +1426,6 @@ SDA<-function(AnimalID,
   d_SMRsum <- (data.frame(lapply(lst, `length<-`, max(lengths(lst)))))
   write.csv(file=SDAhrlydata_name, d_SMRsum, row.names=FALSE)
 
-  lst <- lapply(d_SMRsum_wDELAY , unlist)
-  d_SMRsum_wDELAY <- (data.frame(lapply(lst, `length<-`, max(lengths(lst)))))
-  write.csv(file=SDAhrlydata_name_wDELAY, d_SMRsum_wDELAY, row.names=FALSE)
 
   # 	  print(SDAdata_stepIntegral)
 
@@ -1455,7 +1456,7 @@ SDA<-function(AnimalID,
     ylab("grey = MO2 mean +/- SEM, black = hourly MO2 min ")+
     # geom_points(aes(x=
     facet_wrap(.~ID, ncol=1, nrow=n_id, scales="free")
-  if(begin_smr_hr_zero==TRUE){
+  if(begin_smr_hr_zero){
     sda_hr_plot<- sda_hr_plot + geom_point(data=d_SMRsum_wDELAY, aes(y=mo2_min, x=hour), pch=21, size=1, fill="red", alpha=0.7)
     sda_hr_plot<- sda_hr_plot + geom_line(data=d_SMRsum_wDELAY, aes(y=mo2_min, x=hour), colour="red", alpha=0.7)
     # sda_hr_plot<- sda_hr_plot +	geom_point(data=plotDF, aes(y=mo2_min, x=hour), colour="green", pch=8)
