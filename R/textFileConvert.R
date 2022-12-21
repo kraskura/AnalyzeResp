@@ -10,6 +10,7 @@
 #' @export
 #'
 #' @importFrom utils read.delim
+#' @importFrom rMR DO.unit.convert
 #'
 textFileConvert<-function(txt_file,
                           nrowSkip,
@@ -113,7 +114,7 @@ textFileConvert<-function(txt_file,
     if(any(channels == 1)){
       # new_csv$Ch1_O2 <- conv_o2 (o2 = new_csv$Ch1_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch1, sal = salinity, atm_pres = atm_pressure)
 
-      new_csv$Ch1_O2 <- rMR::DO.unit.convert(new_csv$Ch1_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+      new_csv$Ch1_O2 <- DO.unit.convert(new_csv$Ch1_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
                     bar.press=1, temp.C = temp_ch1, bar.units.out = "atm",
                     salinity = salinity, salinity.units = "pp.thou")
 
@@ -122,12 +123,12 @@ textFileConvert<-function(txt_file,
     if(any(channels == 2)){
       # new_csv$Ch2_O2 <- conv_o2 (o2 = new_csv$Ch2_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch2, sal = salinity, atm_pres = atm_pressure)
       if (N_Ch!= 8){
-          new_csv$Ch2_O2 <-  rMR::DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+          new_csv$Ch2_O2 <- DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
                       bar.press=1, temp.C = temp_ch1, bar.units.out = "atm",
                       salinity = salinity, salinity.units = "pp.thou")
 
       }else{
-          new_csv$Ch2_O2 <- rMR::DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+          new_csv$Ch2_O2 <- DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
                       bar.press=1, temp.C = temp_ch2, bar.units.out = "atm",
                       salinity = salinity, salinity.units = "pp.thou")
       }
@@ -137,11 +138,11 @@ textFileConvert<-function(txt_file,
     if(any(channels == 3)){
       # new_csv$Ch3_O2 <- conv_o2 (o2 = new_csv$Ch3_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch3, sal = salinity, atm_pres = atm_pressure)
       if (N_Ch!= 8){
-        new_csv$Ch3_O2 <- rMR::DO.unit.convert(new_csv$Ch3_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+        new_csv$Ch3_O2 <- DO.unit.convert(new_csv$Ch3_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
                       bar.press=1, temp.C = temp_ch1, bar.units.out = "atm",
                       salinity = salinity, salinity.units = "pp.thou")
       }else{
-        new_csv$Ch3_O2 <- rMR::DO.unit.convert(new_csv$Ch3_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+        new_csv$Ch3_O2 <- DO.unit.convert(new_csv$Ch3_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
                                                     bar.press=1, temp.C = temp_ch3, bar.units.out = "atm",
                                                     salinity = salinity, salinity.units = "pp.thou")
       }
@@ -151,11 +152,11 @@ textFileConvert<-function(txt_file,
       # print(new_csv)
       # new_csv$Ch4_O2 <- conv_o2 (o2 = new_csv$Ch4_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch4, sal = salinity, atm_pres = atm_pressure)
       if (N_Ch!= 8){
-        new_csv$Ch4_O2 <- rMR::DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+        new_csv$Ch4_O2 <- DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
                       bar.press=1, temp.C = temp_ch1, bar.units.out = "atm",
                       salinity = salinity, salinity.units = "pp.thou")
       }else{
-        new_csv$Ch4_O2 <- rMR::DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
+        new_csv$Ch4_O2 <- DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
                                                     bar.press=1, temp.C = temp_ch4, bar.units.out = "atm",
                                                     salinity = salinity, salinity.units = "pp.thou")
       }

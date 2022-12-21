@@ -26,6 +26,18 @@
 #' @param handling_delay in hours
 #' @param begin_smr_hr_zero logical
 #'
+#' @importFrom stats lm coef var integrate predict quantile sd smooth.spline
+#' @import graphics
+#' @import grDevices
+#' @importFrom gridExtra grid.arrange
+#' @import scales
+#' @import ggplot2
+#' @import utils
+#' @importFrom dplyr filter top_n arrange
+#' @importFrom tidyr spread
+#' @importFrom mclust Mclust densityMclust MclustBootstrap
+#' @importFrom DescTools AUC
+#'
 #' @return The output from \code{\link{print}}
 #' @export
 #'

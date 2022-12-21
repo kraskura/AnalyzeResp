@@ -22,7 +22,9 @@ Imports:
   tidyr,
   plotrix,
   mclust,
-  gridExtra
+  gridExtra,
+  DescTools,
+  rMR
   
   
   

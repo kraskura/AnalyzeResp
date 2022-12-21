@@ -76,7 +76,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 
   #  binding global variables locally to the function.
-  DateTime_start<-m<-cycle_mmr<-cycle_type<-back_m_prior1<-back_m_prior2<-back_m_prior3<-back_m_prior4<-back_regression1<-back_regression2<-back_regression3<-back_regression4<-xpos<-ypos<-hjustvar<-vjustvar<-annotateText<-min_start<-quantiles<-mo2_perc<-smr_val<-smr_method<-NULL
+  DateTime_start<-m<-cycle_mmr<-cycle_type<-back_m_prior1<-back_m_prior2<-back_m_prior3<-back_m_prior4<-back_regression1<-back_regression2<-back_regression3<-back_regression4<-xpos<-ypos<-hjustvar<-vjustvar<-annotateText<-min_start<-quantiles<-mo2_perc<-smr_val<-smr_method<-back_ch<-NULL
 
   if(!length(as.vector(date_format))==2){
     stop_function<-TRUE

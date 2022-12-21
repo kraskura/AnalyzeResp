@@ -9,7 +9,13 @@ textFileConvert(
   nrowSkip,
   N_Ch = 4,
   local_path = TRUE,
-  exclude_first_measurement_s = 0
+  exclude_first_measurement_s = 0,
+  convert_units = FALSE,
+  units_from = NULL,
+  units_to = NULL,
+  channels = c(1, 2, 3, 4),
+  salinity = 0,
+  atm_pressure = 1
 )
 }
 \arguments{
