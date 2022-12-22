@@ -41,6 +41,8 @@ SDA(
 
 \item{r2_threshold_smr}{R2 threshold for SMR, measurements below the threshold are excluded}
 
+\item{sda_threshold_level}{Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to sda_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as threshold for full digestion, enter sda_threshold = 1.2.}
+
 \item{scaling_exponent_smr}{Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])}
 
 \item{date_format}{The date format used in the original FireSting data files. Must specify one of the following: "m/d/y", "d/m/y", "y-m-d"}
@@ -48,6 +50,10 @@ SDA(
 \item{data.SDA}{The name of the SDA data file (“…analyzed.csv”; a character string); an output file from the SMR function.}
 
 \item{analyzed_MR}{The name of the data file with estimated SMR values}
+
+\item{SMR_calc}{Logical, indicates whether to calculate SMR from the present data trend}
+
+\item{SMR_vals}{allows a user}
 
 \item{drop_ch}{Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)}
 
@@ -73,9 +79,9 @@ SDA(
 
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
-\item{handling_delay}{in hours}
+\item{handling_delay}{a delay of SDA due to handling, anesthsia, or any other experimental factor. in hours}
 
-\item{begin_smr_hr_zero}{logical}
+\item{begin_smr_hr_zero}{logical. Wether to force the integral SDA costs still be calculated from hour 0, that is assumed to be at SMR level (refer to sda_threshold_level)}
 }
 \value{
 The output from \code{\link{print}}

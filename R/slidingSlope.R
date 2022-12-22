@@ -108,10 +108,10 @@ slidingSlope<-function(d,
     		  plotnameMean<-paste( gsub('.{4}$', '', data.MMR), "_SLIDING_MMRanalysis", Ch , ".png", sep='')
 
     		}else{
-    		  if(!is.character(local_path) & dir.exists("MANUAL")){
-            filename_set<-paste("./MANUAL/channel_sliding_sets/", gsub('.{4}$', '', data.MMR), "_SLIDINGset", Ch , ".csv", sep='')
-      		  filename_setMean<-paste("./MANUAL/channel_sliding_sets/", gsub('.{4}$', '', data.MMR), "_SLIDINGsetMean", Ch , ".csv", sep='')
-      		  plotnameMean<-paste("./MANUAL/channel_plots_MMRanalysis/", gsub('.{4}$', '', data.MMR), "_SLIDING_MMRanalysis", Ch , ".png", sep='')
+    		  if(!is.character(local_path) & dir.exists("MMR")){
+            filename_set<-paste("./MMR/channel_sliding_sets/", gsub('.{4}$', '', data.MMR), "_SLIDINGset", Ch , ".csv", sep='')
+      		  filename_setMean<-paste("./MMR/channel_sliding_sets/", gsub('.{4}$', '', data.MMR), "_SLIDINGsetMean", Ch , ".csv", sep='')
+      		  plotnameMean<-paste("./MMR/channel_plots_MMRanalysis/", gsub('.{4}$', '', data.MMR), "_SLIDING_MMRanalysis", Ch , ".png", sep='')
     		  }
           if(is.character(local_path)){
             message(paste("MMR sliding window analysis: returns are saved at a specified working directory: \n", local_path))

@@ -42,6 +42,10 @@ SMR(
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
 \item{plot_temp}{Logical argument. Indicates whether or not temperature trends for each cycle will be plotted and saved    TRUE}
+
+\item{background_data}{logical. If this datafile is a background (background respiration file), indicate TRUE}
+
+\item{sda_data}{logical. If this datafile belong to SDA analysis, is a SDA data file, indicate TRUE}
 }
 \value{
 The output from \code{\link{print}}

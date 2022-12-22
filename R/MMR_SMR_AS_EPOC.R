@@ -76,7 +76,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 
   #  binding global variables locally to the function.
-  DateTime_start<-m<-cycle_mmr<-cycle_type<-back_m_prior1<-back_m_prior2<-back_m_prior3<-back_m_prior4<-back_regression1<-back_regression2<-back_regression3<-back_regression4<-xpos<-ypos<-hjustvar<-vjustvar<-annotateText<-min_start<-quantiles<-mo2_perc<-smr_val<-smr_method<-back_ch<-NULL
+  DateTime_start<-m<-cycle_mmr<-cycle_type<-back_m_prior1<-back_m_prior2<-back_m_prior3<-back_m_prior4<-back_regression1<-back_regression2<-back_regression3<-back_regression4<-xpos<-ypos<-hjustvar<-vjustvar<-annotateText<-min_start<-quantiles<-mo2_perc<-smr_val<-smr_method<-NULL
 
   if(!length(as.vector(date_format))==2){
     stop_function<-TRUE
@@ -351,6 +351,8 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   # 1. find what channels recorded background
   if (!is.null(background_post) | !is.null(background_prior) ) {
 
+
+    # reading in the file
     if(!is.null(background_prior)){
 
       if(file.exists(background_prior) | file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", background_prior, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
@@ -366,10 +368,9 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
             stop("Cannot locate the indicated background_prior data file.")
           }
       }
-      back_ch_prior<-length(unique(back_prior$Ch))
+      back_ch<-length(unique(back_prior$Ch))
     }
-
-
+    # reading in the file
     if(!is.null(background_post)){
       if(file.exists(background_post) | file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", background_post, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
     	  if(file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", background_post, sep=""))){
@@ -385,16 +386,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
         }
       }
 
-      back_ch_post<-length(unique(back_post$Ch))
+      back_ch<-length(unique(back_post$Ch))
     }
 
-    if(!back_ch_post == back_ch_prior){
-      message("Background: unequal number of channels back_prior and back_post")
-    }
-
-    # Jan 4 2020: make linear regression over time and correct background based on a predicted value
-    # create
-    if (!is.null(background_gr)){
+    # get background regressions over time
+    if(!is.null(background_gr)){
 
       # if files not available toss out error -- stop
       if(is.null(background_post) | is.null(background_post)){
@@ -434,7 +430,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	 if(match_background_Ch==TRUE){
 
         back_ch_regressions<-list()
-
+print(back_ch)
         for(i in 1:back_ch){
           back_ch_d<- back_all[back_all$Ch==(unique(back_all$Ch))[i],]
           Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3)
@@ -475,7 +471,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       }
     } # end for getting regressions for the background
 
-    if (is.null(background_gr)){
+    if(is.null(background_gr)){
       if (!is.null(background_prior)){
         back_ch_prior<-list()
         back_ch_prior_names<-list()
@@ -490,7 +486,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
           back_ch_prior[[i]] <- assign(back_m_name, mean_m)
           back_ch_prior_names[[i]] <- back_m_name
         }
-
       }
       # 3. estimate one background slope mean to be used in MR corrections
       if (!is.null(background_post)){
@@ -733,9 +728,10 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	  if((nrow(as.data.frame(d_ch[grepl("MMR", as.character(d_ch$cycle_type)),])))>1){
 
   	    d_ch<-d_ch[c(which((as.numeric(d_ch$cycle_mmr)>1 & grepl("MMR", as.character(d_ch$cycle_type))) | grepl("cycle", as.character(d_ch$cycle_type)))),]
-  	  }
-  	  d_temp1<-rbind(d_temp1, d_ch)
 
+  	  }
+
+  	  d_temp1<-rbind(d_temp1, d_ch)
   	}
 
     d<-d_temp1
@@ -743,20 +739,20 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	if(any(d$r2<r2_threshold_mmr)){
   		d_new<-d_MMR[0,]
 
-  		for (i in 1:length(d_MMR_list)){
+  		for(i in 1:length(d_MMR_list)){
   			d_ch<-as.data.frame(d_MMR_list[i])
   			colnames(d_ch)<-c("cycle_type", "cycle_start","cycle_end", "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max", "t_mean", "Ch", "DateTime_start")
 
   			d_temp<-d_ch[grepl("MMR", as.character(d_ch$cycle_type)),]
 
-  			if (nrow(d_temp) == 1 & c(d_temp$cycle_end[1] - d_temp$cycle_start[1] < 3) &
-  			    c(nrow(d_temp) == 1)){ # no data with r2 at the threshold and at the desired minute length
-            message(paste("MMR: ", d_temp$Ch[1], ": measurement was < 3 minutes, use full measurement cycle", sep =""))
+  			if (nrow(d_temp) == 1 & c(d_temp$cycle_end[1] - d_temp$cycle_start[1] < 3) & c(nrow(d_temp) == 1)){ # no data with r2 at the threshold and at the desired minute length
+          message(paste("MMR: ", d_temp$Ch[1], ": measurement was < 3 minutes, use full measurement cycle", sep =""))
+          d_new<-rbind(d_new, d_ch)
   			}
 
   			if (all(d_temp$r2 < r2_threshold_mmr) | c(nrow(d_temp) == 1 & c(d_temp$cycle_end[1] - d_temp$cycle_start[1] < 3))){
 
-  				if (all(d_temp$r2 < r2_threshold_mmr)){
+  			  if (all(d_temp$r2 < r2_threshold_mmr)){
   						new_min_length_mmr<-d_temp$cycle_mmr[d_temp$r2==max(d_temp$r2)][1]
   						d_ch<-d_ch[c(which(grepl("cycle", as.character(d_ch$cycle_type)) | d_ch$cycle_mmr== new_min_length_mmr)),]
   						d_new<-rbind(d_new, d_ch)
@@ -776,7 +772,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     						new_min_length_mmr<-times_list[j]
     						d_ch<-d_ch[c(which(grepl("cycle", as.character(d_ch$cycle_type)) | d_ch$cycle_mmr == new_min_length_mmr)),]
     						d_new<-rbind(d_new, d_ch)
-
     							if (new_min_length_mmr==1){
     								message(paste("MMR: ", d_ch$Ch[1],": measurement time extended from ", min_length_mmr ,"s to full a measurement", sep=""))
     							}else{
@@ -788,10 +783,9 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     				}
   			  }
 
-
   			}else{
-  				d_ch<-d_ch[c(which(grepl("cycle", as.character(d_ch$cycle_type)) | d_ch$cycle_mmr==min_length_mmr)),]
-  				d_new<-rbind(d_new, d_ch)
+  			  d_ch<-d_ch[c(which(grepl("cycle", as.character(d_ch$cycle_type)) | d_ch$cycle_mmr==min_length_mmr)),]
+  			  d_new<-rbind(d_new, d_ch)
   			}
   		}
 
@@ -828,7 +822,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 			}
 		}
 
-
+print(paste("2", length(unique(d_MMR$Ch))))
 
   	# **********************************************
     # START -- >>> background corrections MMR
@@ -1056,6 +1050,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	  names(d_MMR)[names(d_MMR) == 'mo2'] <- 'mo2_1kg'
 
     d_MMR$mo2<-d_MMR[,mo2_val_for_calc]
+
 
   }
 	# END -- >>> MMR file available
@@ -1855,7 +1850,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 
 	  if(!(length(unique(d_SMR$Ch)) == length(unique(d_MMR$Ch)))){
-	    stop_function <- TRUE
+
+print(length(unique(d_SMR$Ch)))
+print(length(unique(d_MMR$Ch)))
+
+	     stop_function <- TRUE
       if(stop_function) stop(paste("The number of channels in MMR and SMR do not match, check the input data and try again! | "))#, "Ch in MMR:", unique(d_MMR$Ch),  "Ch in SMR:", unique(d_SMR$Ch)))
 	  }
 

@@ -28,6 +28,18 @@ textFileConvert(
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
 \item{exclude_first_measurement_s}{The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)}
+
+\item{convert_units}{Logical (FALSE = default). If true, the funciton is passed to rMR function DO.unit.convert to convert O2 content units.}
+
+\item{units_from}{default NULL, options:"mg/L", "PP", "pct".  passed down to rM::DO.unit.convert arg. DO.units.in}
+
+\item{units_to}{= default NULL, options:"mg/L", "PP", "pct".  passed down to rM::DO.unit.convert arg. DO.units.out}
+
+\item{channels}{= c(1,2,3,4), indicate which channels to apply the conversion to}
+
+\item{salinity}{= 0, passed down to rM::DO.unit.convert arg. salinity (must be in "pp.thou")}
+
+\item{atm_pressure}{= 1, passed down to rM::DO.unit.convert arg. bar.press (must be in "atm")}
 }
 \value{
 The output from \code{\link{print}}

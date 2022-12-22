@@ -12,6 +12,8 @@
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param date_format The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")
 #' @param plot_temp Logical argument. Indicates whether or not temperature trends for each cycle will be plotted and saved	TRUE
+#' @param background_data logical. If this datafile is a background (background respiration file), indicate TRUE
+#' @param sda_data logical. If this datafile belong to SDA analysis, is a SDA data file, indicate TRUE
 #'
 #' @return The output from \code{\link{print}}
 #' @export
