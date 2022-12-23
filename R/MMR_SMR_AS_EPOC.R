@@ -406,6 +406,13 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
         }
       }
 
+  	 if(local_path | !dir.exists("./MMR_SMR_AS_EPOC/plots_background")){
+  	    plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
+  	  }else{
+  	   	plotname.backgr<-paste("./MMR_SMR_AS_EPOC/plots_background/", filename.SMR,"_PLOT_BACKGROUND.png", sep="")
+  	 }
+
+
       back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[1], tz = date_format[2])
   	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[1], tz = date_format[2])
 
@@ -420,17 +427,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   # 	    theme(axis.text.x = element_text(angle = 45))+
   # 	    facet_grid(Ch~.)
 
-
-  	 if(local_path | !dir.exists("./MMR_SMR_AS_EPOC/plots_background")){
-  	    plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
-  	  }else{
-  	   	plotname.backgr<-paste("./MMR_SMR_AS_EPOC/plots_background/", filename.SMR,"_PLOT_BACKGROUND.png", sep="")
-  	 }
-
   	 if(match_background_Ch==TRUE){
 
         back_ch_regressions<-list()
-print(back_ch)
+        back_ch<-length(unique(back_all$Ch))
+
         for(i in 1:back_ch){
           back_ch_d<- back_all[back_all$Ch==(unique(back_all$Ch))[i],]
           Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3)
@@ -469,12 +470,15 @@ print(back_ch)
           message("Background: exponential change of bacterial respiration rates. One regression for all channels")
         }
       }
+
     } # end for getting regressions for the background
 
     if(is.null(background_gr)){
       if (!is.null(background_prior)){
         back_ch_prior<-list()
         back_ch_prior_names<-list()
+
+        back_ch<-length(unique(back_prior$Ch))
 
         for( i in 1:back_ch){
           back_ch_d<-back_prior[back_prior$Ch==(unique(back_prior$Ch))[i],]
@@ -492,6 +496,7 @@ print(back_ch)
 
         back_ch_post<-list()
         back_ch_post_names<-list()
+        back_ch<-length(unique(back_post$Ch))
 
           for( i in 1:back_ch){
 
@@ -510,7 +515,6 @@ print(back_ch)
       }
 
       # get a list of our values
-
       ## should look for possible variables:
       # back_m_post1
       # back_m_post2
@@ -610,7 +614,7 @@ print(back_ch)
         }
 
       } # end of match background == FALSE (the else part of if statement)
-    }# end of background_linear_gr == FALSE
+    }# end of background_gr == FALSE
 
   }# the end of getting the background slopes
 

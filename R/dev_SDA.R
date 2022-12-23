@@ -231,7 +231,6 @@ SDA<-function(AnimalID,
             stop("Cannot locate the indicated background_prior data file.")
           }
       }
-      back_ch<-length(unique(back_prior$Ch))
     }
 
     if(!is.null(background_post)){
@@ -248,8 +247,6 @@ SDA<-function(AnimalID,
           stop("Cannot locate the indicated background_post data file.")
         }
       }
-
-      back_ch<-length(unique(back_post$Ch))
     }
 
 
@@ -288,6 +285,8 @@ SDA<-function(AnimalID,
 
       if (match_background_Ch==TRUE){
         back_ch_regressions<-list()
+
+        back_ch<-length(unique(back_all$Ch))
 
         for(i in 1:back_ch){
           back_ch_d<- back_all[back_all$Ch==(unique(back_all$Ch))[i],]
@@ -337,6 +336,8 @@ SDA<-function(AnimalID,
         back_ch_prior<-list()
         back_ch_prior_names<-list()
 
+        back_ch<-length(unique(back_prior$Ch))
+
         for( i in 1:back_ch){
           back_ch_d<-back_prior[back_prior$Ch==(unique(back_prior$Ch))[i],]
           Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3)
@@ -355,6 +356,7 @@ SDA<-function(AnimalID,
 
         back_ch_post<-list()
         back_ch_post_names<-list()
+        back_ch<-length(unique(back_post$Ch))
 
         for( i in 1:back_ch){
 
