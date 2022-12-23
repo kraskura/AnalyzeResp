@@ -37,7 +37,8 @@
 #' @import scales
 #' @import ggplot2
 #' @import utils
-#' @importFrom dplyr filter top_n arrange %>%
+#' @importFrom dplyr filter top_n arrange
+#' @importFrom magrittr %>%
 #' @importFrom tidyr spread
 #' @importFrom mclust Mclust densityMclust MclustBootstrap
 #'

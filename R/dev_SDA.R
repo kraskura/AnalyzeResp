@@ -37,6 +37,7 @@
 #' @importFrom tidyr spread
 #' @importFrom mclust Mclust densityMclust MclustBootstrap
 #' @importFrom DescTools AUC
+#' @importFrom magrittr %>%
 #'
 #' @return The output from \code{\link{print}}
 #' @export

@@ -17,6 +17,7 @@ Imports:
   graphics,
   utils,
   dplyr,
+  magrittr,
   stringr, 
   pryr,
   tidyr,

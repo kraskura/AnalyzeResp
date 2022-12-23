@@ -26,8 +26,6 @@
 #' @import ggplot2
 #' @import utils
 #' @import stringr
-#' @importFrom dplyr group_by
-#' @importFrom dplyr summarize
 #'
 #'
 SMR<-function(data,
