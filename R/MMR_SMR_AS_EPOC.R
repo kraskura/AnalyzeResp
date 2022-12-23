@@ -37,7 +37,7 @@
 #' @import scales
 #' @import ggplot2
 #' @import utils
-#' @importFrom dplyr filter top_n arrange
+#' @importFrom dplyr filter top_n arrange %>%
 #' @importFrom tidyr spread
 #' @importFrom mclust Mclust densityMclust MclustBootstrap
 #'
@@ -712,7 +712,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	###
 
   	d<-d_MMR %>%
-  		group_by(Ch) %>%
+  		dplyr::group_by(Ch) %>%
   		filter(cycle_mmr== min_length_mmr| cycle_mmr== 1 | cycle_type=="cycle2" | cycle_type=="cycle3" | cycle_type=="cycle4")
   	d<-as.data.frame(d)
 
