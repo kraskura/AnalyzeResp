@@ -29,6 +29,7 @@ MMR_SMR_AS_EPOC(
   background_prior = NULL,
   background_post = NULL,
   background_slope = NULL,
+  background_slope_mmr = NULL,
   background.V = NULL,
   background_gr = NULL,
   match_background_Ch = FALSE,
@@ -83,7 +84,9 @@ MMR_SMR_AS_EPOC(
 
 \item{background_post}{The same as background_prior, only post respirometry trial}
 
-\item{background_slope}{Manually assigned background slope used to correct metabolic rate in all individuals. Provide numeric value in mgO2 L-1 h-1v}
+\item{background_slope}{Manually assigned background slope used to correct metabolic rate in all individuals. Provide numeric value in mgO2 L-1 h-1}
+
+\item{background_slope_mmr}{Manually assigned background slope used to correct MMR in all individuals. Provide numeric value in mgO2 L-1 h-1}
 
 \item{background.V}{Manually assigned respirometer volumes (L). A vector with 4 numeric variables, one for each channel.}
 

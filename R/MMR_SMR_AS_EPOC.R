@@ -22,7 +22,8 @@
 #' @param end_EPOC_Ch Manually assigned end time (min) of full recovery (EPOC). The time can be assigned for each channel independently; use a numerical vector of 4 variables, one for each channel (e.g., c(120, 120, NA, 180), for 2 h, 2h, SMR level, and 3 h EPOC end times, respectively)
 #' @param background_prior The name of the analyzed background “…analyzed.csv” file, an output file from the SMR function (respiration in an empty respirometer measured before the respirometry trial).
 #' @param background_post The same as background_prior, only post respirometry trial
-#' @param background_slope Manually assigned background slope used to correct metabolic rate in all individuals. Provide numeric value in mgO2 L-1 h-1v
+#' @param background_slope Manually assigned background slope used to correct metabolic rate in all individuals. Provide numeric value in mgO2 L-1 h-1
+#' @param background_slope_mmr Manually assigned background slope used to correct MMR in all individuals. Provide numeric value in mgO2 L-1 h-1
 #' @param background.V Manually assigned respirometer volumes (L). A vector with 4 numeric variables, one for each channel.
 #' @param background_gr Specify whether to assume that bacterial growth (thus respiration rates) changed linearly or in exponentially across the duration of the respirometry trial. Must specify either "linear" or "exp": metabolic rate values across the given trial are corrected using the estimated background values from the indicated growth curve. Both background_prior and background_post must be provided to enable this.
 #' @param match_background_Ch Logical. If TRUE, the background respiration is estimated and applied channel-specific. The background_prior and background_post are used to estimate background respiration specific to each channel (or individual), which then is used to correct each individual’s MO2 independently. By default, the mean background respiration rate from all channels is calculated and applied to correct all individual’s MO2
@@ -69,6 +70,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
                           background_prior = NULL,
                           background_post = NULL,
                           background_slope = NULL,
+                          background_slope_mmr = NULL,
                           background.V = NULL,
                           background_gr = NULL,
                           match_background_Ch = FALSE,
@@ -335,7 +337,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
    filename.SMR<-paste(gsub('.{4}$', '',data.SMR), "_SMR", sep="")
 	 filename.MMR<-paste(gsub('.{4}$', '',data.MMR), "_MMR_", sep="")
 
-
   # **********************************************
   # START-- >>> background
   if((is.null(background.V) & !is.null(background_slope)) |(!is.null(background.V) & is.null(background_slope))) {
@@ -351,7 +352,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   # background file wrangling
   # 1. find what channels recorded background
   if (!is.null(background_post) | !is.null(background_prior) ) {
-
 
     # reading in the file
     if(!is.null(background_prior)){
@@ -390,14 +390,15 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       back_ch<-length(unique(back_post$Ch))
     }
 
-    # get background regressions over time
+    # background growth if as needed
     if(!is.null(background_gr)){
 
-      # if files not available toss out error -- stop
-      if(is.null(background_post) | is.null(background_post)){
+      # if files not available toss out error -- stop, requested growth curves of bacteria
+      if(!is.null(background_gr) & c(is.null(background_post) | is.null(background_post))){
        stop("Missing a file to model the growth of bacteria, must provide both: \"background_prior\" \"and background_post\" files")
       }
 
+      # local directories, saving filenames
       if (!dir.exists("plots_background") | !dir.exists("./MMR_SMR_AS_EPOC/plots_background")){
         if(local_path & !dir.exists("plots_background")){
           dir.create(file.path("./plots_background"), recursive = TRUE)
@@ -406,12 +407,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
           dir.create(file.path("./MMR_SMR_AS_EPOC/plots_background"), recursive = TRUE)
         }
       }
-
-  	 if(local_path | !dir.exists("./MMR_SMR_AS_EPOC/plots_background")){
-  	    plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
-  	  }else{
-  	   	plotname.backgr<-paste("./MMR_SMR_AS_EPOC/plots_background/", filename.SMR,"_PLOT_BACKGROUND.png", sep="")
-  	 }
+    	if(local_path | !dir.exists("./MMR_SMR_AS_EPOC/plots_background")){
+    	    plotname.backgr<-paste( filename.SMR,"_PLOT_BACKGROUND.png", sep="")
+    	  }else{
+    	   plotname.backgr<-paste("./MMR_SMR_AS_EPOC/plots_background/", filename.SMR,"_PLOT_BACKGROUND.png", sep="")
+    	}
 
 
       back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[1], tz = date_format[2])
@@ -427,7 +427,9 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   #       ylab("Regression slope value- mgO2/min")+
   # 	    theme(axis.text.x = element_text(angle = 45))+
   # 	    facet_grid(Ch~.)
+  #
 
+     # if(!is.null(background_gr)){}
   	 if(match_background_Ch==TRUE){
 
         back_ch_regressions<-list()
@@ -474,148 +476,143 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
     } # end for getting regressions for the background
 
-    if(is.null(background_gr)){
-      if (!is.null(background_prior)){
-        back_ch_prior<-list()
-        back_ch_prior_names<-list()
+    # no growth just values, this should be estimated no matter what growth yes or no)
+    if (!is.null(background_prior)){
+      back_ch_prior<-list()
+      back_ch_prior_names<-list()
 
-        back_ch<-length(unique(back_prior$Ch))
+      back_ch<-length(unique(back_prior$Ch))
+
+      for( i in 1:back_ch){
+        back_ch_d<-back_prior[back_prior$Ch==(unique(back_prior$Ch))[i],]
+        Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3)
+
+        back_m_name<-paste("back_m_prior", Ch, sep="") # channel names with a channel # at the end
+        mean_m<-sum(back_ch_d$m)/nrow(back_ch_d) # get average slopes from the prior background cycles can be limitless essentially
+        assign(back_m_name, mean_m)
+        back_ch_prior[[i]] <- assign(back_m_name, mean_m)
+        back_ch_prior_names[[i]] <- back_m_name
+      }
+    }
+    # 3. estimate one background slope mean to be used in MR corrections
+    if (!is.null(background_post)){
+
+      back_ch_post<-list()
+      back_ch_post_names<-list()
+      back_ch<-length(unique(back_post$Ch))
 
         for( i in 1:back_ch){
-          back_ch_d<-back_prior[back_prior$Ch==(unique(back_prior$Ch))[i],]
+
+          back_ch_d<-back_post[back_post$Ch==(unique(back_post$Ch))[i],]
           Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3)
 
-          back_m_name<-paste("back_m_prior", Ch, sep="") # channel names with a channel # at the end
-          mean_m<-sum(back_ch_d$m)/nrow(back_ch_d) # get average slopes from the prior background cycles can be limitless essentially
+          back_m_name<-paste("back_m_post", Ch, sep="")
+          mean_m<-sum(back_ch_d$m)/nrow(back_ch_d)
+
           assign(back_m_name, mean_m)
-          back_ch_prior[[i]] <- assign(back_m_name, mean_m)
-          back_ch_prior_names[[i]] <- back_m_name
+
+          back_ch_post[[i]] <- assign(back_m_name, mean_m)
+          back_ch_post_names[[i]] <- back_m_name
+
         }
+    }
+
+    # BELOW >> get a list of our values
+    ## should look for possible variables:
+    # back_m_post1
+    # back_m_post2
+    # back_m_post3
+    # back_m_post4
+    # back_m_prior1
+    # back_m_prior2
+    # back_m_prior3
+    # back_m_prior4
+
+    if (match_background_Ch==TRUE){
+      # conditions possible:
+      # prior only
+      # post only
+      # prior and post for a specific channel
+
+      if (!is.null(background_prior)){
+        ch_available<-as.numeric(substr(as.character(unique(back_prior$Ch)),start=3, stop=3))
       }
-      # 3. estimate one background slope mean to be used in MR corrections
       if (!is.null(background_post)){
-
-        back_ch_post<-list()
-        back_ch_post_names<-list()
-        back_ch<-length(unique(back_post$Ch))
-
-          for( i in 1:back_ch){
-
-            back_ch_d<-back_post[back_post$Ch==(unique(back_post$Ch))[i],]
-            Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3)
-
-            back_m_name<-paste("back_m_post", Ch, sep="")
-            mean_m<-sum(back_ch_d$m)/nrow(back_ch_d)
-
-            assign(back_m_name, mean_m)
-
-            back_ch_post[[i]] <- assign(back_m_name, mean_m)
-            back_ch_post_names[[i]] <- back_m_name
-
-          }
+        ch_available<-as.numeric(substr(as.character(unique(back_post$Ch)),start=3, stop=3))
       }
 
-      # get a list of our values
-      ## should look for possible variables:
-      # back_m_post1
-      # back_m_post2
-      # back_m_post3
-      # back_m_post4
-      # back_m_prior1
-      # back_m_prior2
-      # back_m_prior3
-      # back_m_prior4
 
-      if (match_background_Ch==TRUE){
-        # conditions possible:
-        # prior only
-        # post only
-        # prior and post for a specific channel
+      for (i in 1:back_ch){
 
-        if (!is.null(background_prior)){
-          ch_available<-as.numeric(substr(as.character(unique(back_prior$Ch)),start=3, stop=3))
-        }
-        if (!is.null(background_post)){
-          ch_available<-as.numeric(substr(as.character(unique(back_post$Ch)),start=3, stop=3))
-        }
+        # prior only condition
+       if(exists(paste("back_m_prior", ch_available[i], sep="")) & !exists(paste("back_m_post", ch_available[i], sep=""))){
 
+         if(back_ch_prior_names[[i]]==paste("back_m_prior", ch_available[i], sep="")){
+            # message("matching background Channels")
 
-        for (i in 1:back_ch){
-
-          # prior only condition
-         if(exists(paste("back_m_prior", ch_available[i], sep="")) & !exists(paste("back_m_post", ch_available[i], sep=""))){
-
-           if(back_ch_prior_names[[i]]==paste("back_m_prior", ch_available[i], sep="")){
-              # message("matching background Channels")
-
-              back_m_name2<-paste("back_m", ch_available[i], sep="")
-              assign(back_m_name2, back_ch_prior[[i]])
-              #next # continue the loop to the nect channel
-
-           }
+            back_m_name2<-paste("back_m", ch_available[i], sep="")
+            assign(back_m_name2, back_ch_prior[[i]])
+            #next # continue the loop to the nect channel
 
          }
 
-          # post only condition
-          if(!exists(paste("back_m_prior", ch_available[i], sep="")) & exists(paste("back_m_post",ch_available[i], sep=""))){
+       }
 
-            if(back_ch_post_names[[i]]==paste("back_m_post", ch_available[i], sep="")){
-              # message("matching background Channels")
+        # post only condition
+        if(!exists(paste("back_m_prior", ch_available[i], sep="")) & exists(paste("back_m_post",ch_available[i], sep=""))){
 
-              back_m_name2<-paste("back_m", ch_available[i], sep="")
-              assign(back_m_name2, back_ch_post[[i]])
-              #next # continue the loop to the next channel
+          if(back_ch_post_names[[i]]==paste("back_m_post", ch_available[i], sep="")){
+            # message("matching background Channels")
 
-            }
+            back_m_name2<-paste("back_m", ch_available[i], sep="")
+            assign(back_m_name2, back_ch_post[[i]])
+            #next # continue the loop to the next channel
 
           }
 
-          if(exists(paste("back_m_prior", ch_available[i], sep="")) & exists(paste("back_m_post",ch_available[i], sep=""))){
-
-            if(back_ch_post_names[[i]]==paste("back_m_post", ch_available[i], sep="")){
-             # message("matching background Channels")
-              prior_post_mean<-(back_ch_prior[[i]] + back_ch_post[[i]]) / 2
-
-              back_m_name2<-paste("back_m", ch_available[i], sep="")
-              assign(back_m_name2,  prior_post_mean)
-              #next # continue the loop to the nect channel
-
-            }
-
-          } # closes 'prior and post available' condition statement
-
-        } # closes the loop -  here have
-
-      }else{ #match_background_Ch=TRUE switch to FALSE
-
-       # 1. prior file only
-       # 2. post file only
-       # 3. prior and post
-
-        if(is.null(background_post) | !is.null(background_prior)){
-
-          prior_mean<-sum(as.numeric(back_ch_prior)) / (length (unique(back_prior$Ch)))
-          back_m<-prior_mean
-
         }
+        if(exists(paste("back_m_prior", ch_available[i], sep="")) & exists(paste("back_m_post",ch_available[i], sep=""))){
 
-        if(!is.null(background_post) | is.null(background_prior)){
+          if(back_ch_post_names[[i]]==paste("back_m_post", ch_available[i], sep="")){
+           # message("matching background Channels")
+            prior_post_mean<-(back_ch_prior[[i]] + back_ch_post[[i]]) / 2
 
-          post_mean<-sum(as.numeric(back_ch_post)) / (length (unique(back_post$Ch)))
-          back_m<-post_mean
+            back_m_name2<-paste("back_m", ch_available[i], sep="")
+            assign(back_m_name2,  prior_post_mean)
+            #next # continue the loop to the nect channel
 
-        }
+          }
 
-        if(!is.null(background_post) & !is.null(background_prior)){
+        } # closes 'prior and post available' condition statement
 
-          prior_mean<-sum(as.numeric(back_ch_prior)) / (length (unique(back_prior$Ch)))
-          post_mean<-sum(as.numeric(back_ch_post)) / (length (unique(back_post$Ch)))
-          back_m<-(prior_mean+post_mean) / 2
+      } # closes the loop -  here have
 
-        }
+    }else{ #match_background_Ch = FALSE
 
-      } # end of match background == FALSE (the else part of if statement)
-    }# end of background_gr == FALSE
+     # 1. prior file only (mean values)
+      if(is.null(background_post) | !is.null(background_prior)){
+
+        prior_mean<-sum(as.numeric(back_ch_prior)) / (length (unique(back_prior$Ch)))
+        back_m<-prior_mean
+
+      }
+     # 2. post file only (mean values)
+      if(!is.null(background_post) | is.null(background_prior)){
+
+        post_mean<-sum(as.numeric(back_ch_post)) / (length (unique(back_post$Ch)))
+        back_m<-post_mean
+
+      }
+     # 3. prior and post (mean values)
+      if(!is.null(background_post) & !is.null(background_prior)){
+
+        prior_mean<-sum(as.numeric(back_ch_prior)) / (length (unique(back_prior$Ch)))
+        post_mean<-sum(as.numeric(back_ch_post)) / (length (unique(back_post$Ch)))
+        back_m<-(prior_mean+post_mean) / 2
+
+      }
+    } # end of match background == FALSE (the else part of if statement)
+
 
   }# the end of getting the background slopes
 
@@ -827,7 +824,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 			}
 		}
 
-print(paste("2", length(unique(d_MMR$Ch))))
+# print(paste("2", length(unique(d_MMR$Ch))))
 
   	# **********************************************
     # START -- >>> background corrections MMR
@@ -837,22 +834,34 @@ print(paste("2", length(unique(d_MMR$Ch))))
 
   	d_MMR$DateTime_start<- strptime(d_MMR$DateTime_start, format="%Y-%m-%d %H:%M:%S")
 
-    if(mmr_background != "trial_mean" & !is.null(background_gr)){
+  	  # 0. It the mmr background slope values ARE provided
+    if(mmr_background == "background_slope_mmr"){ # first priority: user provided background respiration slope to correct MMR value
 
-      if(mmr_background == "back_prior"){
+      if(!is.null(background_slope_mmr) | !is.null(background.V)){
+        stop("Incomplete request: must provide \"background_slope_mmr\" slope and must have backkground.V (volume in L) provided")
+      }
+      # user provided slopes
+      for (i in 1:nrow(d_MMR)){
+        d_MMR$mo2[i]<-(( d_MMR$m[i]*(background.V-d_MMR$bw[i])) - (background_slope_mmr * background.V)) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+      }
+      message("MMR corrected for background: using user provided slope value, same slope for all channels | bacterial respiration slope: ", mmr_background)
 
-        if(match_background_Ch != TRUE){ # if NOT channel specific
+	  }else{ # context specific MMR corrections:
 
-            if(!exists("prior_mean")) stop("Incomplete request: no prior background respiration data to correct MMR measurement, must provide \"background_prior\"file")
+	    # 1 "back_prior"
+      if(mmr_background == "back_prior"){ # doesnt matter whether its liner growth or not.
+        if(!match_background_Ch){ # "back_prior" and match_background_Ch = FALSE
+          message("MMR corrected for background: using a common background from a \"background_prior\" file only (same slope for all channels) | bacterial respiration slope: ", prior_mean)
+          if(!exists("prior_mean")){
+            stop("Incomplete request: no prior background respiration data to correct MMR measurement, must provide \"background_prior\"file")
+          }
+          for (i in 1:nrow(d_MMR)){
+      		  d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (prior_mean * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
+          }
 
-            for (i in 1:nrow(d_MMR)){
-        		  d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (prior_mean * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-            }
-            message("MMR corrected for background: using a common background from a \"background_prior\" file only (same slope for all channels) | bacterial respiration slope: ", prior_mean)
-
-          }else{ # this will be mmr slope different than smr, and is channel specific, i.e. match__background==TRUE
-
+        }else{ # # "back_prior" and match_background_Ch = TRUE; doesnt matter if it is linear regression or not.
           message("MMR corrected for background: using Ch specific average background values from \"background_prior\"")
+
           for (i in 1:nrow(d_MMR)){
       		  if(substr(d_MMR$Ch[i], start=3, stop=3) == "1"){
       		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m_prior1 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
@@ -873,21 +882,10 @@ print(paste("2", length(unique(d_MMR$Ch))))
     		  }
 
         }
-
-      }else{ # else from mmr = back prior
-
-        if(!is.numeric(mmr_background)) stop("Incomplete request: must provide \"mmr_background\" slope value to manually MMR for background OR use mmr_background=\"trial_mean\"")
-
-         for (i in 1:nrow(d_MMR)){
-      		  d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (mmr_background * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
-         }
-        message("MMR corrected for background: using specified slope value, same slope for all channels | bacterial respiration slope: ", mmr_background)
       }
 
-
-	  }else{ # ALL OF THE CORRECTION BELOW IS WITH USING SAME SLOPE AS SMR
-
-	    if(!is.null(background_gr)){
+	    # 2. "back_gr"
+	    if(mmr_background == "back_gr"){
 	        if(match_background_Ch==TRUE){
 	          message("MMR corrected for background: using Ch specific background based on estimated regression of bacterial growth")
 	            for (i in 1:nrow(d_MMR)){
@@ -948,6 +946,8 @@ print(paste("2", length(unique(d_MMR$Ch))))
         		  }# end of the looop
 	        }
           if(match_background_Ch==FALSE){
+            message("MMR corrected for background: mean background slopes (not channel specific) based on the estimated regression of bacterial growth")
+
               if(background_gr == "linear"){
     		        background_slopes<-data.frame(DateTime_start = d_MMR$DateTime_start)
                 background_slopes$back_m<-predict(back_regression, background_slopes)
@@ -962,11 +962,12 @@ print(paste("2", length(unique(d_MMR$Ch))))
           	 }
 	        }
 
+	    }
 
-	    }else{
+	    # 3. "trial_mean" << DEFAULT
+	    if(mmr_background == "trail_mean"){
           # 1.1 if background files (either prior or post, or both) are provided and its one overall mean value (back_m)
       		if ((( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==FALSE) & is.null(background_slope) ){
-
 
       		  for (i in 1:nrow(d_MMR)){
       		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
@@ -978,7 +979,7 @@ print(paste("2", length(unique(d_MMR$Ch))))
 
       		## if background slope and volume are specifically provided, then use those! this alos overrides the background prior and post argument.
       		# all channels with the same slope
-      		if (!is.null(background_slope) ){
+      		if (!is.null(background_slope)){
 
       		  for (i in 1:nrow(d_MMR)){
       		    d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (background_slope * background.V)) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
