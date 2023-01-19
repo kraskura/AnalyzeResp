@@ -52,7 +52,7 @@ SDA<-function(AnimalID,
               data.SDA = NULL,
               analyzed_MR = NULL,
               SMR_calc = TRUE,
-              SMR_vals = c(NA, NA, NA, NA),
+              SMR_vals = c(NULL, NULL, NULL, NULL),
               drop_ch = NULL,
               N_Ch = 4,
               end_SDA_Ch = NA,
@@ -74,15 +74,61 @@ SDA<-function(AnimalID,
   if(!length(as.vector(date_format))==2){
     stop_function<-TRUE
     if(stop_function) {
-      stop("Argument 'date_format' is not properly stated. \n It must be a vector of two stating: i) the date time format and ii) timezone. \n Default is: c(\"%Y-%m-%d %H:%M:%S\", \"GMT\"). Argument is passed to strptime() ")
+      stop("Cannot interpret 'date_format' format. \n Please provide a vector of two stating: i) the date time format and ii) timezone. \n Default is: c(\"%Y-%m-%d %H:%M:%S\", \"GMT\"). Argument is passed to strptime() ")
     }
   }
+
+  # ************** if multiple files of SDA are provided:
+  if(length(data.SDA) > 1){
+    message("Multiple SDA files are combined")
+
+      if(file.exists(data.SDA[1]) | file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+    	  if(file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){
+          data_glued<-read.csv(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))
+            for(i in 2:length(data.SDA)){
+              data_glued0 <- read.csv(paste("./SDA/csv_input_files/", data.SDA[i], sep=""))
+              data_glued <- rbind(data_glued, data_glued0)
+            }
+        }
+        if(file.exists(data.SDA[1])){
+          data_glued<-read.csv(data.SDA[1])
+            for(i in 2:length(data.SDA)){
+              data_glued0 <- read.csv(data.SDA[i])
+              data_glued <- rbind(data_glued, data_glued0)
+            }
+        }
+    	}else{
+        stop_function<-TRUE
+        if(stop_function){
+          stop("Cannot locate the indicated data.SDA data file.")
+        }
+    	}
+
+    # first order all data by channels
+    data_glued <- data_glued[order(data_glued$Ch), ]
+
+	  data_glued$DateTime_start<- strptime(data_glued$DateTime_start, format = date_format[1], tz = date_format[2])
+
+    data_glued$time_diff<-NA
+
+    for(i in 2:nrow(data_glued)){
+      data_glued$time_diff[i]<-data_glued$min_start[1]+(as.numeric(difftime(data_glued$DateTime_start[i],data_glued$DateTime_start[1], units="min")))
+    }
+
+    data_glued$time_diff[1]<-data_glued$min_start[1]
+  	data_glued$min_start<-data_glued$time_diff
+
+  	data_glued<-data_glued[,1:16]
+  	d_SMR<-data_glued
+  }
+
 
   SDA.spar<-function(spar,d, SDAdata, b, sda_threshold, end_SDA, begin_smr_hr_zero){
 
     sda_threshold<-as.numeric(sda_threshold)
     d$hour<-as.numeric(as.character(d$hour))
 
+    d<-d[complete.cases(d),]
     fit<-smooth.spline(d$hour,d$mo2_min, spar=spar)
     f = function(x) {predict(fit, x)$y}
 
@@ -176,7 +222,7 @@ SDA<-function(AnimalID,
 
   graphics.off()
 
-  filename.SMR<-paste(gsub('.{4}$', '',data.SDA), "_SMR", sep="")
+  filename.SMR<-paste(gsub('.{4}$', '',data.SDA[1]), "_SMR", sep="")
 
   if (local_path | !dir.exists("SDA")){
 		plotname.freq<-paste( filename.SMR,"_PLOT_SMR_analyses.png", sep="")
@@ -480,22 +526,22 @@ SDA<-function(AnimalID,
   # if match_background_Ch=TRUE then correct all SMR values using Chanel specific back_mCh, where Ch is the number of the channel (the total avrg)
   # END -- >>> background
 
-
-
-  # read in datafile
-  if(file.exists(data.SDA) | file.exists(paste("./SDA/csv_input_files/", data.SDA, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
-  	  if(file.exists(paste("./SDA/csv_input_files/", data.SDA, sep=""))){
-        d_SMR<-read.csv(paste("./SDA/csv_input_files/", data.SDA, sep=""))
-      }
-      if(file.exists(data.SDA)){
-        d_SMR<-read.csv(data.SDA)
-      }
-  	}else{
-      stop_function<-TRUE
-      if(stop_function){
-        stop("Cannot locate the indicated data.SDA data file.")
-      }
+  if(length(data.SDA)==1){
+    if(file.exists(data.SDA) | file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+    	  if(file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){
+          d_SMR<-read.csv(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))
+        }
+        if(file.exists(data.SDA)){
+          d_SMR<-read.csv(data.SDA)
+        }
+    	}else{
+        stop_function<-TRUE
+        if(stop_function){
+          stop("Cannot locate the indicated data.SDA data file.")
+        }
+    }
   }
+    # read in datafile
 
   # drop any unwanted channels
   if(!is.null(drop_ch[1])){
@@ -767,7 +813,7 @@ SDA<-function(AnimalID,
     geom_histogram(bins = 60 , color = "black", fill = "gray") +
     facet_grid(Ch~.)+
     theme_classic()+
-    ggtitle(data.SDA)
+    ggtitle(data.SDA[1])
 
   d_SMR$DateTime_start<-as.character(d_SMR$DateTime_start)
   # the lowest 10 values after removal of 5 lowest
@@ -1103,11 +1149,11 @@ SDA<-function(AnimalID,
 
   # save data:
   if (local_path | !dir.exists("SDA")){
-    filename.smr<-paste( gsub('.{12}$', '', data.SDA), "SMR_analyzed.csv", sep='')
-    filename.MR<-paste( gsub('.{12}$', '', data.SDA), "MR_analyzed.csv", sep='')
+    filename.smr<-paste( gsub('.{12}$', '', data.SDA[1]), "SMR_analyzed.csv", sep='')
+    filename.MR<-paste( gsub('.{12}$', '', data.SDA[1]), "MR_analyzed.csv", sep='')
   }else{
-    filename.smr<-paste("./SDA/csv_analyzed_SMR/",gsub('.{12}$', '', data.SDA), "SMR_analyzed.csv", sep='')
-    filename.MR<-paste("./SDA/csv_analyzed_MR/", gsub('.{12}$', '', data.SDA), "MR_analyzed.csv", sep='')
+    filename.smr<-paste("./SDA/csv_analyzed_SMR/",gsub('.{12}$', '', data.SDA[1]), "SMR_analyzed.csv", sep='')
+    filename.MR<-paste("./SDA/csv_analyzed_MR/", gsub('.{12}$', '', data.SDA[1]), "MR_analyzed.csv", sep='')
   }
 
   lst <- lapply(newdata.smr, unlist)
@@ -1126,39 +1172,42 @@ SDA<-function(AnimalID,
 
   if (SMR_calc==FALSE){
 
-    if (SMR_calc==FALSE & (is.null(analyzed_MR))){
-      stop("SMR analysis: must provide analyzed MR file or specific SMR values")
+    if (SMR_calc==FALSE & is.null(SMR_vals) & is.null(analyzed_MR)){
+      stop("SMR analysis: must provide 'analyzed_MR' file or specific 'SMR_vals'")
     }
 
-    if(file.exists(analyzed_MR) | file.exists(paste("./SDA/csv_input_files/", analyzed_MR, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
-    	  if(file.exists(paste("./SDA/csv_input_files/", analyzed_MR, sep=""))){
-          newdata.smr<-read.csv(paste("./SDA/csv_input_files/", analyzed_MR, sep=""))
-        }
-        if(file.exists(analyzed_MR)){
-          newdata.smr<-read.csv(analyzed_MR)
-        }
-    	}else{
-        stop_function<-TRUE
-        if(stop_function){
-          stop("SMR analysis: cannot locate the indicated analyzed_MR data file with SMR values.")
-        }
+    if(!is.null(analyzed_MR)){
+      if(file.exists(analyzed_MR) | file.exists(paste("./SDA/csv_input_files/", analyzed_MR, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+      	  if(file.exists(paste("./SDA/csv_input_files/", analyzed_MR, sep=""))){
+            newdata.smr<-read.csv(paste("./SDA/csv_input_files/", analyzed_MR, sep=""))
+          }
+          if(file.exists(analyzed_MR)){
+            newdata.smr<-read.csv(analyzed_MR)
+          }
+      	}else{
+          stop_function<-TRUE
+          if(stop_function){
+            stop("SMR analysis: cannot locate the indicated analyzed_MR data file with SMR values.")
+          }
+      }
     }
 
     # newdata.smr<-read.csv(analyzed_MR)
     message("SMR analysis: using estimated SMR values from previosly analyzed provided data")
   }
 
+
   if (local_path | !dir.exists("SDA")){
-    plotname.sda.data<-	paste(gsub('.{4}$', '', data.SDA),"_SDA_hourly_PLOT.png", sep='')
-    SDAdata_name<-paste(gsub('.{4}$', '', data.SDA),"_SDA_analyzed.csv", sep='')
-    SDAhrlydata_name<-paste(gsub('.{4}$', '', data.SDA),"_SDA_hrly_analyzed.csv", sep='')
-    SDAhrlydata_name_wDELAY<-paste(gsub('.{4}$', '', data.SDA),"_SDA_hrly_wDELAY_analyzed.csv", sep='')
+    plotname.sda.data<-	paste(gsub('.{4}$', '', data.SDA[1]),"_SDA_hourly_PLOT.png", sep='')
+    SDAdata_name<-paste(gsub('.{4}$', '', data.SDA[1]),"_SDA_analyzed.csv", sep='')
+    SDAhrlydata_name<-paste(gsub('.{4}$', '', data.SDA[1]),"_SDA_hrly_analyzed.csv", sep='')
+    SDAhrlydata_name_wDELAY<-paste(gsub('.{4}$', '', data.SDA[1]),"_SDA_hrly_wDELAY_analyzed.csv", sep='')
 
   }else{
-    plotname.sda.data<-	paste("./SDA/plots_SDA_hourly/",gsub('.{4}$', '', data.SDA),"_SDA_hourly_PLOT.png", sep='')
-    SDAdata_name<-paste("./SDA/csv_analyzed_SDA/", gsub('.{4}$', '', data.SDA),"_SDA_analyzed.csv", sep='')
-    SDAhrlydata_name<-paste("./SDA/csv_analyzed_SDA_hrly/", gsub('.{4}$', '', data.SDA),"_SDA_hrly_analyzed.csv", sep='')
-    SDAhrlydata_name_wDELAY<-paste("./SDA/csv_analyzed_SDA_hrly/", gsub('.{4}$', '', data.SDA),"_SDA_hrly_wDELAY_analyzed.csv", sep='')
+    plotname.sda.data<-	paste("./SDA/plots_SDA_hourly/",gsub('.{4}$', '', data.SDA[1]),"_SDA_hourly_PLOT.png", sep='')
+    SDAdata_name<-paste("./SDA/csv_analyzed_SDA/", gsub('.{4}$', '', data.SDA[1]),"_SDA_analyzed.csv", sep='')
+    SDAhrlydata_name<-paste("./SDA/csv_analyzed_SDA_hrly/", gsub('.{4}$', '', data.SDA[1]),"_SDA_hrly_analyzed.csv", sep='')
+    SDAhrlydata_name_wDELAY<-paste("./SDA/csv_analyzed_SDA_hrly/", gsub('.{4}$', '', data.SDA[1]),"_SDA_hrly_wDELAY_analyzed.csv", sep='')
   }
 
   # SDA
@@ -1255,6 +1304,7 @@ SDA<-function(AnimalID,
 
     # Find the smr value to use for SDA calculations
     if (sda_threshold_level[1]=="SMR_vals" & SMR_calc==FALSE){
+      # print(Y.Ch)
       b<-SMR_vals[as.numeric(substr(Y.Ch, start=3, stop=3))]
       b<-b*as.numeric(sda_threshold_level[2])
 
