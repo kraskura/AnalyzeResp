@@ -23,6 +23,7 @@ MMR_SMR_AS_EPOC(
   drop_ch = NULL,
   MLND = TRUE,
   verbose.MLND = FALSE,
+  calc_EPOC = TRUE,
   epoc_threshold = 1,
   recovMMR_threshold = 0.5,
   end_EPOC_Ch = c(NA, NA, NA, NA),
@@ -74,6 +75,8 @@ MMR_SMR_AS_EPOC(
 
 \item{verbose.MLND}{From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).}
 
+\item{calc_EPOC}{Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourcly recovery, etc.)}
+
 \item{epoc_threshold}{Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to epoc_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as a recovery threshold, enter epoc_threshold = 1.2.}
 
 \item{recovMMR_threshold}{Short-term recovery threshold relevant to individual’s MMR. Indicates the (percent) level of MMR to calculate recovery indices. The default indicates 50 percent MMR, e.g., the time it takes to recover to 50 percent MMR (default). Enter 0.3 for 30 percent MMR, 0.8 for 80 percent MMR)}
@@ -94,7 +97,7 @@ MMR_SMR_AS_EPOC(
 
 \item{match_background_Ch}{Logical. If TRUE, the background respiration is estimated and applied channel-specific. The background_prior and background_post are used to estimate background respiration specific to each channel (or individual), which then is used to correct each individual’s MO2 independently. By default, the mean background respiration rate from all channels is calculated and applied to correct all individual’s MO2}
 
-\item{mmr_background}{Specifies what background value should be used to correct MMR value. Options: i) "back_prior" takes background respiration rate value estimated from the background_prior file only, ii)"trial_mean" takes background respiration rate value that is applied to the entire trial (MMR and SMR, indistinguishable), and iii) a defined respiration rate value mgO2 L-1 h-1.}
+\item{mmr_background}{Specifies what background value should be used to correct MMR value. Options: i) "back_prior" takes background respiration rate value estimated from the background_prior file only, ii)"trial_mean" takes background respiration rate value that is applied to the entire trial (MMR and SMR, indistinguishable), iii) "back_gr", and iv) a defined respiration rate value mgO2 L-1 h-1.}
 
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 }

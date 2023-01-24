@@ -15,7 +15,7 @@ SDA(
   data.SDA = NULL,
   analyzed_MR = NULL,
   SMR_calc = TRUE,
-  SMR_vals = c(NA, NA, NA, NA),
+  SMR_vals = c(NULL, NULL, NULL, NULL),
   drop_ch = NULL,
   N_Ch = 4,
   end_SDA_Ch = NA,

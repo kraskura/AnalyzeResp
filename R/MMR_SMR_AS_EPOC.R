@@ -27,9 +27,10 @@
 #' @param background.V Manually assigned respirometer volumes (L). A vector with 4 numeric variables, one for each channel.
 #' @param background_gr Specify whether to assume that bacterial growth (thus respiration rates) changed linearly or in exponentially across the duration of the respirometry trial. Must specify either "linear" or "exp": metabolic rate values across the given trial are corrected using the estimated background values from the indicated growth curve. Both background_prior and background_post must be provided to enable this.
 #' @param match_background_Ch Logical. If TRUE, the background respiration is estimated and applied channel-specific. The background_prior and background_post are used to estimate background respiration specific to each channel (or individual), which then is used to correct each individual’s MO2 independently. By default, the mean background respiration rate from all channels is calculated and applied to correct all individual’s MO2
-#' @param mmr_background Specifies what background value should be used to correct MMR value. Options: i) "back_prior" takes background respiration rate value estimated from the background_prior file only, ii)"trial_mean" takes background respiration rate value that is applied to the entire trial (MMR and SMR, indistinguishable), and iii) a defined respiration rate value mgO2 L-1 h-1.
+#' @param mmr_background Specifies what background value should be used to correct MMR value. Options: i) "back_prior" takes background respiration rate value estimated from the background_prior file only, ii)"trial_mean" takes background respiration rate value that is applied to the entire trial (MMR and SMR, indistinguishable), iii) "back_gr", and iv) a defined respiration rate value mgO2 L-1 h-1.
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param verbose.MLND From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).
+#' @param calc_EPOC Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourcly recovery, etc.)
 #'
 #' @importFrom stats lm coef var integrate predict quantile sd smooth.spline
 #' @import graphics
@@ -64,6 +65,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
                           drop_ch = NULL,
                           MLND = TRUE,
                           verbose.MLND = FALSE,
+                          calc_EPOC = TRUE,
                           epoc_threshold = 1,
                           recovMMR_threshold = 0.5,
                           end_EPOC_Ch = c(NA, NA, NA, NA),
@@ -79,14 +81,10 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 
   #  binding global variables locally to the function.
-  DateTime_start<-m<-cycle_mmr<-cycle_type<-back_m_prior1<-back_m_prior2<-back_m_prior3<-back_m_prior4<-back_regression1<-back_regression2<-back_regression3<-back_regression4<-xpos<-ypos<-hjustvar<-vjustvar<-annotateText<-min_start<-quantiles<-mo2_perc<-smr_val<-smr_method<-NULL
-
-  if(!length(as.vector(date_format))==2){
-    stop_function<-TRUE
-    if(stop_function) {
-      stop("Argument 'date_format' is not properly stated. \n It must be a vector of two stating: i) the date time format and ii) timezone. \n Default is: c(\"%Y-%m-%d %H:%M:%S\", \"GMT\"). Argument is passed to strptime() ")
-    }
-  }
+  DateTime_start<-m<-cycle_mmr<-cycle_type<-NULL
+  back_m_prior1<-back_m_prior2<-back_m_prior3<-back_m_prior4<-NULL
+  back_regression1<-back_regression2<-back_regression3<-back_regression4<-NULL
+  xpos<-ypos<-hjustvar<-vjustvar<-annotateText<-min_start<-quantiles<-mo2_perc<-smr_val<-smr_method<-NULL
 
   ## recovery smoothing, only relevant withing this function
   ## # start of EPOC.spar plot function
@@ -144,7 +142,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		  	b <- b_list[i]
 
   		}else{
-
   		    b <- b_list[i] * epoc_threshold
   		}
 
@@ -334,11 +331,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
   graphics.off()
 
-   filename.SMR<-paste(gsub('.{4}$', '',data.SMR), "_SMR", sep="")
-	 filename.MMR<-paste(gsub('.{4}$', '',data.MMR), "_MMR_", sep="")
+ filename.SMR<-paste(gsub('.{4}$', '',data.SMR[1]), "_SMR", sep="")
+ filename.MMR<-paste(gsub('.{4}$', '',data.MMR), "_MMR_", sep="")
 
   # **********************************************
-  # START-- >>> background
+  # START-- >>> background ------
   if((is.null(background.V) & !is.null(background_slope)) |(!is.null(background.V) & is.null(background_slope))) {
     stop_function <- TRUE
     if(stop_function) stop("Must provide background unique slope and volume together, or provide a background file with same volumes as animal respirometers")
@@ -349,8 +346,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	  if(stop_function) stop("If match_background_Ch = TRUE, must provide at least one datafiles, either background measured before or after the respirometry trial")
   }
 
-  # background file wrangling
-  # 1. find what channels recorded background
+  # find what channels recorded background
   if (!is.null(background_post) | !is.null(background_prior) ) {
 
     # reading in the file
@@ -621,7 +617,13 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   # END -- >>> background
   # **********************************************
 
-
+  # Stop functions and setup --------
+  if(!length(as.vector(date_format))==2){
+    stop_function<-TRUE
+    if(stop_function) {
+      stop("Cannot interpret 'date_format' format. \n Please provide a vector of two stating: i) the date time format and ii) timezone. \n Default is: c(\"%Y-%m-%d %H:%M:%S\", \"GMT\"). Argument is passed to strptime() ")
+    }
+  }
 
 	newdata.smr<-as.data.frame(matrix(ncol=33, nrow=0))
 	names(newdata.smr)<-c("filename", "ID", "Ch", "BW","t_min","t_max", "t_mean", "N_mo2", #8
@@ -632,11 +634,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	"AS_smr_mean10minVal_overall", "AS_SMR_low10quant_overall", "AS_SMR_low15quant_overall", "AS_SMR_low20quant_overall", "AS_smr_mlnd_overall", #5
 	"mmr_length_cycle", "scaling_exponent_mmr", "scaling_exponent_smr", "common_mass")#1
 
-	# cols = c(4:17, 19:32)
-	# newdata.smr[,cols] %<>% lapply(function(x) as.numeric(as.character(x)))
-	# cols2 = c(1:3, 18)
-	# newdata.smr[,cols2] %<>% lapply(function(x) as.character(x))
-
 	cols = c(4:33)
 	cols2 = c(1:3)
   newdata.smr[,cols] <- lapply(newdata.smr[,cols], as.character)
@@ -644,7 +641,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	newdata.smr[,cols2] <- lapply(newdata.smr[,cols2], as.character)
 
  	# **********************************************
-  # START -- >>> MMR file available
+  # START -- >>> MMR file available ---------
   if (!is.null(data.MMR)){
 
     if(file.exists(data.MMR) | file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
@@ -965,7 +962,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	    }
 
 	    # 3. "trial_mean" << DEFAULT
-	    if(mmr_background == "trail_mean"){
+	    if(mmr_background == "trial_mean"){
           # 1.1 if background files (either prior or post, or both) are provided and its one overall mean value (back_m)
       		if ((( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==FALSE) & is.null(background_slope) ){
 
@@ -1062,29 +1059,60 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	# END -- >>> MMR file available
  	# **********************************************
 
+	# *********************************************
+	# START -- >>> SMR data available --------
+	if(!is.null(data.SMR[1])){
 
+	   # read in SMR files, one or multiple:
+    if(file.exists(data.SMR[1]) | file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
 
-	# **********************************************
-	# START -- >>> If SMR data IS available
-	# analyses MMR points for SMR value distributions and calculations too if available, no EPOC
-	if(!is.null(data.SMR)){
+      if(file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR[1], sep=""))){
+        data_glued<-read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR[1], sep=""))
+        if(length(data.SMR) > 1){
+          message("Multiple SDA files are combined")
+          for(i in 2:length(data.SMR)){
+            data_glued0 <- read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR[i], sep=""))
+            data_glued <- rbind(data_glued, data_glued0)
+          }
+        }
+      }
 
-    if(file.exists(data.SMR) | file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
-    	  if(file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR, sep=""))){
-          d_SMR<-read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR, sep=""))
+      if(file.exists(data.SMR[1])){
+        data_glued<-read.csv(data.SMR[1])
+        if(length(data.SMR) > 1){
+          message("Multiple SMR files are combined")
+          for(i in 2:length(data.SMR)){
+            data_glued0 <- read.csv(data.SMR[i])
+            data_glued <- rbind(data_glued, data_glued0)
+          }
         }
-        if(file.exists(data.SMR)){
-          d_SMR<-read.csv(data.SMR)
-        }
-    	}else{
-        stop_function<-TRUE
-        if(stop_function){
-          stop("Cannot locate the indicated data.SMR data file.")
-        }
+      }
+
+    }else{
+      stop_function<-TRUE
+      if(stop_function){
+        stop("Cannot locate the indicated 'data.SMR' data file(s).")
+      }
     }
 
+    # first order all data by channels
+    data_glued <- data_glued[order(data_glued$Ch), ] # even if only one file
+    data_glued$DateTime_start<- strptime(data_glued$DateTime_start, format = date_format[1], tz = date_format[2])
 
-		# d_SMR<-read.csv(data.SMR)
+    if(length(data.SMR) > 1){
+      data_glued$time_diff<-NA
+
+      for(i in 2:nrow(data_glued)){
+        data_glued$time_diff[i]<-data_glued$min_start[1]+(as.numeric(difftime(data_glued$DateTime_start[i],data_glued$DateTime_start[1], units="min")))
+      }
+
+      data_glued$time_diff[1]<-data_glued$min_start[1]
+    	data_glued$min_start<-data_glued$time_diff
+    	data_glued<-data_glued[,1:16]
+    }
+
+  	d_SMR<-data_glued
+
 			# drop any unwanted channels
 	  if(!is.null(drop_ch[1])){
 	    n_ch_drop<-length(drop_ch)
@@ -1832,13 +1860,12 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 			print(smr_meth_p)
 		dev.off()
 
-
 	}
+	# END -- >>> SMR file available
+ 	# **********************************************
 
-	# Both MMR and SMR files are available: recovery focused part
+	# MMR and SMR files available: ----------
 	if(!is.null(data.MMR) & !is.null(data.SMR)){
-
-	  message("Recovery: estimating EPOC, hourly EPOC, percentMMR, time to X percent MMR, and more")
 
 	  if (local_path | !dir.exists("MMR_SMR_AS_EPOC")){
 		  	EPOCdata_name<-paste( filename.MMR, "_EPOC_DATA.csv", sep='')
@@ -1849,18 +1876,14 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		}else{
 		  	EPOCdata_name<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_EPOC/", filename.MMR, "_EPOC_DATA.csv", sep='')
 		  	# EPOCplot_name<-	paste("../plots_ch_EPOC/", filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
-		  	filename.smr<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_SMR/",gsub('.{4}$', '', data.SMR), "SMR_analyzed.csv", sep='')
+		  	filename.smr<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_SMR/",gsub('.{4}$', '', data.SMR[1]), "SMR_analyzed.csv", sep='')
   	  	filename.mmr<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_MMR/",gsub('.{4}$', '', data.MMR), "MMR_analyzed.csv", sep='')
 	    	filename.MR<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_MR/", gsub('.{4}$', '', data.MMR), "MR_analyzed.csv", sep='')
 		}
 
 
 	  if(!(length(unique(d_SMR$Ch)) == length(unique(d_MMR$Ch)))){
-
-print(length(unique(d_SMR$Ch)))
-print(length(unique(d_MMR$Ch)))
-
-	     stop_function <- TRUE
+	    stop_function <- TRUE
       if(stop_function) stop(paste("The number of channels in MMR and SMR do not match, check the input data and try again! | "))#, "Ch in MMR:", unique(d_MMR$Ch),  "Ch in SMR:", unique(d_SMR$Ch)))
 	  }
 
@@ -1918,16 +1941,7 @@ print(length(unique(d_MMR$Ch)))
     cols2 = c(1:3)
   	newdata.smr[,cols] <- lapply(newdata.smr[,cols], as.character)
 		newdata.smr[,cols] <- lapply(newdata.smr[,cols], as.numeric)
-
 		newdata.smr[,cols2] <- lapply(newdata.smr[,cols2], as.character)
-
-
-		# cobine the file specific file to the combined file
-		# newdata.all<-rbind(newdata.all, newdata.smr)
-  	# EPOC part -- ONLY IF both MMR and SMR are available
-  	### defining function first:
-  	#	environment(plotEPOC.spar)<-environment()
-    # when both MMR and SMR are available
 
 		d_SMR$cycle_type<-"SMR"
 		d_MMR$time_frame<-NA
@@ -1941,118 +1955,114 @@ print(length(unique(d_MMR$Ch)))
 		dat_MMR<-d_MMR[,c("ID", "time_frame", "min_start", "r2", "b", "m", "t_min", "t_max", "t_mean", "Ch", "bw", "mo2", "cycle_type", "DateTime_start", "scaling_exponent", "common_mass")]
 		dat_SMR<-d_SMR[,c("ID", "time_frame", "min_start", "r2", "b", "m", "t_min", "t_max", "t_mean", "Ch", "bw", "mo2", "cycle_type", "DateTime_start", "scaling_exponent", "common_mass")]
 
-		if (length(unique(dat_SMR$Ch))>1){
-			Ch.dat.smr<-split(dat_SMR, dat_SMR$Ch)
-			Ch.dat.mmr<-split(dat_MMR, dat_MMR$Ch)
-		}else{
-			Ch.dat.smr<-1
-			Ch.dat.mmr<-1
-		}
-#~ 		data<-dat_MMR[-c(1:nrow(dat_MMR)), ]
+    if(calc_EPOC){
+      message("Recovery: estimating EPOC, hourly EPOC, percentMMR, time to X percent MMR, and more")
 
-		EPOCdata<-matrix(ncol=26, nrow=0)
-		colnames(EPOCdata) <- c("ID", "smr_type", "smr","spar", "EPOC_full", "end_EPOC_min", "SMR_intergral_full", "SMR_threshold", "EPOC_1hr", "MO2_1hr", "EPOC_2hr", "MO2_2hr", "EPOC_3hr", "MO2_3hr", "EPOC_4hr", "MO2_4hr",  "EPOC_5hr", "MO2_5hr", "end_EPOC.mmr", "EPOC_mmr", "MO2_mmr", "MMR", "MMR_percent", "scaling_exponent_mmr",  "scaling_exponent_smr", "common_mass")
-
-    # apply EPOC.spar function on combined mmr smr data
-  	# loop through all available chanels
-		for(i in 1:length(unique(dat_SMR$Ch))){
-
-  		if (length(unique(dat_SMR$Ch))==1){
-  			d.smr<-dat_SMR
-  			d.mmr<-dat_MMR
+  		if (length(unique(dat_SMR$Ch))>1){
+  			Ch.dat.smr<-split(dat_SMR, dat_SMR$Ch)
+  			Ch.dat.mmr<-split(dat_MMR, dat_MMR$Ch)
   		}else{
-  			d.smr<-as.data.frame(Ch.dat.smr[i])
-  			d.mmr<-as.data.frame(Ch.dat.mmr[i])
+  			Ch.dat.smr<-1
+  			Ch.dat.mmr<-1
   		}
+  #~ 		data<-dat_MMR[-c(1:nrow(dat_MMR)), ]
+
+  		EPOCdata<-matrix(ncol=26, nrow=0)
+  		colnames(EPOCdata) <- c("ID", "smr_type", "smr","spar", "EPOC_full", "end_EPOC_min", "SMR_intergral_full", "SMR_threshold", "EPOC_1hr", "MO2_1hr", "EPOC_2hr", "MO2_2hr", "EPOC_3hr", "MO2_3hr", "EPOC_4hr", "MO2_4hr",  "EPOC_5hr", "MO2_5hr", "end_EPOC.mmr", "EPOC_mmr", "MO2_mmr", "MMR", "MMR_percent", "scaling_exponent_mmr",  "scaling_exponent_smr", "common_mass")
+
+      # apply EPOC.spar function and combined mmr smr data
+    	# loop through all available chanels
+  		for(i in 1:length(unique(dat_SMR$Ch))){
+
+    		if (length(unique(dat_SMR$Ch))==1){
+    			d.smr<-dat_SMR
+    			d.mmr<-dat_MMR
+    		}else{
+    			d.smr<-as.data.frame(Ch.dat.smr[i])
+    			d.mmr<-as.data.frame(Ch.dat.mmr[i])
+    		}
 
 
-		  cols = c(1,2,5,13,14)
-		  d.smr[,cols] <- lapply(d.smr[, cols], as.character)
-      d.mmr[,cols] <- lapply(d.mmr[, cols], as.character)
+  		  cols = c(1,2,5,13,14)
+  		  d.smr[,cols] <- lapply(d.smr[, cols], as.character)
+        d.mmr[,cols] <- lapply(d.mmr[, cols], as.character)
 
-  		d<-rbind(d.mmr, d.smr)
-  		colnames(d)<-c("ID", "time_frame", "min_start", "r2", "b", "m", "t_min", "t_max", "t_mean", "Ch", "bw", "mo2", "cycle_type", "DateTime_start", "scaling_exponent", "common_mass")
+    		d<-rbind(d.mmr, d.smr)
+    		colnames(d)<-c("ID", "time_frame", "min_start", "r2", "b", "m", "t_min", "t_max", "t_mean", "Ch", "bw", "mo2", "cycle_type", "DateTime_start", "scaling_exponent", "common_mass")
 
-  		# mmr value for MMR 50 recovery calculations
-  		mmr.val <- max(d$mo2)
-  		# message(paste(d$Ch[1], ": MMR = ", round(mmr.val,2) ,sep=""))
+    		# mmr value for MMR 50 recovery calculations
+    		mmr.val <- max(d$mo2)
+    		# message(paste(d$Ch[1], ": MMR = ", round(mmr.val,2) ,sep=""))
 
-  		# Ch specific name for epoc plot
-			if (local_path | !dir.exists("MMR_SMR_AS_EPOC")){
-	    	EPOCplot_name<-	paste( filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
-    	}else{
-	    	EPOCplot_name<-	paste("./MMR_SMR_AS_EPOC/plots_ch_EPOC/", filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
-	    }
+    		# Ch specific name for epoc plot
+  			if (local_path | !dir.exists("MMR_SMR_AS_EPOC")){
+  	    	EPOCplot_name<-	paste( filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
+      	}else{
+  	    	EPOCplot_name<-	paste("./MMR_SMR_AS_EPOC/plots_ch_EPOC/", filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
+  	    }
 
-    	 # d$DateTime_start<- strptime(d$DateTime_start, format="%Y-%m-%d %H:%M:%S") # the default strptime, that was already used above
-  		 d$time_mo2<-NA
-  		 d$time_mo2[1]<-0
+      	 # d$DateTime_start<- strptime(d$DateTime_start, format="%Y-%m-%d %H:%M:%S") # the default strptime, that was already used above
+    		 d$time_mo2<-NA
+    		 d$time_mo2[1]<-0
 
-			for(j in 2:nrow(d)){
-				d$time_mo2[j]<-difftime(d$DateTime_start[j], d$DateTime_start[1], units=c("mins"))
-			}
-
-		  end_EPOC<-end_EPOC_Ch[as.numeric(substr(d$Ch[1], start=3, stop=3))]
-  		## The EPOC calculation
-
-		  spars <- c(0.1, 0.2, 0.3)
-
-  			if(nrow(d) ==4 || nrow(d)>4){
-  				for (n in 1:length(spars)){
-  					if (n == 1) {
-  					  # length(spars)
-  						png(EPOCplot_name, width = 6, height = length(spars)*4, units="in", res=200)
-  						par(mfrow=c(length(spars),1), mar=c(4,4,3,1)+0.1)
-  					}
-
-  					EPOCdata <- EPOC.spar(spars[n], d, EPOCdata, mmr.val, epoc_threshold, recovMMR_threshold, newdata.smr, MLND, end_EPOC, scaling_exponent_mmr, scaling_exponent_smr, common_mass)
-
-  					if (n == length(spars)){
-  						dev.off()
-  						write.csv(file=EPOCdata_name, EPOCdata, row.names=FALSE)
-  					}
-  				}
-
-  			}else{
-  				message(paste("Recovery: Too few (n=", nrow(d), ") data points for smoothing and EPOC analysis.", sep = ""))
+  			for(j in 2:nrow(d)){
+  				d$time_mo2[j]<-difftime(d$DateTime_start[j], d$DateTime_start[1], units=c("mins"))
   			}
 
-	   }
+  		  end_EPOC<-end_EPOC_Ch[as.numeric(substr(d$Ch[1], start=3, stop=3))]
+    		## The EPOC calculation
+
+  		  spars <- c(0.1, 0.2, 0.3)
+
+    			if(nrow(d) ==4 || nrow(d)>4){
+    				for (n in 1:length(spars)){
+    					if (n == 1) {
+    					  # length(spars)
+    						png(EPOCplot_name, width = 6, height = length(spars)*4, units="in", res=200)
+    						par(mfrow=c(length(spars),1), mar=c(4,4,3,1)+0.1)
+    					}
+
+    					EPOCdata <- EPOC.spar(spars[n], d, EPOCdata, mmr.val, epoc_threshold, recovMMR_threshold, newdata.smr, MLND, end_EPOC, scaling_exponent_mmr, scaling_exponent_smr, common_mass)
+
+    					if (n == length(spars)){
+    						dev.off()
+    						write.csv(file=EPOCdata_name, EPOCdata, row.names=FALSE)
+    					}
+    				}
+
+    			}else{
+    				message(paste("Recovery: Too few (n=", nrow(d), ") data points for smoothing and EPOC analysis.", sep = ""))
+    			}
+
+  	   }
 
 
-  	if (epoc_threshold == 1){
-  		  	message (paste("Recovery: Time at EPOC assigned when oxygen uptake rates recover to RMR/SMR level"))
-  		}else{
-  		    message (paste("Recovery: Time at EPOC assigned when oxygen uptake rates recover to ", epoc_threshold, " x SMR/RMR ", sep = ""))
-  		}
+    	if (epoc_threshold == 1){
+    		message (paste("Recovery: Time at EPOC assigned when oxygen uptake rates recover to RMR/SMR level"))
+    	}else{
+    		message (paste("Recovery: Time at EPOC assigned when oxygen uptake rates recover to ", epoc_threshold, " x SMR/RMR ", sep = ""))
+    	}
+    }else{
+      message("Recovery: Not evaluated, use 'calc_EPOC' to calculate EPOC")
+    }
 
-#   	newdata.smr<-as.data.frame(newdata.smr)
-# 		newdata.smr<- apply(newdata.smr, 2, as.character)
-#
 		write.csv(file=filename.smr, d_SMR, row.names=FALSE)
 		write.csv(file=filename.mmr, d_MMR, row.names=FALSE)
 		write.csv(file=filename.MR, newdata.smr, row.names=FALSE)
 
-	# 	if(test=="preSDA"){
-	#     	  filename.MR<-paste("../csv_input_files/", gsub('.{4}$', '', data.MMR), "MR_analyzed.csv", sep='')
-	#     	  write.csv(file=filename.MR, newdata.smr, row.names=FALSE)
-	#    }
-
-		# message("Save MMR, SMR, and MR files")
-
   }
 
-	# no MMR file, only SMR file
-  if(!is.null(data.SMR) & is.null(data.MMR)){
+	# no MMR file, only SMR file: ------------
+  if(!is.null(data.SMR[1]) & is.null(data.MMR)){
 
    message("No RMR/SMR: Aerobic scopes and recovery performances are not estimated.")
 
 	 if(local_path | !dir.exists("MMR_SMR_AS_EPOC")){
-	    filename.smr<-paste(gsub('.{4}$', '', data.SMR), "SMR_analyzed.csv", sep='')
-		  filename.MR<-paste(gsub('.{4}$', '', data.SMR), "MR_analyzed.csv", sep='')
+	    filename.smr<-paste(gsub('.{4}$', '', data.SMR[1]), "SMR_analyzed.csv", sep='')
+		  filename.MR<-paste(gsub('.{4}$', '', data.SMR[1]), "MR_analyzed.csv", sep='')
    }else{
-	    filename.smr<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_SMR/",gsub('.{4}$', '', data.SMR), "SMR_analyzed.csv", sep='')
-		  filename.MR<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_MR/", gsub('.{4}$', '', data.SMR), "MR_analyzed.csv", sep='')
+	    filename.smr<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_SMR/",gsub('.{4}$', '', data.SMR[1]), "SMR_analyzed.csv", sep='')
+		  filename.MR<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_MR/", gsub('.{4}$', '', data.SMR[1]), "MR_analyzed.csv", sep='')
 	 }
 
     lst <- lapply(newdata.smr, unlist)
@@ -2061,18 +2071,11 @@ print(length(unique(d_MMR$Ch)))
 		write.csv(file=filename.smr, d_SMR, row.names=FALSE)
 		write.csv(file=filename.MR, newdata.smr, row.names=FALSE)
 
-	   # if(test=="preSDA"){
-	   #  	  filename.MR<-paste("../csv_input_files/", gsub('.{4}$', '', data.SMR), "MR_analyzed.csv", sep='')
-	   #  	  write.csv(file=filename.MR, newdata.smr, row.names=FALSE)
-	   # }
-		# message("Save SMR and MR files")
 
   }
 
-
-	# ***********************************************
-  # no SMR file
-  if(is.null(data.SMR) & !is.null(data.MMR)){# if only MMR is analyzed
+	# no SMR file, only MMR file: ------------
+  if(is.null(data.SMR[1]) & !is.null(data.MMR)){# if only MMR is analyzed
 
     message("No MMR: Aerobic scopes and recovery performances are not estimated.")
 

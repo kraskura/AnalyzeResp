@@ -26,7 +26,7 @@
 #' @param handling_delay a delay of SDA due to handling, anesthsia, or any other experimental factor. in hours
 #' @param begin_smr_hr_zero logical. Wether to force the integral SDA costs still be calculated from hour 0, that is assumed to be at SMR level (refer to sda_threshold_level)
 #'
-#' @importFrom stats lm coef var integrate predict quantile sd smooth.spline
+#' @importFrom stats lm coef var integrate predict quantile sd smooth.spline complete.cases
 #' @import graphics
 #' @import grDevices
 #' @importFrom gridExtra grid.arrange
@@ -69,7 +69,9 @@ SDA<-function(AnimalID,
               begin_smr_hr_zero=FALSE){
 
   # *************** SETUP START
-  DateTime_start <- back_regression1 <- back_regression2 <- back_regression3 <- back_regression4 <- bw <- hour <- m <- min_start <- mo2_mean <- mo2_min <- mo2_perc <- quantiles <- smr_method <- smr_val <- NULL
+  DateTime_start <- back_regression1 <- back_regression2 <- back_regression3 <- back_regression4 <- NULL
+  bw <- hour <- m <- min_start <- mo2_mean <- mo2_min <- mo2_perc <- quantiles <- smr_method <- smr_val <- NULL
+
 
   if(!length(as.vector(date_format))==2){
     stop_function<-TRUE
@@ -78,37 +80,43 @@ SDA<-function(AnimalID,
     }
   }
 
-  # ************** if multiple files of SDA are provided:
+  # read in files SDA ------
+  if(file.exists(data.SDA[1]) | file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+
+    if(file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){
+      data_glued<-read.csv(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))
+      if(length(data.SDA) > 1){
+        message("Multiple SDA files are combined")
+        for(i in 2:length(data.SDA)){
+          data_glued0 <- read.csv(paste("./SDA/csv_input_files/", data.SDA[i], sep=""))
+          data_glued <- rbind(data_glued, data_glued0)
+        }
+      }
+    }
+
+    if(file.exists(data.SDA[1])){
+      data_glued<-read.csv(data.SDA[1])
+      if(length(data.SDA) > 1){
+        message("Multiple SDA files are combined")
+        for(i in 2:length(data.SDA)){
+          data_glued0 <- read.csv(data.SDA[i])
+          data_glued <- rbind(data_glued, data_glued0)
+        }
+      }
+    }
+
+  }else{
+    stop_function<-TRUE
+    if(stop_function){
+      stop("Cannot locate the indicated data.SDA data file.")
+    }
+  }
+
+  # first order all data by channels
+  data_glued <- data_glued[order(data_glued$Ch), ] # even if only one file
+  data_glued$DateTime_start<- strptime(data_glued$DateTime_start, format = date_format[1], tz = date_format[2])
+
   if(length(data.SDA) > 1){
-    message("Multiple SDA files are combined")
-
-      if(file.exists(data.SDA[1]) | file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
-    	  if(file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){
-          data_glued<-read.csv(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))
-            for(i in 2:length(data.SDA)){
-              data_glued0 <- read.csv(paste("./SDA/csv_input_files/", data.SDA[i], sep=""))
-              data_glued <- rbind(data_glued, data_glued0)
-            }
-        }
-        if(file.exists(data.SDA[1])){
-          data_glued<-read.csv(data.SDA[1])
-            for(i in 2:length(data.SDA)){
-              data_glued0 <- read.csv(data.SDA[i])
-              data_glued <- rbind(data_glued, data_glued0)
-            }
-        }
-    	}else{
-        stop_function<-TRUE
-        if(stop_function){
-          stop("Cannot locate the indicated data.SDA data file.")
-        }
-    	}
-
-    # first order all data by channels
-    data_glued <- data_glued[order(data_glued$Ch), ]
-
-	  data_glued$DateTime_start<- strptime(data_glued$DateTime_start, format = date_format[1], tz = date_format[2])
-
     data_glued$time_diff<-NA
 
     for(i in 2:nrow(data_glued)){
@@ -117,12 +125,12 @@ SDA<-function(AnimalID,
 
     data_glued$time_diff[1]<-data_glued$min_start[1]
   	data_glued$min_start<-data_glued$time_diff
-
   	data_glued<-data_glued[,1:16]
-  	d_SMR<-data_glued
   }
+	d_SMR<-data_glued
 
 
+# end read in file
   SDA.spar<-function(spar,d, SDAdata, b, sda_threshold, end_SDA, begin_smr_hr_zero){
 
     sda_threshold<-as.numeric(sda_threshold)
@@ -249,7 +257,7 @@ SDA<-function(AnimalID,
 
 
 
-  # background file manipulation
+  # background  -----
   if((is.null(background.V) & !is.null(background_slope)) |(!is.null(background.V) & is.null(background_slope))) {
     stop_function <- TRUE
     if(stop_function) stop("Must provide background unique slope and volume together, or provide a background file with same volumes as animal respirometers")
@@ -526,23 +534,23 @@ SDA<-function(AnimalID,
   # if match_background_Ch=TRUE then correct all SMR values using Chanel specific back_mCh, where Ch is the number of the channel (the total avrg)
   # END -- >>> background
 
-  if(length(data.SDA)==1){
-    if(file.exists(data.SDA) | file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
-    	  if(file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){
-          d_SMR<-read.csv(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))
-        }
-        if(file.exists(data.SDA)){
-          d_SMR<-read.csv(data.SDA)
-        }
-    	}else{
-        stop_function<-TRUE
-        if(stop_function){
-          stop("Cannot locate the indicated data.SDA data file.")
-        }
-    }
-  }
-    # read in datafile
+  # if(length(data.SDA)==1){
+  #   if(file.exists(data.SDA) | file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+  #   	  if(file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){
+  #         d_SMR<-read.csv(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))
+  #       }
+  #       if(file.exists(data.SDA)){
+  #         d_SMR<-read.csv(data.SDA)
+  #       }
+  #   	}else{
+  #       stop_function<-TRUE
+  #       if(stop_function){
+  #         stop("Cannot locate the indicated data.SDA data file.")
+  #       }
+  #   }
+  # }
 
+  # SMR, mo2 overnight -----
   # drop any unwanted channels
   if(!is.null(drop_ch[1])){
     n_ch_drop<-length(drop_ch)
