@@ -8,7 +8,6 @@
 #' @param chop_end The time (min) to be chopped off at the end of each measurement cycle
 #' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel Firesting has 4 temperature and 4 oxygen sensors
 #' @param inventory_data The inventory file (.csv file), default = NULL
-#' @param flush_plot Plotting of additional figures where full cycle (measure:flush) is presented.
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param date_format The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")
 #' @param plot_temp Logical argument. Indicates whether or not temperature trends for each cycle will be plotted and saved	TRUE
@@ -36,16 +35,10 @@ SMR<-function(data,
               N_Ch = 4,
               date_format = c("%m/%d/%Y %H:%M:%S", "GMT"),
               inventory_data = NULL,
-              flush_plot = NULL, # to be deprecated
               local_path = TRUE,
               plot_temp = FALSE,
               background_data = FALSE,
               sda_data = FALSE){
-
-  if(is.character(flush_plot)){
-    stop_function<-TRUE
-    if(stop_function) {stop("The updated version does not use 'flush_plot'. Argument ignored") }
-  }
 
   if(!length(as.vector(date_format))==2){
     stop_function<-TRUE

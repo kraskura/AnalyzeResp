@@ -48,7 +48,7 @@ SDA<-function(AnimalID,
               r2_threshold_smr,
               sda_threshold_level,
               scaling_exponent_smr = 1,
-              date_format = c("%Y-%m-%d %H:%M:%S", "GMT"),
+              date_format = c("%Y-%m-%d %H:%M:%S", "%m/%d/%Y %H:%M:%S"),
               data.SDA = NULL,
               analyzed_MR = NULL,
               SMR_calc = TRUE,
@@ -114,7 +114,13 @@ SDA<-function(AnimalID,
 
   # first order all data by channels
   data_glued <- data_glued[order(data_glued$Ch), ] # even if only one file
-  data_glued$DateTime_start<- strptime(data_glued$DateTime_start, format = date_format[1], tz = date_format[2])
+
+  if(!is.na(strptime(data_glued$DateTime_start[1], format = date_format[1], tz = ""))){
+    data_glued$DateTime_start<- strptime(data_glued$DateTime_start, format = date_format[1], tz = "")
+  }
+  if(!is.na(strptime(data_glued$DateTime_start[1], format = date_format[2], tz = ""))){
+    data_glued$DateTime_start<- strptime(data_glued$DateTime_start, format = date_format[2], tz = "")
+  }
 
   if(length(data.SDA) > 1){
     data_glued$time_diff<-NA
@@ -279,6 +285,8 @@ SDA<-function(AnimalID,
           }
           if(file.exists(background_prior)){
             back_prior<-read.csv(background_prior)
+            print(head(back_prior))
+
           }
       	}else{
           stop_function<-TRUE
@@ -321,8 +329,14 @@ SDA<-function(AnimalID,
         }
       }
 
-      back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[1], tz = date_format[2])
-  	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[1], tz = date_format[2])
+    if(!is.na(strptime(back_prior$DateTime_start[1], format = date_format[1], tz = ""))){
+      back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[1], tz = "")
+  	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[1], tz = "")
+    }
+    if(!is.na(strptime(back_prior$DateTime_start[1], format = date_format[2], tz = ""))){
+      back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[2], tz = "")
+  	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[2], tz = "")
+    }
 
       back_all<- rbind(back_prior, back_post)
       back_all$DateTime_start<- as.POSIXct(back_all$DateTime_start)
@@ -622,12 +636,17 @@ SDA<-function(AnimalID,
   # 1.2 if match_background_Ch=TRUE then use back_m[Ch] to correct each mo2 value for each channel
   #  2. if background files are NOT provided we DONT acount for any background respiration
 
-	d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format[1], tz = date_format[2])
+  if(!is.na(strptime(d_SMR$DateTime_start[1], format = date_format[1], tz = ""))){
+    d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format, tz = "")
+  }
+  if(!is.na(strptime(d_SMR$DateTime_start[1], format = date_format[2], tz = ""))){
+    d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format[2], tz = "")
+  }
 
   # 000 Jan 4 addition - account for background using linear regression
   # making predictions
   if(!is.null(background_gr) & match_background_Ch==FALSE){
-    background_slopes<-data.frame(DateTime_start = d_SMR$DateTime_start)
+    background_slopes<-data.frame(DateTime_start = as.POSIXct(d_SMR$DateTime_start))
 
     if(background_gr == "linear"){
       background_slopes$back_m<-predict(back_regression, background_slopes)
