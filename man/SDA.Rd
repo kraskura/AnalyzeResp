@@ -11,7 +11,7 @@ SDA(
   r2_threshold_smr,
   sda_threshold_level,
   scaling_exponent_smr = 1,
-  date_format = c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT"),
+  date_format = c("\%Y-\%m-\%d \%H:\%M:\%S", "\%m/\%d/\%Y \%H:\%M:\%S"),
   data.SDA = NULL,
   analyzed_MR = NULL,
   SMR_calc = TRUE,
@@ -53,7 +53,7 @@ SDA(
 
 \item{SMR_calc}{Logical, indicates whether to calculate SMR from the present data trend}
 
-\item{SMR_vals}{allows a user}
+\item{SMR_vals}{allows a user to input their own SMR values}
 
 \item{drop_ch}{Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)}
 

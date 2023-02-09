@@ -13,7 +13,6 @@ SMR(
   N_Ch = 4,
   date_format = c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT"),
   inventory_data = NULL,
-  flush_plot = NULL,
   local_path = TRUE,
   plot_temp = FALSE,
   background_data = FALSE,
@@ -36,8 +35,6 @@ SMR(
 \item{date_format}{The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")}
 
 \item{inventory_data}{The inventory file (.csv file), default = NULL}
-
-\item{flush_plot}{Plotting of additional figures where full cycle (measure:flush) is presented.}
 
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 

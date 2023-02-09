@@ -10,7 +10,7 @@
 #' @param data.SDA The name of the SDA data file (“…analyzed.csv”; a character string); an output file from the SMR function.
 #' @param analyzed_MR The name of the data file with estimated SMR values
 #' @param SMR_calc Logical, indicates whether to calculate SMR from the present data trend
-#' @param SMR_vals allows a user
+#' @param SMR_vals allows a user to input their own SMR values
 #' @param N_Ch The number of channels of the FireSting. It must be either 4 or 8.
 #' @param drop_ch Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)
 #' @param end_SDA_Ch Manually assigned end time (min) of digestion (SDA). The time can be assigned for each channel independently; use a numerical vector of 4 variables, one for each channel (e.g., c(120, 120, NA, 180), for 2 h, 2h, SMR level, and 3 h SDA end times, respectively)
@@ -170,7 +170,7 @@ SDA<-function(AnimalID,
     }
     if(is.na(end_SDA)){
       end_SDA<-newVal$init[nrow(newVal)]
-      message("Respiration post digestion does not reach the chosen SMR levels: ",b, ": assume SDA continues until the end of the trial")
+      message(paste("Smooth level spar:", spar, "MR does not reach the chosen SMR levels: ",b, ": end tie of SDA is the end of the trial"))
     }
   }
 
@@ -285,7 +285,6 @@ SDA<-function(AnimalID,
           }
           if(file.exists(background_prior)){
             back_prior<-read.csv(background_prior)
-            print(head(back_prior))
 
           }
       	}else{
@@ -883,12 +882,20 @@ SDA<-function(AnimalID,
 
   a2<-as.data.frame(matrix(ncol=3, nrow=0))
 
+  if(any(is.na(d_SMR$mo2) | is.nan(d_SMR$mo2))){
+    stop_function<-TRUE
+    if(stop_function) {
+      print(min10_plot)
+      stop("See exported plot: some MO2 values are NA or NaN, cannot estimate SMR")
+    }
+  }
+
   for (i in unique(d_SMR$Ch)){
     split_temp<-as.data.frame(split(d_SMR, d_SMR$Ch)[i])
     colnames(split_temp)<-colnames(d_SMR)
-    quant10<-quantile(split_temp$mo2, 0.1, na.rm=FALSE)
-    quant15<-quantile(split_temp$mo2, 0.15, na.rm=FALSE)
-    quant20<-quantile(split_temp$mo2, 0.2, na.rm=FALSE)
+    quant10<-quantile(split_temp$mo2, 0.1, na.rm=T)
+    quant15<-quantile(split_temp$mo2, 0.15, na.rm=T)
+    quant20<-quantile(split_temp$mo2, 0.2, na.rm=T)
 
     a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "10%", as.numeric(quant10)))))
     a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "15%", as.numeric(quant15)))))
@@ -1513,7 +1520,7 @@ SDA<-function(AnimalID,
   SDAdata <- (data.frame(lapply(lst, `length<-`, max(lengths(lst)))))
   SDAdata<-rbind(SDAdata_stepIntegral, SDAdata)
 
-  write.csv(file = SDAdata_name, SDAdata, row.names=FALSE) ## herehere
+  write.csv(file = SDAdata_name, SDAdata, row.names=FALSE)
 
 }
 
