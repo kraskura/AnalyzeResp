@@ -4,12 +4,6 @@
 #' @export
 organizeAnalysisLocally <- function (){
 
-  # userConfirm<-readline(prompt="This function will create a set of data folder at a local directory: (y/n) ")
-  # if(userConfirm == "Y" | userConfirm == "y" | userConfirm == "n" | userConfirm == "N"){
-
-    # if(userConfirm == "n" | userConfirm == "N"){
-      # message("Folders not created, all files need to be handled within local directory (default for all functions)")
-      # }else{
       userInputFolders<-readline(prompt="Indicate all folders to create e.g. 1,2,3: \n (1) SMR \n (2) MMR \n (3) SDA \n (4) MMR_SMR_AS_EPOC \n (5) BACK_RESP")
       userInputFolders<-(c(as.numeric(unlist(strsplit(userInputFolders,split=',')))))
 

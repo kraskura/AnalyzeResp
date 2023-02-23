@@ -883,11 +883,11 @@ SDA<-function(AnimalID,
   a2<-as.data.frame(matrix(ncol=3, nrow=0))
 
   if(any(is.na(d_SMR$mo2) | is.nan(d_SMR$mo2))){
-    stop_function<-TRUE
-    if(stop_function) {
-      print(min10_plot)
-      stop("See exported plot: some MO2 values are NA or NaN, cannot estimate SMR")
-    }
+    message(paste("N = ", length(which(is.na(d_SMR$mo2) | is.nan(d_SMR$mo2))),
+            " MO2 values are NA or NaN, EXCLUDING these to estimate SMR", sep = ""))
+
+    d_SMR<-d_SMR[!c(is.na(d_SMR$mo2) | is.nan(d_SMR$mo2)),]
+
   }
 
   for (i in unique(d_SMR$Ch)){
