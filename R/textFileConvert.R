@@ -38,7 +38,7 @@ textFileConvert<-function(txt_file,
 
   # must be provided ("firesting_v2023")
 
-  if(original_software == "Firesting_pre2023"){
+  if(type_file == "Firesting_pre2023"){
 
     if(N_Ch == 4 | N_Ch==2){
     	new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
@@ -93,7 +93,7 @@ textFileConvert<-function(txt_file,
     	new_csv$Ch4_O2<-d[,8]
     }
 
-  } else if (original_software == "Firesting_2023"){
+  } else if (type_file == "Firesting_2023"){
       new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
 
     	d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s) # 70
