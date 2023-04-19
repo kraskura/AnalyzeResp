@@ -20,6 +20,7 @@
 #'
 textFileConvert<-function(txt_file,
                           nrowSkip,
+                          type_file,
                           N_Ch = 4,
                           local_path = TRUE,
                           exclude_first_measurement_s = 0,
@@ -34,58 +35,105 @@ textFileConvert<-function(txt_file,
     stop("Must provide how many rows to skip from raw datafile; e.g. 4-Ch and 2-Ch fireSting commonly need 19, 8-Ch Firesting needs 26")
   }
 
-  if(N_Ch == 4 | N_Ch==2){
-  	new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
-  	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
+  # must be provided ("firesting_v2023")
 
-  	d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s)
+  if(original_software == "Firesting_pre2023"){
 
-  	d<-d[,1:15]
+    if(N_Ch == 4 | N_Ch==2){
+    	new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
+    	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
 
-  	nr<-nrow(d)
-  	nc<-ncol(d)
+    	d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s)
 
-  	new_csv[nr,]<-NA
-  	new_csv$date<-d[,1]
-  	new_csv$time<-d[,2]
-  	new_csv$time_sec<-d[,3]
-  	# oxyegen below
-  	new_csv$Ch1_O2<-d[,5]
+    	d<-d[,1:15]
 
-  	new_csv$Ch1_temp<-d[,15]# temp Ch1 - but same for all
+    	nr<-nrow(d)
+    	nc<-ncol(d)
 
-  	new_csv$Ch2_O2<-d[,6]
-  	new_csv$Ch3_O2<-d[,7]
-  	new_csv$Ch4_O2<-d[,8]
+    	new_csv[nr,]<-NA
+    	new_csv$date<-d[,1]
+    	new_csv$time<-d[,2]
+    	new_csv$time_sec<-d[,3]
+    	# oxyegen below
+    	new_csv$Ch1_O2<-d[,5]
+
+    	new_csv$Ch1_temp<-d[,15]# temp Ch1 - but same for all
+
+    	new_csv$Ch2_O2<-d[,6]
+    	new_csv$Ch3_O2<-d[,7]
+    	new_csv$Ch4_O2<-d[,8]
   } # end od N_Ch == 2
 
-  if(N_Ch==8){
-    new_csv<-as.data.frame(matrix(nrow=0, ncol=11))
-  	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2", "Ch2_temp", "Ch3_temp", "Ch4_temp")
+    if(N_Ch==8){
+      new_csv<-as.data.frame(matrix(nrow=0, ncol=11))
+    	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2", "Ch2_temp", "Ch3_temp", "Ch4_temp")
 
-  	d<-read.delim(txt_file, skip= nrowSkip + exclude_first_measurement_s)
-  	# exclude rows with wrong data, no data, no time formats for the two columns
-  	d<-d[c(which(grepl( "/", d[,1]) & grepl( ":", d[,2]))),]
-  	d<-d[,1:12]
-  	nr<-nrow(d)
-  	nc<-ncol(d)
+    	d<-read.delim(txt_file, skip= nrowSkip + exclude_first_measurement_s)
+    	# exclude rows with wrong data, no data, no time formats for the two columns
+    	d<-d[c(which(grepl( "/", d[,1]) & grepl( ":", d[,2]))),]
+    	d<-d[,1:12]
+    	nr<-nrow(d)
+    	nc<-ncol(d)
 
-  	new_csv[nr,]<-NA
-  	new_csv$date<-d[,1]
-  	new_csv$time<-d[,2]
-  	new_csv$time_sec<-d[,3]
-  	# oxyegen below
-  	new_csv$Ch1_O2<-d[,5]
+    	new_csv[nr,]<-NA
+    	new_csv$date<-d[,1]
+    	new_csv$time<-d[,2]
+    	new_csv$time_sec<-d[,3]
+    	# oxyegen below
+    	new_csv$Ch1_O2<-d[,5]
 
-  	new_csv$Ch1_temp<-d[,9]# unique ch temps
-  	new_csv$Ch2_temp<-d[,10]# unique ch temps
-  	new_csv$Ch3_temp<-d[,11]# unique ch temps
-  	new_csv$Ch4_temp<-d[,12]# unique ch temps
+    	new_csv$Ch1_temp<-d[,9]# unique ch temps
+    	new_csv$Ch2_temp<-d[,10]# unique ch temps
+    	new_csv$Ch3_temp<-d[,11]# unique ch temps
+    	new_csv$Ch4_temp<-d[,12]# unique ch temps
 
-  	new_csv$Ch2_O2<-d[,6]
-  	new_csv$Ch3_O2<-d[,7]
-  	new_csv$Ch4_O2<-d[,8]
+    	new_csv$Ch2_O2<-d[,6]
+    	new_csv$Ch3_O2<-d[,7]
+    	new_csv$Ch4_O2<-d[,8]
+    }
+
+  } ifelse (original_software == "Firesting_2023"){
+      new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
+
+    	d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s) # 70
+      colnames(d)<-d[1,]
+      d<-d[-1,]
+
+    	names<-colnames(d)
+      O2_ch1_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.1", x = names, ignore.case = T)))
+      O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.2", x = names, ignore.case = T)))
+      O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.3", x = names, ignore.case = T)))
+      O2_ch4_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.4", x = names, ignore.case = T)))
+      temp_ch1_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch.1", x = names, ignore.case = T)))
+      temp_ch2_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch.2", x = names, ignore.case = T)))
+      temp_ch3_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch.3", x = names, ignore.case = T)))
+      temp_ch4_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch.4", x = names, ignore.case = T)))    	# d<-d[,1:15]
+
+      new_csv<-d[, c(1:3)]
+
+    if(N_Ch == 4 | N_Ch==2){
+
+    	new_csv$Ch1_O2<-d[,O2_ch1_name]
+    	new_csv$Ch1_temp<-d[,temp_ch1_name]# temp Ch1 - but same for all
+
+    	new_csv$Ch2_O2<-d[,O2_ch2_name]
+    	new_csv$Ch3_O2<-d[,O2_ch3_name]
+    	new_csv$Ch4_O2<-d[,O2_ch4_name]
+
+    	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
+    }
+
+    if(N_Ch==8){
+    	new_csv$Ch2_temp<-d[,temp_ch2_name]
+      new_csv$Ch3_temp<-d[,temp_ch3_name]
+      new_csv$Ch4_temp<-d[,temp_ch4_name]
+
+    	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2", "Ch2_temp", "Ch3_temp", "Ch4_temp")
+    }
+
   }
+
+
 
   if(N_Ch==4){
     temp_ch1 <- new_csv$Ch1_temp
@@ -179,7 +227,7 @@ textFileConvert<-function(txt_file,
 
 	if(dir.exists("csv_files")){
     write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), ".csv", sep=''), new_csv, row.names=FALSE)
-	 message("Return csv files saved in \"./csv_files\" local directory")
+	  message("Return csv files saved in \"./csv_files\" local directory")
 	}
 
 }

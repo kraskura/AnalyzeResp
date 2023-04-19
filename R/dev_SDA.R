@@ -24,7 +24,7 @@
 #' @param match_background_Ch Logical. If TRUE, the background respiration is estimated and applied channel-specific. The background_prior and background_post are used to estimate background respiration specific to each channel (or individual), which then is used to correct each individual’s MO2 independently. By default, the mean background respiration rate from all channels is calculated and applied to correct all individual’s MO2
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param handling_delay a delay of SDA due to handling, anesthsia, or any other experimental factor. in hours
-#' @param begin_smr_hr_zero logical. Wether to force the integral SDA costs still be calculated from hour 0, that is assumed to be at SMR level (refer to sda_threshold_level)
+#' @param begin_smr_hr_zero logical. Whether to force the integral SDA costs still be calculated from hour 0, that is assumed to be at SMR level (refer to sda_threshold_level)
 #'
 #' @importFrom stats lm coef var integrate predict quantile sd smooth.spline complete.cases
 #' @import graphics
@@ -68,10 +68,132 @@ SDA<-function(AnimalID,
               handling_delay = c(0,0,0,0),
               begin_smr_hr_zero=FALSE){
 
-  # *************** SETUP START
+  # ******************************************************************************
+  # *************** SETUP START **************************************
+
+  graphics.off()
+
   DateTime_start <- back_regression1 <- back_regression2 <- back_regression3 <- back_regression4 <- NULL
   bw <- hour <- m <- min_start <- mo2_mean <- mo2_min <- mo2_perc <- quantiles <- smr_method <- smr_val <- NULL
 
+  filename.SMR<-paste(gsub('.{4}$', '',data.SDA[1]), "_SMR", sep="")
+
+  if (local_path | !dir.exists("SDA")){
+		plotname.freq<-paste( filename.SMR,"_PLOT_SMR_analyses.png", sep="")
+		plotname.smr.meth<-paste( filename.SMR,"_PLOT_SMR_methodsALL.png", sep="")
+	}else{
+		plotname.freq<-paste("./SDA/plots_min_values_SMR/", filename.SMR,"_PLOT_SMR_analyses.png", sep="")
+		plotname.smr.meth<-paste("./SDA/plots_methods_sum_SMR/", filename.SMR,"_PLOT_SMR_methodsALL.png", sep="")
+  }
+
+  newdata.smr<-as.data.frame(matrix(ncol=17, nrow=0))
+  names(newdata.smr)<-c("filename", "ID", "Ch", "BW","t_min","t_max", "t_mean", "N_mo2", #8
+                        "smr_mean10minVal","smr_SD10minVal", "smr_CV10minVal", "SMR_low10quant","SMR_low15quant","SMR_low20quant", #6
+                        "smr_mlnd", "smr_CVmlnd", "smr_Nmlnd")#3
+
+  cols = c(4:17)
+  newdata.smr[,cols] <- lapply(newdata.smr[,cols], as.character)
+  newdata.smr[,cols] <- lapply(newdata.smr[,cols], as.numeric)
+  cols2 = c(1:3)
+  newdata.smr[,cols2] <- lapply(newdata.smr[,cols2], as.character)
+
+  SDA.spar<-function(spar,d, SDAdata, b, sda_threshold, end_SDA, begin_smr_hr_zero){
+
+    sda_threshold<-as.numeric(sda_threshold)
+    d$hour<-as.numeric(as.character(d$hour))
+
+    d<-d[complete.cases(d),]
+    fit<-smooth.spline(d$hour,d$mo2_min, spar=spar)
+    f = function(x) {predict(fit, x)$y}
+
+    end<-round(d$hour[nrow(d)],1)
+    newx<-seq(0,end, by=0.1)
+    newy<-predict(fit, newx, deriv=0)
+    newy<-lapply(newy, as.numeric)
+    newVal<-data.frame(Reduce(cbind,newy)) # creating dummy dataset with predicted values
+
+    SDAdata.temp<-matrix(ncol=15, nrow=0)
+    colnames(SDAdata)<-c("ID","SMR","spar", "SDA_integrated", "end_SDA_estim_hr", "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full", "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type")
+
+    #2-1- establish SMR threshold m1 and b1 for SMR (b1= y intercept, m1=slope)
+    m0 <- 0 # slope
+    f.smr <- function(x)(m0*x)+b # smr function
+
+
+  # Calculate the area under the SMR for all types of SMR calculated in the MMr_SMR_analyze function
+  #2-2 the EPOC cuttoff in the smoothed function / this is used also for the SMR block
+  # providing end_SDA value manually (in minutes)
+  if(is.na(end_SDA)){
+    if (begin_smr_hr_zero==TRUE){
+      end_SDA <- newVal$init[(which(round(newVal$V2[2:nrow(newVal)], 3)<=b))[1]] # force the function to look beyond the first value, which is set to SMR level
+    }else{
+      end_SDA <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]]
+    }
+    if(is.na(end_SDA)){
+      end_SDA<-newVal$init[nrow(newVal)]
+      message(paste("Smooth level spar:", spar, "MR does not reach the chosen SMR levels: ",b, ": end tie of SDA is the end of the trial"))
+    }
+  }
+
+
+  # if(end_SDA > max(newVal$init)){
+  #   message("The SDA end value is greater than the duration of respirometry trial | end_SDA set to the last value")
+  #   end_SDA<-newVal$init[nrow(newVal)]
+  # }
+
+
+
+  #3 integrate SDA curve with to the provided end SDA time
+  f.int = function(x) {integrate(f, lower=0, upper=end_SDA)$value}
+  f.int.vec = Vectorize(f.int, vectorize.args='x')
+  f.int.vec = Vectorize(f.int, vectorize.args='x')
+  full<-f.int.vec(end_SDA)
+  # SMR block
+  SMR<-integrate(f.smr, lower=0, upper=end_SDA)$value
+  SDA_full<-round(full-SMR,3) # the costs of digestion
+  MO2_full<-round(newVal$V2[which(newVal$init==end_SDA)],3)
+
+  # end_SDA_row<-which(round(d$hour)==round(end_SDA))[1]
+  end_SDA_row <- which(abs(d$hour - end_SDA) == min(abs(d$hour - end_SDA)))[1]
+  peak_SDA<-max(d$mo2_min[1:end_SDA_row])[1]
+  peak_SDA_max<-max(d$mo2_max[1:end_SDA_row])[1]
+  peak_SDA_mean<-max(d$mo2_mean[1:end_SDA_row])[1]
+
+  time_peak_SDA<-d$hour[which(d$mo2_min==peak_SDA)]
+  time_peak_SDA_max<-d$hour[which(d$mo2_max==peak_SDA_max)[1]]
+  time_peak_SDA_mean<-d$hour[which(d$mo2_mean==peak_SDA_mean)[1]] # in h not saved in the dataframe
+  percentSMR_peak_SDA<-round((peak_SDA/b)*100,2)
+
+  values<-as.data.frame(t(c(as.character(d$ID[1]),
+                            b, spar, SDA_full, end_SDA,
+                            SMR, peak_SDA, time_peak_SDA, percentSMR_peak_SDA, MO2_full,
+                            peak_SDA_max, time_peak_SDA_max, peak_SDA_mean, time_peak_SDA_mean,  sda_threshold)))
+
+
+  colnames(values)<-c("ID","SMR","spar", "SDA_integrated", "end_SDA_estim_hr",
+                      "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full",
+                      "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type")
+
+  SDAdata.temp<-rbind(SDAdata.temp,values)
+  scale<-c(0.02,0.07,0.12,0.17,0.22)
+
+  plot(x=range(newVal$init), xlim=c(0,max(d$hour, na.rm=TRUE)+2), ylim=c(0,max(d$mo2_min, na.rm=TRUE)+2),type='n', ylab="MO2", xlab="time (h)")
+  points(d$hour,d$mo2_min, main=spar, col="grey50", pch=21)
+  lines(newy[[1]], newy[[2]], col="black")
+  abline(h=b, col="red",lty=1, lwd=1)
+  abline(v=end_SDA, col="red", lty=2)
+  legend("topright", legend=paste("spar = ", spar, "\n blue diam: peak SDA mean \n red diam: peak SDA" ))
+  # text(x=(max(d$mo2_min)+50)-(0.01*(max(d$hour)+50)),y=(max(d$mo2_min)+2)-(scale[i]*(max(d$mo2_min)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
+  points(x=time_peak_SDA, y=peak_SDA, pch=23, col="red",cex=2)
+  points(x=time_peak_SDA_mean, y=peak_SDA_mean, pch=23, col="blue",cex=2)
+  # text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2)+2)-(scale[i]*(max(d$mo2)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
+
+
+  SDAdata<-rbind(SDAdata,SDAdata.temp)
+
+  return(SDAdata)
+
+} # end SDA.spar
 
   if(!length(as.vector(date_format))==2){
     stop_function<-TRUE
@@ -79,6 +201,9 @@ SDA<-function(AnimalID,
       stop("Cannot interpret 'date_format' format. \n Please provide a vector of two stating: i) the date time format and ii) timezone. \n Default is: c(\"%Y-%m-%d %H:%M:%S\", \"GMT\"). Argument is passed to strptime() ")
     }
   }
+
+  # *************** SETUP END ************************************************
+  # ******************************************************************************
 
   # read in files SDA ------
   if(file.exists(data.SDA[1]) | file.exists(paste("./SDA/csv_input_files/", data.SDA[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
@@ -135,134 +260,13 @@ SDA<-function(AnimalID,
   }
 	d_SMR<-data_glued
 
-
-# end read in file
-  SDA.spar<-function(spar,d, SDAdata, b, sda_threshold, end_SDA, begin_smr_hr_zero){
-
-    sda_threshold<-as.numeric(sda_threshold)
-    d$hour<-as.numeric(as.character(d$hour))
-
-    d<-d[complete.cases(d),]
-    fit<-smooth.spline(d$hour,d$mo2_min, spar=spar)
-    f = function(x) {predict(fit, x)$y}
-
-    end<-round(d$hour[nrow(d)],1)
-    newx<-seq(0,end, by=0.1)
-    newy<-predict(fit, newx, deriv=0)
-    newy<-lapply(newy, as.numeric)
-    newVal<-data.frame(Reduce(cbind,newy)) # creating dummy dataset with predicted values
-
-    SDAdata.temp<-matrix(ncol=15, nrow=0)
-    colnames(SDAdata)<-c("ID","SMR","spar", "SDA_integrated", "end_SDA_estim_hr", "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full", "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type")
-
-    #2-1- establish SMR threshold m1 and b1 for SMR (b1= y intercept, m1=slope)
-    m0 <- 0 # slope
-    f.smr <- function(x)(m0*x)+b # smr function
-
-  # Calculate the area under the SMR for all types of SMR calculated in the MMr_SMR_analyze function
-  #2-2 the EPOC cuttoff in the smoothed function / this is used also for the SMR block
-  # providing end_SDA value manually (in minutes)
-  if(is.na(end_SDA)){
-    if (begin_smr_hr_zero==TRUE){
-      end_SDA <- newVal$init[(which(round(newVal$V2[2:nrow(newVal)], 3)<=b))[1]] # force the function to look beyond te first value, which is set to SMR level
-    }else{
-      end_SDA <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]]
-    }
-    if(is.na(end_SDA)){
-      end_SDA<-newVal$init[nrow(newVal)]
-      message(paste("Smooth level spar:", spar, "MR does not reach the chosen SMR levels: ",b, ": end tie of SDA is the end of the trial"))
-    }
-  }
-
-
-  # if(end_SDA > max(newVal$init)){
-  #   message("The SDA end value is greater than the duration of respirometry trial | end_SDA set to the last value")
-  #   end_SDA<-newVal$init[nrow(newVal)]
-  # }
-
-
-
-  #3 integrate recovery curve with to the provided end EPOC time
-  f.int = function(x) {integrate(f, lower=0, upper=end_SDA)$value}
-  f.int.vec = Vectorize(f.int, vectorize.args='x')
-  f.int.vec = Vectorize(f.int, vectorize.args='x')
-  full<-f.int.vec(end_SDA)
-  # SMR block
-  SMR<-integrate(f.smr, lower=0, upper=end_SDA)$value
-  SDA_full<-round(full-SMR,3) # the costs of digestion
-  MO2_full<-round(newVal$V2[which(newVal$init==end_SDA)],3)
-
-  # end_SDA_row<-which(round(d$hour)==round(end_SDA))[1]
-  end_SDA_row <- which(abs(d$hour - end_SDA) == min(abs(d$hour - end_SDA)))[1]
-  peak_SDA<-max(d$mo2_min[1:end_SDA_row])[1]
-  peak_SDA_max<-max(d$mo2_max[1:end_SDA_row])[1]
-  peak_SDA_mean<-max(d$mo2_mean[1:end_SDA_row])[1]
-
-  time_peak_SDA<-d$hour[which(d$mo2_min==peak_SDA)]
-  time_peak_SDA_max<-d$hour[which(d$mo2_max==peak_SDA_max)[1]]
-  time_peak_SDA_mean<-d$hour[which(d$mo2_mean==peak_SDA_mean)[1]] # in h not saved in the dataframe
-  percentSMR_peak_SDA<-round((peak_SDA/b)*100,2)
-
-  values<-as.data.frame(t(c(as.character(d$ID[1]),
-                            b, spar, SDA_full, end_SDA,
-                            SMR, peak_SDA, time_peak_SDA, percentSMR_peak_SDA, MO2_full,
-                            peak_SDA_max, time_peak_SDA_max, peak_SDA_mean, time_peak_SDA_mean,  sda_threshold)))
-
-
-  colnames(values)<-c("ID","SMR","spar", "SDA_integrated", "end_SDA_estim_hr",
-                      "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full",
-                      "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type")
-
-  SDAdata.temp<-rbind(SDAdata.temp,values)
-  scale<-c(0.02,0.07,0.12,0.17,0.22)
-
-  plot(x=range(newVal$init), xlim=c(0,max(d$hour, na.rm=TRUE)+2), ylim=c(0,max(d$mo2_min, na.rm=TRUE)+2),type='n', ylab="MO2", xlab="time (h)")
-  points(d$hour,d$mo2_min, main=spar, col="grey50", pch=21)
-  lines(newy[[1]], newy[[2]], col="black")
-  abline(h=b, col="red",lty=1, lwd=1)
-  abline(v=end_SDA, col="red", lty=2)
-  legend("topright", legend=paste("spar = ", spar, "\n blue diam: peak SDA mean \n red diam: peak SDA" ))
-  # text(x=(max(d$mo2_min)+50)-(0.01*(max(d$hour)+50)),y=(max(d$mo2_min)+2)-(scale[i]*(max(d$mo2_min)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
-  points(x=time_peak_SDA, y=peak_SDA, pch=23, col="red",cex=2)
-  points(x=time_peak_SDA_mean, y=peak_SDA_mean, pch=23, col="blue",cex=2)
-  # text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2)+2)-(scale[i]*(max(d$mo2)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
-
-
-  SDAdata<-rbind(SDAdata,SDAdata.temp)
-
-  return(SDAdata)
-
-} # end SDA.spar
-
-  graphics.off()
-
-  filename.SMR<-paste(gsub('.{4}$', '',data.SDA[1]), "_SMR", sep="")
-
-  if (local_path | !dir.exists("SDA")){
-		plotname.freq<-paste( filename.SMR,"_PLOT_SMR_analyses.png", sep="")
-		plotname.smr.meth<-paste( filename.SMR,"_PLOT_SMR_methodsALL.png", sep="")
-	}else{
-		plotname.freq<-paste("./SDA/plots_min_values_SMR/", filename.SMR,"_PLOT_SMR_analyses.png", sep="")
-		plotname.smr.meth<-paste("./SDA/plots_methods_sum_SMR/", filename.SMR,"_PLOT_SMR_methodsALL.png", sep="")
-  }
-
-  newdata.smr<-as.data.frame(matrix(ncol=17, nrow=0))
-  names(newdata.smr)<-c("filename", "ID", "Ch", "BW","t_min","t_max", "t_mean", "N_mo2", #8
-                        "smr_mean10minVal","smr_SD10minVal", "smr_CV10minVal", "SMR_low10quant","SMR_low15quant","SMR_low20quant", #6
-                        "smr_mlnd", "smr_CVmlnd", "smr_Nmlnd")#3
-
-  cols = c(4:17)
-  newdata.smr[,cols] <- lapply(newdata.smr[,cols], as.character)
-  newdata.smr[,cols] <- lapply(newdata.smr[,cols], as.numeric)
-  cols2 = c(1:3)
-  newdata.smr[,cols2] <- lapply(newdata.smr[,cols2], as.character)
-
-  # *************** SETUP END
+# ******************************************************************************
+# ******************************************************************************
 
 
 
 
-
+# ******************************************************************************
   # background  -----
   if((is.null(background.V) & !is.null(background_slope)) |(!is.null(background.V) & is.null(background_slope))) {
     stop_function <- TRUE
@@ -563,6 +567,8 @@ SDA<-function(AnimalID,
   #   }
   # }
 
+	# ******************************************************************************
+	# ******************************************************************************
   # SMR, mo2 overnight -----
   # drop any unwanted channels
   if(!is.null(drop_ch[1])){
@@ -1264,6 +1270,7 @@ SDA<-function(AnimalID,
     h.Ch<-as.character(h.Ch.data$Ch[1])
     h.Ch.data<-h.Ch.data[c(h.Ch.data$min_start/60) >= handling_delay[as.numeric(substr(h.Ch, start=3, stop=3))] , ]
 
+
     if(h == 1){
       Ch.data.sda.full_temp<-h.Ch.data
     }else{
@@ -1271,6 +1278,8 @@ SDA<-function(AnimalID,
     } # take the experimental data that is passed the handling delay if any
 
   }
+
+  message("Only data passed the handling delay considered for any analysis")
 
   d_SMR<-Ch.data.sda.full_temp
 
