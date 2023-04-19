@@ -81,7 +81,7 @@ SDA(
 
 \item{handling_delay}{a delay of SDA due to handling, anesthsia, or any other experimental factor. in hours}
 
-\item{begin_smr_hr_zero}{logical. Wether to force the integral SDA costs still be calculated from hour 0, that is assumed to be at SMR level (refer to sda_threshold_level)}
+\item{begin_smr_hr_zero}{logical. Whether to force the integral SDA costs still be calculated from hour 0, that is assumed to be at SMR level (refer to sda_threshold_level)}
 }
 \value{
 The output from \code{\link{print}}

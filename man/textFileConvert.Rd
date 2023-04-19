@@ -7,6 +7,7 @@
 textFileConvert(
   txt_file,
   nrowSkip,
+  type_file,
   N_Ch = 4,
   local_path = TRUE,
   exclude_first_measurement_s = 0,
@@ -22,6 +23,8 @@ textFileConvert(
 \item{txt_file}{The name of the original “.txt” file from FireSting}
 
 \item{nrowSkip}{The number of rows to skip; these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings}
+
+\item{type_file}{Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox"}
 
 \item{N_Ch}{The number of FireSting channels. Options include 2, 4, 8. If a 2-channel FireSting was used, this argument could be ignored, or enter 4}
 
