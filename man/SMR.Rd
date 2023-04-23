@@ -8,6 +8,7 @@ SMR(
   data,
   cycle_start,
   cycle_end,
+  first_cycle,
   chop_start,
   chop_end,
   N_Ch = 4,
@@ -25,6 +26,8 @@ SMR(
 \item{cycle_start}{The stat time (min) of auto cycle. This indicates the start of the measurement (relative to min 0).}
 
 \item{cycle_end}{The time (min) of auto cycle; end of the measurement (relative to min 0)}
+
+\item{first_cycle}{whether the first cycle is a flush or metabolic rate measurement. provide either: "flush" or "measurement"}
 
 \item{chop_start}{The time (min) to be chopped off at the start of each measurement cycle}
 
