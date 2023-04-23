@@ -93,7 +93,8 @@ textFileConvert<-function(txt_file,
     	new_csv$Ch4_O2<-d[,8]
     }
 
-  } else if (type_file == "Firesting_2023"){
+  }
+  else if (type_file == "Firesting_2023"){
       new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
 
     	d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s) # 70
@@ -133,26 +134,65 @@ textFileConvert<-function(txt_file,
     }
 
   }
+  else if (type_file == "Witrox_2023"){
+      new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
+      d<-read.csv(txt_file, skip = nrowSkip + exclude_first_measurement_s,
+               fileEncoding = "UTF-16", sep = "\t", header = FALSE)
+      colnames(d)<-d[1,]
+      d<-d[-1,]
+
+    	names<-colnames(d)
+      O2_ch1_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch 1", x = names, ignore.case = T)))
+      O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch 2", x = names, ignore.case = T)))
+      O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch 3", x = names, ignore.case = T)))
+      O2_ch4_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch 4", x = names, ignore.case = T)))
+      temp_ch1_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch 1", x = names, ignore.case = T)))
+      temp_ch2_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch 2", x = names, ignore.case = T)))
+      temp_ch3_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch 3", x = names, ignore.case = T)))
+      temp_ch4_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch 4", x = names, ignore.case = T)))    	# d<-d[,1:15]
+
+      new_csv<-d[, c(1:2)]
+
+      new_csv$time_sec<-
+      sapply(strsplit(d$`Relative time [HH:MM:SS]`,":"),
+        function(x) {
+          x <- as.numeric(x)
+          x[3]+x[2]*60+x[1]*60*60
+          }
+      )
+
+    	new_csv$Ch1_O2<-d[,O2_ch1_name]
+    	new_csv$Ch1_temp<-d[,temp_ch1_name]# temp Ch1 - but same for all
+
+    	new_csv$Ch2_O2<-d[,O2_ch2_name]
+    	new_csv$Ch3_O2<-d[,O2_ch3_name]
+    	new_csv$Ch4_O2<-d[,O2_ch4_name]
+
+    	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
+    }
+
+  # }
 
 
 
-  if(N_Ch==4){
-    temp_ch1 <- new_csv$Ch1_temp
-    temp_ch2 <- new_csv$Ch1_temp
-    temp_ch3 <- new_csv$Ch1_temp
-    temp_ch4 <- new_csv$Ch1_temp
-  }
-  if(N_Ch==2){
-    temp_ch1 <- new_csv$Ch1_temp
-    temp_ch2 <- new_csv$Ch1_temp
-  }
-  if(N_Ch==8){
-    temp_ch1 <- new_csv$Ch1_temp
-    temp_ch2 <- new_csv$Ch2_temp
-    temp_ch3 <- new_csv$Ch3_temp
-    temp_ch4 <- new_csv$Ch4_temp
-  }
+  # if(N_Ch==4){
+  #   temp_ch1 <- new_csv$Ch1_temp
+  #   temp_ch2 <- new_csv$Ch1_temp
+  #   temp_ch3 <- new_csv$Ch1_temp
+  #   temp_ch4 <- new_csv$Ch1_temp
+  # }
+  # if(N_Ch==2){
+  #   temp_ch1 <- new_csv$Ch1_temp
+  #   temp_ch2 <- new_csv$Ch1_temp
+  # }
+  # if(N_Ch==8){
+  #   temp_ch1 <- new_csv$Ch1_temp
+  #   temp_ch2 <- new_csv$Ch2_temp
+  #   temp_ch3 <- new_csv$Ch3_temp
+  #   temp_ch4 <- new_csv$Ch4_temp
+  # }
 
+  new_csv[c(3:ncol(new_csv))] <- sapply(new_csv[3:ncol(new_csv)],as.numeric)
   if(convert_units){
     if(is.null(units_from) | is.null(units_to)){
       stop_function<-TRUE
@@ -168,9 +208,9 @@ textFileConvert<-function(txt_file,
 
     if(any(channels == 1)){
       # new_csv$Ch1_O2 <- conv_o2 (o2 = new_csv$Ch1_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch1, sal = salinity, atm_pres = atm_pressure)
-
-      new_csv$Ch1_O2 <- DO.unit.convert(new_csv$Ch1_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                    bar.press = atm_pressure, temp.C = temp_ch1, bar.units.out = "atm",
+      new_csv$Ch1_O2 <- DO.unit.convert(new_csv$Ch1_O2, DO.units.in = units_from,
+                                        DO.units.out = units_to, bar.units.in ="atm",
+                    bar.press = atm_pressure, temp.C = new_csv$Ch1_temp, bar.units.out = "atm",
                     salinity = salinity, salinity.units = "pp.thou")
 
     }
@@ -179,12 +219,12 @@ textFileConvert<-function(txt_file,
       # new_csv$Ch2_O2 <- conv_o2 (o2 = new_csv$Ch2_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch2, sal = salinity, atm_pres = atm_pressure)
       if (N_Ch!= 8){
           new_csv$Ch2_O2 <- DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                      bar.press = atm_pressure, temp.C = temp_ch1, bar.units.out = "atm",
+                      bar.press = atm_pressure, temp.C = new_csv$Ch1_temp, bar.units.out = "atm",
                       salinity = salinity, salinity.units = "pp.thou")
 
       }else{
           new_csv$Ch2_O2 <- DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                      bar.press = atm_pressure, temp.C = temp_ch2, bar.units.out = "atm",
+                      bar.press = atm_pressure, temp.C = new_csv$Ch2_temp, bar.units.out = "atm",
                       salinity = salinity, salinity.units = "pp.thou")
       }
 
@@ -194,41 +234,38 @@ textFileConvert<-function(txt_file,
       # new_csv$Ch3_O2 <- conv_o2 (o2 = new_csv$Ch3_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch3, sal = salinity, atm_pres = atm_pressure)
       if (N_Ch!= 8){
         new_csv$Ch3_O2 <- DO.unit.convert(new_csv$Ch3_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                      bar.press = atm_pressure, temp.C = temp_ch1, bar.units.out = "atm",
+                      bar.press = atm_pressure, temp.C = new_csv$Ch1_temp, bar.units.out = "atm",
                       salinity = salinity, salinity.units = "pp.thou")
       }else{
         new_csv$Ch3_O2 <- DO.unit.convert(new_csv$Ch3_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                                                    bar.press = atm_pressure, temp.C = temp_ch3, bar.units.out = "atm",
+                                                    bar.press = atm_pressure, temp.C = new_csv$Ch3_temp, bar.units.out = "atm",
                                                     salinity = salinity, salinity.units = "pp.thou")
       }
     }
 
     if(any(channels == 4)){
-      # print(new_csv)
       # new_csv$Ch4_O2 <- conv_o2 (o2 = new_csv$Ch4_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch4, sal = salinity, atm_pres = atm_pressure)
       if (N_Ch!= 8){
         new_csv$Ch4_O2 <- DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                      bar.press = atm_pressure, temp.C = temp_ch1, bar.units.out = "atm",
+                      bar.press = atm_pressure, temp.C = new_csv$Ch1_temp, bar.units.out = "atm",
                       salinity = salinity, salinity.units = "pp.thou")
       }else{
         new_csv$Ch4_O2 <- DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                                                    bar.press = atm_pressure, temp.C = temp_ch4, bar.units.out = "atm",
+                                                    bar.press = atm_pressure, temp.C = new_csv$Ch4_temp, bar.units.out = "atm",
                                                     salinity = salinity, salinity.units = "pp.thou")
       }
     }
   }
 
 	# save in the current directory (default)
-  if(local_path | !dir.exists("csv_files")){
+  if(local_path){
     write.csv(file=paste(gsub('.{4}$', '', txt_file), ".csv", sep=''), new_csv, row.names=FALSE)
-    if(!dir.exists("csv_files")){
-      message("Return csv files saved in local working directory")
-    }
-  }
-
-	if(dir.exists("csv_files")){
+    message("Return csv files saved in local working directory")
+  } else if(local_path == FALSE & dir.exists("csv_files")){
     write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), ".csv", sep=''), new_csv, row.names=FALSE)
 	  message("Return csv files saved in \"./csv_files\" local directory")
+	}else{
+    stop("Cannot save new file, need either csv_files folder, or local_path = TRUE argument")
 	}
 
 }

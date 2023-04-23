@@ -13,6 +13,7 @@
 #' @param plot_temp Logical argument. Indicates whether or not temperature trends for each cycle will be plotted and saved	TRUE
 #' @param background_data logical. If this datafile is a background (background respiration file), indicate TRUE
 #' @param sda_data logical. If this datafile belong to SDA analysis, is a SDA data file, indicate TRUE
+#' @param first_cycle whether the first cycle is a flush or metabolic rate measurement. provide either: "flush" or "measurement"
 #'
 #' @return The output from \code{\link{print}}
 #' @export
@@ -30,6 +31,7 @@
 SMR<-function(data,
               cycle_start,
               cycle_end,
+              first_cycle,
               chop_start,
               chop_end,
               N_Ch = 4,
@@ -107,16 +109,12 @@ SMR<-function(data,
     		}
   	  }
 
-
-
     # no inventory data
   	if(nrow(inv.data)==0){
 
-  		# if(Ch==4){
-  		#   message(paste("Ch1: no cleaning of data"))
-  		# } else {
-  		#   message(paste("Ch",Ch-4 ,": no cleaning of data", sep=""))
-  		# }
+# ADD HERE START w/ MEASUREMENT
+
+
 
   		# run through each "measure cycle" and get slope, intercept, r2. All channel cycles plotted together in one file
   	  for (i in 1:length(seq_end)){
@@ -588,146 +586,13 @@ SMR<-function(data,
 
   }
 
-  # some experimental design checks  - this plots the entire cycle of flush + MR measure. With veritcal line whetre the flush should start.
-  # this is great to see if the cycles stay on track and you are getting the slope/ section that you actually need/want
-  # Channel_cycle<-function(Ch,
-  #                         seq_end,
-  #                         seq_st,
-  #                         flush,
-  #                         plotname,
-  #                         data1,
-  #                         plot_temp,
-  #                         N_Ch3){
-  #
-  #     if(plot_temp==TRUE){
-  #       # temp plot name
-  #       sub_directory_name<-gsub(pattern="plots_channel_cycle", replacement= "plots_channel_temperature_cycle", x= plotname)
-  #       plotname_temperature<-gsub(pattern=".png", replacement= "_temp.png", x= sub_directory_name)
-  #
-  #       # print( plotname_temperature)
-  #       }
-  #
-  #   	cycle_time<-seq_end[2]-seq_end[1]
-  #
-  #   	for (i in 1:length(seq_end)){
-  #
-  #   		end<-seq_end[i]
-  #   		start<-end-cycle_time
-  #
-  #   		d<-data1[c(which(data1$time_min>start & data1$time_min<end)),]
-  #
-  #   		if (i == 1){
-  #   			message("plot -cycle")
-  #   			if(length(seq_st)<=100){
-  #   				png(plotname, width=40, height=40, units="in",  res=200)
-  #   				par(mfrow=c(10,10)) # This will fit 100 plots.
-  #   			}
-  #   			if(length(seq_st)>100 & length(seq_st)<=150){
-  #   				png(plotname, width=40, height=60, units="in",  res=200)
-  #   				par(mfrow=c(15,10)) # This will fit 150 plots
-  #   			}
-  #   			if(length(seq_st)>=150 & length(seq_st)<=225){
-  #   				png(plotname, width=50, height=50, units="in",  res=200)
-  #   				par(mfrow=c(15,15)) # This will fit 225 plots
-  #   			}
-  #   		  if(length(seq_st)>=225 & length(seq_st)<=375){
-  #   				png(plotname, width=50, height=70, units="in",  res=200)
-  #   				par(mfrow=c(15,25)) # This will fit 375 plots
-  #   		  }
-  #   		  if(length(seq_st)>375 ){
-  #   				png(plotname, width=65, height=80, units="in",  res=200)
-  #   				par(mfrow=c(18,35)) # This will > 525 plots
-  #   		  }
-  #   		  if(length(seq_st)>525){message("more than 525 measurement cycles - channel plots re-set, first 525 not plotted")}
-  #   		}
-  #
-  #   			plot(d[,Ch]~time_min, d=d, ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)")
-  #   			abline(v=start+flush, col="red")
-  #
-  #   		if (i == length(seq_end)){
-  #   			dev.off()
-  #   		}
-  #
-  #   	}
-  #
-  #   	# same loop just for temperature
-  #   	if (plot_temp==TRUE){
-  #   		for (i in 1:length(seq_end)){
-  #
-  #     		end<-seq_end[i]
-  #     		start<-end-cycle_time
-  #
-  #     		d<-data1[c(which(data1$time_min>start & data1$time_min<end)),]
-  #     	    if (i == 1){
-  #     			message("plot -cycle temp")
-  #     			if(length(seq_st)<=100){
-  #     				png(plotname_temperature, width=40, height=40, units="in",  res=200)
-  #     				par(mfrow=c(10,10)) # This will fit 100 plots.
-  #     			}
-  #     			if(length(seq_st)>100 & length(seq_st)<=150){
-  #     				png(plotname_temperature, width=40, height=60, units="in",  res=200)
-  #     				par(mfrow=c(15,10)) # This will fit 150 plots
-  #     			}
-  #     			if(length(seq_st)>150 & length(seq_st)<=225){
-  #     				png(plotname_temperature, width=50, height=50, units="in",  res=200)
-  #     				par(mfrow=c(15,15)) # This will fit 150 plots
-  #     			}
-  #     	     if(length(seq_st)>=225 & length(seq_st)<=375){
-  #   			  	png(plotname_temperature, width=50, height=70, units="in",  res=200)
-  #   				  par(mfrow=c(15,25)) # This will fit 375 plots
-  #   		    }
-  #   		    if(length(seq_st)>375 ){
-  #   			   	png(plotname_temperature, width=65, height=80, units="in",  res=200)
-  #   			  	par(mfrow=c(18,35)) # This will > 525 plots
-  #   		    }
-  #     		}
-  #
-  #       		if(!N_Ch3==8){
-  #         		if (Ch==4){
-  #         		  temp<-5
-  #         		}
-  #         		if (Ch==6){
-  #         		  temp<-5
-  #         		}
-  #         		if (Ch==7){
-  #         		  temp<-5
-  #         		}
-  #         		if (Ch==8){
-  #         		  temp<-5
-  #         		}
-  #       		}else{
-  #       		  if (Ch==4){
-  #         		  temp<-5
-  #         		}
-  #         		if (Ch==6){
-  #         		  temp<-9
-  #         		}
-  #         		if (Ch==7){
-  #         		  temp<-10
-  #         		}
-  #         		if (Ch==8){
-  #         		  temp<-11
-  #         		}
-  #       		}
-  #
-  #     	  plot(d[,temp]~time_min, d=d, ylab="Temperature (C)", xlab="Time (min)", col="darkgreen")
-  #     		abline(v=start+flush, col="red")
-  #
-  #       		if (i == length(seq_end)){
-  #       			dev.off()
-  #       		}
-  #   		} # end of loop
-  #   	}
-  #
-  #   }
-  # **********************************************************
-
 
 	newdata<-as.data.frame("new")
 
 		if(file.exists(data) | file.exists(paste("./csv_files/", data, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
   	  if(file.exists(paste("./csv_files/", data, sep=""))){
-        data1<-read.csv(paste("./csv_files/", data, sep=""))
+        data1 <- read.csv(paste("./csv_files/", data, sep=""))
+        data1 <- data1[complete.cases(data1[ , c('time_min')]), ]
       }
       if(file.exists(data)){
         data1<-read.csv(data)
@@ -738,32 +603,6 @@ SMR<-function(data,
         stop("Cannot locate the indicated data data file.")
       }
     }
-# 	if(local_path | dir.exists("csv_files")){
-#   	if(local_path | !dir.exists("csv_files")){
-#
-#   	  if(file.exists(data)){
-#         data1<-read.csv(data)
-#   	  }else{
-#         stop_function<-TRUE
-#         if(stop_function) {
-#           stop("Cannot locate the indicated data file")
-#         }
-#   	  }
-#
-#   	}else{
-#
-#   	  if(!file.exists(paste("./csv_files/", data, sep = ""))){
-#         stop_function<-TRUE
-#         if(stop_function) {
-#           stop("Cannot locate the indicated data file")
-#         }
-#   	  }else{
-#   	    data1<-read.csv(paste("./csv_files/", data, sep = ""))
-#   	  }
-#   	}
-# 	}
-
-	# data1<-read.csv(data)
 
 	# current directory if no specific folders are used
 	if(local_path){
@@ -852,21 +691,10 @@ SMR<-function(data,
       }
     }
 
-# 	  if(file.exists(inventory_data)){
-# 		  data2<-read.csv(inventory_data)
-# 	  }else{
-#       stop_function<-TRUE
-#       if(stop_function) {
-#         stop("Cannot locate the inventory data file, be sure it is in the local directory, or proovide a full path to it")
-#       }
-# 	  }
-
-
 		 if (plot_temp ==TRUE){
         message("Temperature plots are not saved when using inventory files / cleaning data")
 		 }
 	}
-
 	if(as.character(data1$Ch1_O2[1])=="--- " || as.character(data1$Ch1_O2[1])=="---"){
 		data1$Ch1_O2<-0
 	}
@@ -959,11 +787,26 @@ SMR<-function(data,
 	dev.off()
 
 	# make this interval adjustable
-	t_m<-data1$time_min[nrow(data1)] # the max min in the file
-	seq_st<-seq(cycle_start, t_m, cycle_end)
-	seq_end<-seq(cycle_end, t_m, cycle_end)
-	# flush<-seq_st[1]
+  t_m<-max(data1$time_min, na.rm = T) # the max min in the file
 
+  print(t_m)
+
+print("***")
+
+	if(first_cycle == "flush"){
+	    seq_st<-seq(cycle_start, t_m, cycle_end)
+	    seq_end<-seq(cycle_end, t_m, cycle_end)
+	  } else if(first_cycle == "measure"){
+	    seq_st<-seq(0, t_m, cycle_end)
+	    seq_end<-seq(cycle_end-cycle_start, t_m, cycle_end)
+	  } else {
+      stop_function<-TRUE
+      if(stop_function) {
+        stop("Settings missing: must provide whether the file starts with flush or measurement cycle")
+      }
+	  }
+  # print(seq_st[1:10])
+# print(seq_end[1:10])
 
 	# write a channel function prior and call it here
 	# channel 1
