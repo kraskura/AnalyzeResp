@@ -154,7 +154,7 @@ textFileConvert<-function(txt_file,
       new_csv<-d[, c(1:2)]
 
       new_csv$time_sec<-
-      sapply(strsplit(d$`Relative time [HH:MM:SS]`,":"),
+        sapply(strsplit(d$`Relative time [HH:MM:SS]`,":"),
         function(x) {
           x <- as.numeric(x)
           x[3]+x[2]*60+x[1]*60*60

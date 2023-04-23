@@ -592,7 +592,7 @@ SMR<-function(data,
 		if(file.exists(data) | file.exists(paste("./csv_files/", data, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
   	  if(file.exists(paste("./csv_files/", data, sep=""))){
         data1 <- read.csv(paste("./csv_files/", data, sep=""))
-        data1 <- data1[complete.cases(data1[ , c('time_min')]), ]
+        data1 <- data1[complete.cases(data1[ , c('time_sec')]), ]
       }
       if(file.exists(data)){
         data1<-read.csv(data)
@@ -789,10 +789,6 @@ SMR<-function(data,
 	# make this interval adjustable
   t_m<-max(data1$time_min, na.rm = T) # the max min in the file
 
-  print(t_m)
-
-print("***")
-
 	if(first_cycle == "flush"){
 	    seq_st<-seq(cycle_start, t_m, cycle_end)
 	    seq_end<-seq(cycle_end, t_m, cycle_end)
@@ -805,8 +801,6 @@ print("***")
         stop("Settings missing: must provide whether the file starts with flush or measurement cycle")
       }
 	  }
-  # print(seq_st[1:10])
-# print(seq_end[1:10])
 
 	# write a channel function prior and call it here
 	# channel 1
