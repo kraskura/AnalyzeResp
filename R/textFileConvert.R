@@ -259,10 +259,10 @@ textFileConvert<-function(txt_file,
 
 	# save in the current directory (default)
   if(local_path){
-    write.csv(file=paste(gsub('.{4}$', '', txt_file), ".csv", sep=''), new_csv, row.names=FALSE)
+    write.csv(file=paste(gsub('.{4}$', '', txt_file), "_converted.csv", sep=''), new_csv, row.names=FALSE)
     message("Return csv files saved in local working directory")
   } else if(local_path == FALSE & dir.exists("csv_files")){
-    write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), ".csv", sep=''), new_csv, row.names=FALSE)
+    write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "converted.csv", sep=''), new_csv, row.names=FALSE)
 	  message("Return csv files saved in \"./csv_files\" local directory")
 	}else{
     stop("Cannot save new file, need either csv_files folder, or local_path = TRUE argument")
