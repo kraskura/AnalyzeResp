@@ -112,57 +112,11 @@ SMR<-function(data,
     # no inventory data
   	if(nrow(inv.data)==0){
 
-# ADD HERE START w/ MEASUREMENT
-
-
 
   		# run through each "measure cycle" and get slope, intercept, r2. All channel cycles plotted together in one file
   	  for (i in 1:length(seq_end)){
 
-        # start = the actual start of tte cycle
-
-# ************************************************************
-  #  a	    for (i in 1:length(seq_end)){
-  #
-  #  1 		end<-seq_end[i]
-  #  1 		start<-end-cycle_time
-  #
-  #  1		d<-data1[c(which(data1$time_min>start & data1$time_min<end)),]
-  #
-  #   		if (i == 1){
-  #   			message("plot -cycle")
-  #   			if(length(seq_st)<=100){
-  #   				png(plotname, width=40, height=40, units="in",  res=200)
-  #   				par(mfrow=c(10,10)) # This will fit 100 plots.
-  #   			}
-  #   			if(length(seq_st)>100 & length(seq_st)<=150){
-  #   				png(plotname, width=40, height=60, units="in",  res=200)
-  #   				par(mfrow=c(15,10)) # This will fit 150 plots
-  #   			}
-  #   			if(length(seq_st)>=150 & length(seq_st)<=225){
-  #   				png(plotname, width=50, height=50, units="in",  res=200)
-  #   				par(mfrow=c(15,15)) # This will fit 225 plots
-  #   			}
-  #   		  if(length(seq_st)>=225 & length(seq_st)<=375){
-  #   				png(plotname, width=50, height=70, units="in",  res=200)
-  #   				par(mfrow=c(15,25)) # This will fit 375 plots
-  #   		  }
-  #   		  if(length(seq_st)>375 ){
-  #   				png(plotname, width=65, height=80, units="in",  res=200)
-  #   				par(mfrow=c(18,35)) # This will > 525 plots
-  #   		  }
-  #   		  if(length(seq_st)>525){message("more than 525 measurement cycles - channel plots re-set, first 525 not plotted")}
-  #   		}
-  #
-  #   			plot(d[,Ch]~time_min, d=d, ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)")
-  #   			abline(v=start+flush, col="red")
-  #
-  #   		if (i == length(seq_end)){
-  #   			dev.off()
-  #   		}
-  #
-  #   	}
-# ************************************************************
+        # ************************************************************
     	  cycle_time<-seq_end[2]-seq_end[1]
   	    end_fullCycle<-seq_end[i]
         start_fullCycle<-end_fullCycle-cycle_time
@@ -821,10 +775,7 @@ SMR<-function(data,
 
 
 		if (!data1$Ch1_O2[1]==0){
-			inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) &
-			                        as.numeric(data2$channel)==1 &
-			                        grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
-			                                     stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+			inv.data<-data2[which(!is.na(str_locate(data, as.character(data2[,2]))) & as.numeric(data2$channel)==1),]
 
 
 			if(nrow(inv.data)==0 || (!nrow(inv.data)==0 )){
@@ -836,9 +787,11 @@ SMR<-function(data,
 		}
 
 		if (!data1$Ch2_O2[1]==0){
-			inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) & as.numeric(data2$channel)==2 &
-			                        grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
-			                                     stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+			inv.data<-data2[which(!is.na(str_locate(data, as.character(data2[,2]))) & as.numeric(data2$channel)==2),]
+
+			# inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) & as.numeric(data2$channel)==2 &
+			#                         grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
+			#                                      stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
 
 			if(nrow(inv.data)==0 || (!nrow(inv.data)==0)){
 				newdata<-Channel(Ch=rows[2], temp=rows_temp[2], seq_st, seq_end, plotname2.2, data1, chop_start, chop_end, inv.data, newdata, plot_temp, N_Ch) # Ch 2 (col 6 in data1)
@@ -848,9 +801,11 @@ SMR<-function(data,
 		}
 
 		if (!data1$Ch3_O2[1]==0){
-			inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) & as.numeric(data2$channel)==3 &
-			                        grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
-			                                     stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+		  inv.data<-data2[which(!is.na(str_locate(data, as.character(data2[,2]))) & as.numeric(data2$channel)==3),]
+
+			# inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) & as.numeric(data2$channel)==3 &
+			#                         grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
+			#                                      stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
 
 			if(nrow(inv.data)==0 || (!nrow(inv.data)==0 )){
 				newdata<-Channel(Ch=rows[3], temp=rows_temp[3], seq_st, seq_end, plotname2.3, data1, chop_start, chop_end, inv.data, newdata, plot_temp, N_Ch) # Ch 3 (col 7 in data1)
@@ -859,9 +814,11 @@ SMR<-function(data,
 		}
 
 		if (!data1$Ch4_O2[1]==0){
-			inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) & as.numeric(data2$channel)==4 &
-			                       grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
-			                                     stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+		  inv.data<-data2[which(!is.na(str_locate(data, as.character(data2[,2]))) & as.numeric(data2$channel)==4),]
+
+			# inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) & as.numeric(data2$channel)==4 &
+			#                        grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
+			#                                      stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
 
 			if(nrow(inv.data)==0 || (!nrow(inv.data)==0 )){
 				newdata<-Channel(Ch=rows[4], temp=rows_temp[4], seq_st, seq_end, plotname2.4, data1, chop_start, chop_end, inv.data, newdata, plot_temp, N_Ch) # Ch 4 (col 8 in data1)
