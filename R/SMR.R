@@ -319,16 +319,13 @@ SMR<-function(data,
   			start<-seq_st[i]+chop_start # chopping off first x min from the beginning of each slopes
   			end<-seq_end[i]-chop_end # chopping off last x min from the end of each slope
 
-  				n2<-which((inv.data.clean[,4]>=start-1 & inv.data.clean[,4]<end+1) | (inv.data.clean[,5]>=start-1 & inv.data.clean[,5]<end+1) | (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<end+1))
-
+  				n2<-which((inv.data.clean[,5]>=start-1 & inv.data.clean[,5]<end+1) | (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<end+1))
   				if(length(n2)==0){
   					cycle_use<-"use full cycle"
 
   				}else{
-
-  				  # print(n2)
   					# replace zeros in the inventory data to real values; in inv. data clean - this is where in invenotory file I added 0 when it just starts from the "start" of teh cycle and ends at the "end" of the cycle
-  				  if(inv.data.clean[n2,5] == 0 & inv.data.clean[n2,6] == 0){
+  				  if(inv.data.clean[n2,4] == 1){
   				    cycle_use<-"skip cycle"
   				  }else{
   				    cycle_use<-"use cleaned cycle"
@@ -471,8 +468,9 @@ SMR<-function(data,
         start<-seq_st[i]+chop_start # chopping off first x min from the beginning of each slopes
   			end<-seq_end[i]-chop_end # chopping off last x min from the end of each slope
 
-  			n2<-which((inv.data.clean[,4]>=start-1 & inv.data.clean[,4]<end+1) | (inv.data.clean[,5]>=start-1 & inv.data.clean[,5]<end+1) | (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<end+1))
-
+  			n2<-which((inv.data.clean[,4]>=start-1 & inv.data.clean[,4]<end+1) |
+  			            (inv.data.clean[,5]>=start-1 & inv.data.clean[,5]<end+1) | (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<end+1))
+print(n2)
   				if(length(n2)==0){
   					cycle_use<-"use full cycle"
   				  }else{
