@@ -6,8 +6,8 @@
 \usage{
 textFileConvert(
   txt_file,
-  nrowSkip,
   type_file,
+  nrowSkip = NULL,
   N_Ch = 4,
   local_path = TRUE,
   exclude_first_measurement_s = 0,
@@ -16,15 +16,16 @@ textFileConvert(
   units_to = NULL,
   channels = c(1, 2, 3, 4),
   salinity = 0,
-  atm_pressure = 1
+  atm_pressure = 1,
+  temperature = NULL
 )
 }
 \arguments{
 \item{txt_file}{The name of the original “.txt” file from FireSting}
 
-\item{nrowSkip}{The number of rows to skip if the default does not work; the argument 'type_file' determined the default N rows to skip "Firesting_pre2023" = , "Firesting_2023" = 70, "Witrox" = 21; these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings}
-
 \item{type_file}{Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox"}
+
+\item{nrowSkip}{The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox" = 21; these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings}
 
 \item{N_Ch}{The number of FireSting channels. Options include 2, 4, 8. If a 2-channel FireSting was used, this argument could be ignored, or enter 4}
 
@@ -43,6 +44,8 @@ textFileConvert(
 \item{salinity}{= 0, passed down to rM::DO.unit.convert arg. salinity (must be in "pp.thou")}
 
 \item{atm_pressure}{= 1, passed down to rM::DO.unit.convert arg. bar.press (must be in "atm")}
+
+\item{temperature}{user set consistent temperature for all channels (ºC)}
 }
 \value{
 The output from \code{\link{print}}
