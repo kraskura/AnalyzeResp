@@ -35,9 +35,9 @@ textFileConvert(
 
 \item{convert_units}{Logical (FALSE = default). If true, the funciton is passed to rMR function DO.unit.convert to convert O2 content units.}
 
-\item{units_from}{default NULL, options:"mg/L", "PP", "pct".  passed down to rM::DO.unit.convert arg. DO.units.in}
+\item{units_from}{default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.in}
 
-\item{units_to}{= default NULL, options:"mg/L", "PP", "pct".  passed down to rM::DO.unit.convert arg. DO.units.out}
+\item{units_to}{= default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.out}
 
 \item{channels}{= c(1,2,3,4), indicate which channels to apply the conversion to}
 

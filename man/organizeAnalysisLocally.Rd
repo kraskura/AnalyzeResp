@@ -4,7 +4,24 @@
 \alias{organizeAnalysisLocally}
 \title{Title}
 \usage{
-organizeAnalysisLocally()
+organizeAnalysisLocally(
+  SMR.folder = TRUE,
+  MMR.folder = TRUE,
+  SDA.folder = TRUE,
+  MMR_SMR_AS_EPOC.folder = TRUE,
+  BACK_RESP.folder = TRUE
+)
+}
+\arguments{
+\item{SMR.folder}{create a local SMR folder, default = TRUE}
+
+\item{MMR.folder}{create a local MMR folder, default = TRUE}
+
+\item{SDA.folder}{create a local SDA folder, default = TRUE}
+
+\item{MMR_SMR_AS_EPOC.folder}{create a local MMR_SMR_AS_EPOC.folder, default = TRUE}
+
+\item{BACK_RESP.folder}{create a local BACK_RESP.folder, default = TRUE}
 }
 \value{
 The output from \code{\link{print}}

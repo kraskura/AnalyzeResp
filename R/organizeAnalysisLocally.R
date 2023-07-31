@@ -1,17 +1,27 @@
 #' Title
 #'
+#' @param SMR.folder create a local SMR folder, default = TRUE
+#' @param MMR.folder create a local MMR folder, default = TRUE
+#' @param SDA.folder create a local SDA folder, default = TRUE
+#' @param MMR_SMR_AS_EPOC.folder create a local MMR_SMR_AS_EPOC.folder, default = TRUE
+#' @param BACK_RESP.folder create a local BACK_RESP.folder, default = TRUE
+#'
 #' @return The output from \code{\link{print}}
 #' @export
-organizeAnalysisLocally <- function (){
+organizeAnalysisLocally <- function (SMR.folder = TRUE,
+                                     MMR.folder = TRUE,
+                                     SDA.folder = TRUE,
+                                     MMR_SMR_AS_EPOC.folder = TRUE,
+                                     BACK_RESP.folder = TRUE){
 
-      userInputFolders<-readline(prompt="Indicate all folders to create e.g. 1,2,3: \n (1) SMR \n (2) MMR \n (3) SDA \n (4) MMR_SMR_AS_EPOC \n (5) BACK_RESP")
-      userInputFolders<-(c(as.numeric(unlist(strsplit(userInputFolders,split=',')))))
+      # userInputFolders<-readline(prompt="Indicate all folders to create e.g. type: 1, 2, 3: (1) SMR (2) MMR (3) SDA (4) MMR_SMR_AS_EPOC (5) BACK_RESP")
+      # userInputFolders<-(c(as.numeric(unlist(strsplit(userInputFolders,split=',')))))
 
       if (!dir.exists("csv_files")){
         dir.create(file.path("./csv_files"), recursive = TRUE)
       }
 
-      if(any(userInputFolders == 1)){
+      if(SMR.folder){
         if (!dir.exists("./SMR")){
           dir.create(file.path("SMR"), recursive = TRUE)
           dir.create(file.path("SMR","csv_analyzed"), recursive = TRUE)
@@ -21,7 +31,7 @@ organizeAnalysisLocally <- function (){
         }
       }
 
-      if(any(userInputFolders == 2)){
+      if(MMR.folder){
         if (!dir.exists("./MMR")){
           dir.create(file.path("MMR"), recursive = TRUE)
           dir.create(file.path("MMR","csv_analyzed"), recursive = TRUE)
@@ -31,7 +41,7 @@ organizeAnalysisLocally <- function (){
         }
       }
 
-      if(any(userInputFolders == 3)){
+      if(SDA.folder){
          if (!dir.exists("./SDA")){
           dir.create(file.path("SDA"), recursive = TRUE)
           dir.create(file.path("SDA", "csv_analyzed_SDA"), recursive = TRUE) # equivalent to EPOC for the MMR_SMR_AS_EPOC function
@@ -53,7 +63,7 @@ organizeAnalysisLocally <- function (){
          }
       }
 
-      if(any(userInputFolders == 4)){
+      if(MMR_SMR_AS_EPOC.folder){
 
        if (!dir.exists("./MMR_SMR_AS_EPOC")){
           dir.create(file.path("MMR_SMR_AS_EPOC"), recursive = TRUE)
@@ -69,7 +79,7 @@ organizeAnalysisLocally <- function (){
        }
       }
 
-      if(any(userInputFolders == 5)){
+      if(BACK_RESP.folder){
         if (!dir.exists("./BACK_RESP")){
           dir.create(file.path("BACK_RESP"), recursive = TRUE)
           dir.create(file.path("BACK_RESP","csv_analyzed"), recursive = TRUE)
