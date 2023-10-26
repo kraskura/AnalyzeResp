@@ -79,6 +79,12 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
                           mmr_background = "trial_mean",
                           local_path = TRUE){
 
+  if(!length(as.vector(date_format))==2){
+    stop_function<-TRUE
+    if(stop_function) {
+      stop("Argument 'date_format' is not properly stated. \n It must be a vector of two stating: i) the date time format and ii) timezone. \n Default is: c(\"%m/%d/%Y %H:%M:%S\", \"GMT\"). Argument is passed to strptime() ")
+    }
+  }
 
   #  binding global variables locally to the function.
   DateTime_start<-m<-cycle_mmr<-cycle_type<-NULL

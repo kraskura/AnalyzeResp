@@ -9,7 +9,7 @@
 #' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel Firesting has 4 temperature and 4 oxygen sensors
 #' @param inventory_data The inventory file (.csv file), default = NULL
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
-#' @param date_format The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")
+#' @param date_format Common format of from the CSV conversion. Default: `c("%m/%d/%Y %H:%M:%S", "GMT")`
 #' @param plot_temp Logical argument. Indicates whether or not temperature trends for each cycle will be plotted and saved	TRUE
 #' @param background_data logical. If this datafile is a background (background respiration file), indicate TRUE
 #' @param sda_data logical. If this datafile belong to SDA analysis, is a SDA data file, indicate TRUE

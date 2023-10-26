@@ -48,7 +48,7 @@ SDA<-function(AnimalID,
               r2_threshold_smr,
               sda_threshold_level,
               scaling_exponent_smr = 1,
-              date_format = c("%Y-%m-%d %H:%M:%S", "%m/%d/%Y %H:%M:%S"),
+              date_format = c("%m/%d/%Y %H:%M:%S", "GMT"),
               data.SDA = NULL,
               analyzed_MR = NULL,
               SMR_calc = TRUE,
@@ -1400,6 +1400,8 @@ SDA<-function(AnimalID,
     # print(Y.Ch)
 
     # d$hour<-d$hour+0.5 # make a half hour because the first measurement and the first hour mean are both 0, fitting smooth spline one will be dropped
+    print(b)
+    print(head(d))
 
     if(begin_smr_hr_zero){ # starting measurement at the beginning of the file
       # zero.row<-d[1,]
