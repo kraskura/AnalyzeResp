@@ -70,11 +70,6 @@ SMR<-function(data,
                     plot_temp,
                     N_Ch2){ # Ch = colum of the channel not the actual channel
 
-  	# if(!exists("newdata")){
-  	# 	newdata<-as.data.frame("new")
-  	# }
-
-    # print(newdata)
 
     if(plot_temp==TRUE){
       # temp plot name
@@ -139,7 +134,6 @@ SMR<-function(data,
           next
   			}
 
-
   			DateTime_start<-as.character(d$DateTime[1])
   			lm_coef<-coef(lm(d[,Ch]~d$time_min)) # get linear regression fit
   			r2<-round(summary(lm(d[,Ch]~d$time_min))$r.squared,3) # get r2
@@ -147,7 +141,8 @@ SMR<-function(data,
   			m<-round(lm_coef[2],5) # get slope
   			b<-round(lm_coef[1],2) # get intercept
 
-  				# if this is the first cycle for this fish - start a new data file
+  				# if this is the first cycle for this fish - start a new data file]
+  			  print(newdata)
   				if(newdata[1,1]=="new"){
 
   					newdata<-matrix(ncol=15,nrow=0)
@@ -450,7 +445,6 @@ SMR<-function(data,
   						}
   					}
 
-
   					# if this is the last cycle for this fish - save the plot
   					if (i == length(seq_end)){
   						dev.off()
@@ -464,7 +458,7 @@ SMR<-function(data,
 
   		}
 
-  	  # run thrugh the loop one more time, but only for temperature
+  	  # run through the loop one more time, but only for temperature
       # WITH inventory data
   		if(plot_temp==TRUE){
         for (i in 1:length(seq_end)){
