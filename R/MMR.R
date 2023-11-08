@@ -15,7 +15,7 @@
 #' @param N_Ch The number of FireSting channels. Options include 2, 4, and 8. This argument can be ignored if 2-Channel FireSting was used.
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param date_format The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")
-#' @param inv.data The name of an inventory data dataframe that provides dertails in "cleaning"
+#' @param inventory_data The name of an inventory data dataframe that provides dertails in "cleaning"
 #'
 #' @return The output from \code{\link{print}}
 #' @export
@@ -50,7 +50,7 @@ MMR<-function(data.MMR,
               N_Ch = 4,
               local_path = TRUE,
               date_format = c("%m/%d/%Y %H:%M:%S", "GMT"),
-              inv.data = NULL){
+              inventory_data = NULL){
 
   #  binding global variables locally to the function.
   p<-p1<-p2<-p3<-p4<-p_null<-NULL
@@ -98,51 +98,34 @@ MMR<-function(data.MMR,
 
 			### is there cleaning?
   		if(nrow(inv.data.clean)>0){
-  		   message(paste("Clean: Ch",j, ",time adjusted time of non-MMR measurement cycle", sep=""))
+  		   cat(paste("Clean: Ch",j ,", adjusted time of non-MMR measurement cycle \n", sep=""))
   	      # find cycle 2 cleaning
-  	      if(any(inv.data.clean$cycle==2)){
+  	      if(any(inv.data.clean[,4]==2)){
   	         clean_cycle2<-"Y"
-  	           start_c2<-inv.data.clean[which(inv.data.clean$cycle==2),"start"] # min start
-  	           end_c2<-inv.data.clean[which(inv.data.clean$cycle==2),"end"]
+  	           start_c2<-inv.data.clean[which(inv.data.clean[,4] == 2),5] # min start
+  	           end_c2<-inv.data.clean[which(inv.data.clean[,4]==2),6]
   	      }
   		   # find cycle 3 cleaning
-  	      if(any(inv.data.clean$cycle==3)){
-  	        # print(inv.data.clean)
+  	      if(any(inv.data.clean[,4]==3)){
   	         clean_cycle3<-"Y"
-  	         # if(!inv.data.clean[which(inv.data.clean$cycle==3),"start"] == 0){
-    	         start_c3<-inv.data.clean[which(inv.data.clean$cycle==3),"start"] # min start
-    	         end_c3<-inv.data.clean[which(inv.data.clean$cycle==3),"end"]
-#   	         }
-#   	         else{
-# 	            start_c3<-0
-# 	            end_c3<-0
-#   	         }
+    	         start_c3<-inv.data.clean[which(inv.data.clean[,4]==3),5] # min start
+    	         end_c3<-inv.data.clean[which(inv.data.clean[,4]==3),6]
 
   	      }
   		  # find cycle 4 cleaning
-  	      if(any(inv.data.clean$cycle==4)){
-  	         # print(inv.data.clean)
+  	      if(any(inv.data.clean[,4]==4)){
   	         clean_cycle4<-"Y"
-  	         # if(!inv.data.clean[which(inv.data.clean$cycle==4),"start"] == 0){
-    	         start_c4<-inv.data.clean[which(inv.data.clean$cycle==4),"start"] # min start
-    	         end_c4<-inv.data.clean[which(inv.data.clean$cycle==4),"end"]
-  	         # }
-  	         # else{
-  	         #   start_c4<-cycle_start[4]
-  	         #   end_c4<-cycle_end[4]
-  	         # }
+    	         start_c4<-inv.data.clean[which(inv.data.clean[,4]==4),5] # min start
+    	         end_c4<-inv.data.clean[which(inv.data.clean[,4]==4),6]
   	      }
   		}
 
-			###  end to cleaning times for cycles
-
-				# print(c(clean_cycle2, start_c2, end_c2, j))
+  	  # end to cleaning times for cycles
+  		# print(c(clean_cycle2, start_c2, end_c2, j))
 
 			## these are standard cycles without any cleaning
 			if (cycles>=2){
 			  if(is.na(clean_cycle2)){
-			    # start_c2<-cycle_start[2]
-			    # end_c2<-cycle_end[2]
 				  d2<-dataMMR[c(which(dataMMR$time_min>cycle_start[2] & dataMMR$time_min<cycle_end[2])),]
 			  }else{
 			    if(start_c2==0 & end_c2 ==0){
@@ -685,16 +668,16 @@ MMR<-function(data.MMR,
   }
 
 
-	if(as.character(dataMMR$Ch1_O2[1])=="--- " || as.character(dataMMR$Ch1_O2[1])=="---"){
+	if(as.character(dataMMR$Ch1_O2[1])=="--- " || as.character(dataMMR$Ch1_O2[1])=="---" || is.na(dataMMR$Ch1_O2[1])){
 		dataMMR$Ch1_O2<-0
 	}
-	if(as.character(dataMMR$Ch2_O2[1])=="--- " || as.character(dataMMR$Ch2_O2[1])=="---"){
+	if(as.character(dataMMR$Ch2_O2[1])=="--- " || as.character(dataMMR$Ch2_O2[1])=="---" || is.na(dataMMR$Ch1_O2[1])){
 		dataMMR$Ch2_O2<-0
 	}
-	if(as.character(dataMMR$Ch3_O2[1])=="--- " || as.character(dataMMR$Ch3_O2[1])=="---"){
+	if(as.character(dataMMR$Ch3_O2[1])=="--- " || as.character(dataMMR$Ch3_O2[1])=="---" || is.na(dataMMR$Ch1_O2[1])){
 		dataMMR$Ch3_O2<-0
 	}
-	if(as.character(dataMMR$Ch4_O2[1])=="--- " || as.character(dataMMR$Ch4_O2[1])=="---"){
+	if(as.character(dataMMR$Ch4_O2[1])=="--- " || as.character(dataMMR$Ch4_O2[1])=="---" || is.na(dataMMR$Ch1_O2[1])){
 		dataMMR$Ch4_O2<-0
 	}
 
@@ -789,62 +772,56 @@ MMR<-function(data.MMR,
 		cycle_end[length(cycle_end)]<-dataMMR$time_min[nrow(dataMMR)]
 	}
 
-    Box_n_data<-(which(!is.na(str_locate(data.MMR, c("box", "BOX", "Box"))))[2])
+  if(is.null(inventory_data)){
+		data2<-as.data.frame(matrix(nrow=0, ncol=0))
+	}else{
 
-    if(!is.null(inv.data)){
-      if(file.exists(inv.data) | file.exists(paste("./csv_files/", inv.data, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
-    	  if(file.exists(paste("./csv_files/", inv.data, sep=""))){
-          data2<-read.csv(paste("./csv_files/", inv.data, sep=""))
-        }
-        if(file.exists(inv.data)){
-          data2<-read.csv(inv.data)
-        }
-    	}else{
-        stop_function<-TRUE
-        if(stop_function){
-          stop("Cannot locate the indicated inv.data data file.")
-        }
+	   if(file.exists(inventory_data) | file.exists(paste("./SMR/csv_files/", inventory_data, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+  	  if(file.exists(paste("./SMR/csv_files/", inventory_data, sep=""))){
+        data2<-read.csv(paste("./SMR/csv_files/", inventory_data, sep=""))
+      }
+      if(file.exists(inventory_data)){
+        data2<-read.csv(inventory_data)
+      }
+  	}else{
+      stop_function<-TRUE
+      if(stop_function){
+        stop("Cannot locate the indicated inventory_data data file.")
       }
     }
+	}
 
-      #   if(!file.exists(inv.data)){
-      #     stop_function<-TRUE
-      #     if(stop_function){
-      #       stop("Cannot locate the inventory data file, be sure it is in the local directory, or proovide a full path to it")
-      #     }
-      #   }
-      #   data2<-read.csv(inv.data)
-      # }
 
       	for (j in 1:4){
 
+      	  if(!is.null(inventory_data)){
 
-      	  if(!is.null(inv.data)){
-
-
-        	   if(j==1){inv.data.clean<-data2[which(grepl(substr(data.MMR, start=1, stop=5), as.character(data2$date)) & as.numeric(data2$channel)==1 &
-        			                        grepl(substr(data.MMR, start = (str_locate(data.MMR, c("box", "BOX", "Box"))[Box_n_data])+1,
-        			                                     stop = (str_locate(data.MMR, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+        	   if(j==1){
+        	     inv.data.clean<-data2[which(grepl(x = data.MMR, pattern = as.character(data2[,2])) &
+        	                                   as.numeric(data2[,3])==1),]
         	   }
-        	   if(j==2){inv.data.clean<-data2[which(grepl(substr(data.MMR, start=1, stop=5), as.character(data2$date)) & as.numeric(data2$channel)==2 &
-        			                        grepl(substr(data.MMR, start = (str_locate(data.MMR, c("box", "BOX", "Box"))[Box_n_data])+1,
-        			                                     stop = (str_locate(data.MMR, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+        	   if(j==2){
+        	     inv.data.clean<-data2[which(grepl(x =data.MMR, pattern = as.character(data2[,2])) &
+        	                                   as.numeric(data2[,3])==2),]
         	   }
-        	   if(j==3){inv.data.clean<-data2[which(grepl(substr(data.MMR, start=1, stop=5), as.character(data2$date)) & as.numeric(data2$channel)==3 &
-        			                        grepl(substr(data.MMR, start = (str_locate(data.MMR, c("box", "BOX", "Box"))[Box_n_data])+1,
-        			                                     stop = (str_locate(data.MMR, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+        	   if(j==3){
+        	     inv.data.clean<-data2[which(grepl(x =data.MMR, pattern = as.character(data2[,2])) &
+        	                                   as.numeric(data2[,3])==3),]
         	   }
-        	   if(j==4){inv.data.clean<-data2[which(grepl(substr(data.MMR, start=1, stop=5), as.character(data2$date)) & as.numeric(data2$channel)==4 &
-        			                        grepl(substr(data.MMR, start = (str_locate(data.MMR, c("box", "BOX", "Box"))[Box_n_data])+1,
-        			                                     stop = (str_locate(data.MMR, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+        	   if(j==4){
+        	     inv.data.clean<-data2[which(grepl(x =data.MMR, pattern = as.character(data2[,2])) &
+        	                                   as.numeric(data2[,3])==4),]
         	   }
 
       	  }else{
 
       	    inv.data.clean<-as.data.frame(matrix(nrow=0, ncol=0))
       	  }
-
-      		  newdata_mmr<-Channel_mmr(data.MMR, dataMMR, cycle_start, cycle_end, clean_start_mmr, clean_end_mmr, Ch_list, cycles, j, rows, rows_temp, newdata_mmr, local_path, inv.data.clean)
+            print(inv.data.clean)
+      		  newdata_mmr<-Channel_mmr(data.MMR, dataMMR, cycle_start, cycle_end,
+      		                           clean_start_mmr, clean_end_mmr, Ch_list,
+      		                           cycles, j, rows, rows_temp,
+      		                           newdata_mmr, local_path, inv.data.clean)
       	}
 
 
@@ -856,4 +833,5 @@ MMR<-function(data.MMR,
 #~ 	assign("newdata_mmr", newdata_mmr, envir=.GlobalEnv)
 
 }
+
 

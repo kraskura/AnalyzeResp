@@ -70,10 +70,6 @@ SMR<-function(data,
                     plot_temp,
                     N_Ch2){ # Ch = colum of the channel not the actual channel
 
-    print("herehere")
-    print(newdata)
-    print(inv.data)
-
     if(plot_temp==TRUE){
       # temp plot name
       sub_directory_name<-gsub(pattern="plots_channel", replacement= "plots_channel_temperature", x= plotname)
@@ -107,7 +103,7 @@ SMR<-function(data,
     		}
   	  }
 
-    # no inventory data
+    # no inventory data-----
   	if(nrow(inv.data)==0){
 
 
@@ -145,12 +141,11 @@ SMR<-function(data,
   			b<-round(lm_coef[1],2) # get intercept
 
   				# if this is the first cycle for this fish - start a new data file]
-
-  				if(newdata[1,1]=="new"){
-
-  					newdata<-matrix(ncol=15,nrow=0)
-  					colnames(newdata)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
-  				}
+#
+#   				if(newdata[1,1]=="new"){
+#   					newdata<-matrix(ncol=15,nrow=0)
+#   					colnames(newdata)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
+#   				}
 
   				# if this is the first cycle for this fish - start a new plot
 
@@ -173,7 +168,7 @@ SMR<-function(data,
     		    }
     		    if(length(seq_st)>375 ){
     			   	png(plotname, width=65, height=80, units="in",  res=200)
-    			  	par(mfrow=c(18,35)) # This will >  plots
+    			  	par(mfrow=c(18,35))
     			  	# print("here")
     		    }
   				}
@@ -272,13 +267,12 @@ SMR<-function(data,
 
   	}
 
-    # yes inventory data
+    # yes inventory data-----
   	if(nrow(inv.data)>0){
-
   	  if(Ch==4){
-  	    message(paste("Ch1: Data are cleaned for quality sections only"))
+  	    cat(paste("Ch1: Data are cleaned for quality sections only \n"))
   	  }else{
-  	    message(paste("Ch",Ch-4 ,": Data are cleaned for quality sections only", sep =""))
+  	    cat(paste("Ch",Ch-4 ,": Data are cleaned for quality sections only \n", sep =""))
   	  }
 
   	  cols = c(3, 4, 5, 6)
@@ -286,15 +280,14 @@ SMR<-function(data,
 	       inv.data[, i]<-as.numeric(as.character(inv.data[, i]))
   	  }
 
-
   		inv.data.clean<-inv.data[!(inv.data$type=="slope_analysis"),]
 
   		for (i in 1:length(seq_end)){
   			# if this is the first cycle for this fish - start a new data file
-  				if(as.character(newdata[1,1])=="new"){
-  					newdata<-matrix(ncol=15,nrow=0)
-  					colnames(newdata)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
-  				}
+  				# if(as.character(newdata[1,1])=="new"){
+  				# 	newdata<-matrix(ncol=15,nrow=0)
+  				# 	colnames(newdata)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
+  				# }
 
   				# if this is the first cycle for this fish - start a new plot
   				if (i == 1){
@@ -317,35 +310,23 @@ SMR<-function(data,
   			start<-seq_st[i]+chop_start # chopping off first x min from the beginning of each slopes
   			end<-seq_end[i]-chop_end # chopping off last x min from the end of each slope
 
-  				n2<-which((inv.data.clean[,5]>=start-1 & inv.data.clean[,5]=end+1) | (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<=end+1))
-
-          # print(n2)
+  				n2<-which((inv.data.clean[,5]>=start-1 & inv.data.clean[,5]<=end+1) |
+  				            (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<=end+1))
 
   				if(length(n2)==0){
   					cycle_use<-"use full cycle"
 
   				}else{
-  					# replace zeros in the inventory data to real values; in inv. data clean - this is where in invenotory file I added 0 when it just starts from the "start" of teh cycle and ends at the "end" of the cycle
+
   				  if(inv.data.clean[n2,4] == 1){
   				    cycle_use<-"skip cycle"
-  				    print("skip cycle")
   				  }else{
   				    cycle_use<-"use cleaned cycle"
   				  }
 
   				  if(inv.data.clean[n2,4]==0){
-  						inv.data.clean[n2,4]<-start
-  					}
-  					if(inv.data.clean[n2,5]==0){
   						inv.data.clean[n2,5]<-start
   					}
-  					if(inv.data.clean[n2,6]==0){
-  						inv.data.clean[n2,6]<-end
-  					}
-
-  				  # if(start==inv.data.clean[n2,5] & end==inv.data.clean[n2,6]){
-
-
 
   					d_clean<-data1[c(which(data1$time_min>inv.data.clean[n2,5] & data1$time_min<inv.data.clean[n2,6])),]
 
@@ -406,6 +387,11 @@ SMR<-function(data,
     						  values<-as.data.frame(t(c(time_frame, start, r20, b0, m0, temp_min0, temp_max0, temp_mean0,O2_min0, O2_max0, O2_mean0, substr(colnames(d0[Ch]), start=1, stop=3), DateTime_start0, type, n_min0)))
     						  colnames(values)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
     						}
+  # 						  if(cycle_use == "skip cycle" & i == 1){
+  #                 # if this is the first cycle for this fish and the newdata is empty
+  # 						    # reset newdata to "new
+  #           	    newdata<-as.data.frame("new")
+  # 						  }
   						}
 
   				# plotting each segment with slope, r2, and equations on it
@@ -455,7 +441,9 @@ SMR<-function(data,
 
   				if(!cycle_use=="skip cycle"){
     				newdata<-rbind(newdata, values) # add all values of interest to the individual fish specific data file (this is saved in MMR_SMR function)
-    				colnames(newdata)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
+    				colnames(newdata)<-c("time_frame","min_start", "r2" ,"b", "m" ,
+    				                     "t_min", "t_max", "t_mean","O2_min", "O2_max",
+    				                     "O2_mean", "Ch", "DateTime_start", "type", "n_min")
   				}
   			}
 
@@ -470,7 +458,8 @@ SMR<-function(data,
   			end<-seq_end[i]-chop_end # chopping off last x min from the end of each slope
 
   			n2<-which((inv.data.clean[,4]>=start-1 & inv.data.clean[,4]<end+1) |
-  			            (inv.data.clean[,5]>=start-1 & inv.data.clean[,5]<end+1) | (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<end+1))
+  			            (inv.data.clean[,5]>=start-1 & inv.data.clean[,5]<end+1) |
+  			            (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<end+1))
   				if(length(n2)==0){
   					cycle_use<-"use full cycle"
   				  }else{
@@ -531,15 +520,13 @@ SMR<-function(data,
 
   	}
 
-
-  	#assign("newdata", newdata, envir=.GlobalEnv)
   	return(newdata)
     # return(N_Ch)
 
   }
 
-
-	newdata<-as.data.frame("new")
+  	newdata<-matrix(ncol=15,nrow=0)
+  	colnames(newdata)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
 
 		if(file.exists(data) | file.exists(paste("./csv_files/", data, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
   	  if(file.exists(paste("./csv_files/", data, sep=""))){
@@ -625,7 +612,7 @@ SMR<-function(data,
 	}
 
 
-	if (is.null(inventory_data)){
+	if(is.null(inventory_data)){
 		data2<-as.data.frame(matrix(nrow=0, ncol=0))
 	}else{
 
@@ -647,16 +634,17 @@ SMR<-function(data,
         message("Temperature plots are not saved when using inventory files / cleaning data")
 		 }
 	}
-	if(as.character(data1$Ch1_O2[1])=="--- " || as.character(data1$Ch1_O2[1])=="---"){
+
+	if(as.character(data1$Ch1_O2[1])=="--- " || as.character(data1$Ch1_O2[1])=="---" || is.na(data1$Ch1_O2[1])){
 		data1$Ch1_O2<-0
 	}
-	if(as.character(data1$Ch2_O2[1])=="--- " || as.character(data1$Ch2_O2[1])=="---"){
+	if(as.character(data1$Ch2_O2[1])=="--- " || as.character(data1$Ch2_O2[1])=="---" || is.na(data1$Ch2_O2[1])){
 		data1$Ch2_O2<-0
 	}
-	if(as.character(data1$Ch3_O2[1])=="--- " || as.character(data1$Ch3_O2[1])=="---"){
+	if(as.character(data1$Ch3_O2[1])=="--- " || as.character(data1$Ch3_O2[1])=="---" || is.na(data1$Ch3_O2[1])){
 		data1$Ch3_O2<-0
 	}
-	if(as.character(data1$Ch4_O2[1])=="--- " || as.character(data1$Ch4_O2[1])=="---"){
+	if(as.character(data1$Ch4_O2[1])=="--- " || as.character(data1$Ch4_O2[1])=="---" || is.na(data1$Ch4_O2[1])){
 		data1$Ch4_O2<-0
 	}
 
@@ -690,7 +678,11 @@ SMR<-function(data,
 	O2_max4<-max(data1$Ch4_O2, na.rm=TRUE)
 	O2_min4<-min(data1$Ch4_O2, na.rm=TRUE)
 
-	message (paste("Minimal O2: ", "[Ch1: ", round(O2_min1,2),"] [Ch2: ", round(O2_min2,2), "] [Ch3: ", round(O2_min3,2), "] [Ch4: ", round(O2_min4,2), "] (mgO2/L)", sep=""))
+	message (paste("Minimal O2: ", "[Ch1: ",
+	               round(O2_min1,2),"] [Ch2: ",
+	               round(O2_min2,2), "] [Ch3: ",
+	               round(O2_min3,2), "] [Ch4: ",
+	               round(O2_min4,2), "] (mgO2/L)", sep=""))
 
 	data1$date<-as.character(data1$date)
 	data1$time<-as.character(data1$time)
@@ -754,56 +746,42 @@ SMR<-function(data,
       }
 	  }
 
-	# write a channel function prior and call it here
-	# channel 1
-
-	# channel first argument -> col # for the Channel 1: 4 Ch2: 6, Ch3:7 Ch4:8
-	# channel second and third arguments: seq_start and seq_end
-
-	# find box number regardless of where it is written in the datafile name
-	# Box_n_data<-(which(!is.na(str_locate(data, c("box", "BOX", "Box"))))[2])
 
 	rows<-c(4,6,7,8) # the order Ch1, Ch2, Ch3, Ch4
 
 	if(N_Ch==8){
   	rows_temp<-c(5,9,10,11) # the order Ch1, Ch2, Ch3, Ch4
-	  }else {
+	  } else {
 	 	rows_temp<-c(5,5,5,5) # the order Ch1, Ch2, Ch3, Ch4
 	}
 
-
 		if (!data1$Ch1_O2[1]==0){
-			inv.data<-data2[which(!is.na(str_locate(data, as.character(data2[,2]))) & as.numeric(data2$channel)==1),]
 
+			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
+			                      & as.numeric(data2[,3])==1),]
 
 			if(nrow(inv.data)==0 || (!nrow(inv.data)==0 )){
 
-				newdata<-Channel(Ch=rows[1], temp=rows_temp[1], seq_st, seq_end, plotname2.1, data1, chop_start, chop_end, inv.data, newdata, plot_temp, N_Ch) # Ch 1 (col 4 in data1)
-			# for "partitioned" section or slope analysis. e.g. lobster apnea
+				newdata<-Channel(Ch=rows[1], temp=rows_temp[1], seq_st, seq_end,
+				                 plotname2.1, data1, chop_start, chop_end,
+				                 inv.data, newdata, plot_temp, N_Ch)
 			}
 
 		}
 
 		if (!data1$Ch2_O2[1]==0){
-			inv.data<-data2[which(!is.na(str_locate(data, as.character(data2[,2]))) & as.numeric(data2$channel)==2),]
-
-			# inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) & as.numeric(data2$channel)==2 &
-			#                         grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
-			#                                      stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2])) & as.numeric(data2[,3])==2),]
 
 			if(nrow(inv.data)==0 || (!nrow(inv.data)==0)){
-				newdata<-Channel(Ch=rows[2], temp=rows_temp[2], seq_st, seq_end, plotname2.2, data1, chop_start, chop_end, inv.data, newdata, plot_temp, N_Ch) # Ch 2 (col 6 in data1)
-			# for "partitioned" section or slope analysis. e.g. lobster apnea
+				newdata<-Channel(Ch=rows[2], temp=rows_temp[2], seq_st, seq_end,
+				                 plotname2.2, data1, chop_start, chop_end,
+				                 inv.data, newdata, plot_temp, N_Ch)
 			}
 
 		}
 
 		if (!data1$Ch3_O2[1]==0){
-		  inv.data<-data2[which(!is.na(str_locate(data, as.character(data2[,2]))) & as.numeric(data2$channel)==3),]
-
-			# inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) & as.numeric(data2$channel)==3 &
-			#                         grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
-			#                                      stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+		  inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2])) & as.numeric(data2[,3])==3),]
 
 			if(nrow(inv.data)==0 || (!nrow(inv.data)==0 )){
 				newdata<-Channel(Ch=rows[3], temp=rows_temp[3], seq_st, seq_end, plotname2.3, data1, chop_start, chop_end, inv.data, newdata, plot_temp, N_Ch) # Ch 3 (col 7 in data1)
@@ -812,11 +790,7 @@ SMR<-function(data,
 		}
 
 		if (!data1$Ch4_O2[1]==0){
-		  inv.data<-data2[which(!is.na(str_locate(data, as.character(data2[,2]))) & as.numeric(data2$channel)==4),]
-
-			# inv.data<-data2[which(!is.na(str_locate(data, as.character(data2$date))) & as.numeric(data2$channel)==4 &
-			#                        grepl(substr(data, start = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1,
-			#                                      stop = (str_locate(data, c("box", "BOX", "Box"))[Box_n_data])+1), as.character(data2$box))),]
+		  inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2])) & as.numeric(data2[,3])==4),]
 
 			if(nrow(inv.data)==0 || (!nrow(inv.data)==0 )){
 				newdata<-Channel(Ch=rows[4], temp=rows_temp[4], seq_st, seq_end, plotname2.4, data1, chop_start, chop_end, inv.data, newdata, plot_temp, N_Ch) # Ch 4 (col 8 in data1)
