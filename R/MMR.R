@@ -28,7 +28,6 @@
 #' @import scales
 #' @import ggplot2
 #' @import utils
-#' @import stringr
 #' @importFrom dplyr group_by
 #' @importFrom dplyr summarize
 #' @importFrom pryr %<a-%
@@ -216,21 +215,21 @@ MMR<-function(data.MMR,
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 				  if(nrow(newdata_mmr60)>0){
 
-				    ablineclip(lm(d[which(d$time_min > newdata_mmr60$cycle_start &
+				    plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr60$cycle_start &
 				                            d$time_min < newdata_mmr60$cycle_end),r]~
 				                    d[which(d$time_min > newdata_mmr60$cycle_start &
 				                              d$time_min < newdata_mmr60$cycle_end),"time_min"]), # purple
 				               col=rgb(red = 128, green = 0, blue = 128, alpha = 230, maxColorValue = 255),
 				               lty = "solid", lwd=4,lend="round",
 				               x1=newdata_mmr60$cycle_start, x2=newdata_mmr60$cycle_end);
-				    ablineclip(lm(d[which(d$time_min > newdata_mmr90$cycle_start &
+				    plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr90$cycle_start &
 				                            d$time_min < newdata_mmr90$cycle_end),r]~
 				                    d[which(d$time_min > newdata_mmr90$cycle_start &
 				                              d$time_min < newdata_mmr90$cycle_end),"time_min"]), # orange
 				               col=rgb(red = 255, green = 127, blue = 80, alpha = 230, maxColorValue = 255),
 				               lty = "solid", lwd=4, lend="round",
 				               x1=newdata_mmr90$cycle_start, x2=newdata_mmr90$cycle_end);
-				    ablineclip(lm(d[which(d$time_min > newdata_mmr120$cycle_start &
+				    plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr120$cycle_start &
 				                            d$time_min < newdata_mmr120$cycle_end),r]~
 				                    d[which(d$time_min > newdata_mmr120$cycle_start &
 				                              d$time_min < newdata_mmr120$cycle_end),"time_min"]),
@@ -271,21 +270,21 @@ MMR<-function(data.MMR,
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 
 				  if(nrow(newdata_mmr60)>0){
-				    ablineclip(lm(d[which(d$time_min > newdata_mmr60$cycle_start &
+				    plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr60$cycle_start &
   				                          d$time_min < newdata_mmr60$cycle_end),r]~
   				                  d[which(d$time_min > newdata_mmr60$cycle_start &
   				                            d$time_min < newdata_mmr60$cycle_end),"time_min"]), # purple
   				             col=rgb(red = 128, green = 0, blue = 128, alpha = 230, maxColorValue = 255),
   				             lty = "solid", lwd=4,lend="round",
   				             x1=newdata_mmr60$cycle_start, x2=newdata_mmr60$cycle_end);
-  				  ablineclip(lm(d[which(d$time_min > newdata_mmr90$cycle_start &
+  				  plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr90$cycle_start &
   				                          d$time_min < newdata_mmr90$cycle_end),r]~
   				                  d[which(d$time_min > newdata_mmr90$cycle_start &
   				                            d$time_min < newdata_mmr90$cycle_end),"time_min"]), # orange
   				             col=rgb(red = 255, green = 127, blue = 80, alpha = 230, maxColorValue = 255),
   				             lty = "solid", lwd=4, lend="round",
   				             x1=newdata_mmr90$cycle_start, x2=newdata_mmr90$cycle_end);
-  				  ablineclip(lm(d[which(d$time_min > newdata_mmr120$cycle_start &
+  				  plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr120$cycle_start &
   				                          d$time_min < newdata_mmr120$cycle_end),r]~
   				                  d[which(d$time_min > newdata_mmr120$cycle_start &
   				                            d$time_min < newdata_mmr120$cycle_end),"time_min"]),
@@ -325,21 +324,21 @@ MMR<-function(data.MMR,
 
 
 				  if(nrow(newdata_mmr60)>0){
-				    ablineclip(lm(d[which(d$time_min > newdata_mmr60$cycle_start &
+				    plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr60$cycle_start &
   				                          d$time_min < newdata_mmr60$cycle_end),r]~
   				                  d[which(d$time_min > newdata_mmr60$cycle_start &
   				                            d$time_min < newdata_mmr60$cycle_end),"time_min"]), # purple
   				             col=rgb(red = 128, green = 0, blue = 128, alpha = 230, maxColorValue = 255),
   				             lty = "solid", lwd=4,lend="round",
   				             x1=newdata_mmr60$cycle_start, x2=newdata_mmr60$cycle_end);
-  				  ablineclip(lm(d[which(d$time_min > newdata_mmr90$cycle_start &
+  				  plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr90$cycle_start &
   				                          d$time_min < newdata_mmr90$cycle_end),r]~
   				                  d[which(d$time_min > newdata_mmr90$cycle_start &
   				                            d$time_min < newdata_mmr90$cycle_end),"time_min"]), # orange
   				             col=rgb(red = 255, green = 127, blue = 80, alpha = 230, maxColorValue = 255),
   				             lty = "solid", lwd=4, lend="round",
   				             x1=newdata_mmr90$cycle_start, x2=newdata_mmr90$cycle_end);
-  				  ablineclip(lm(d[which(d$time_min > newdata_mmr120$cycle_start &
+  				  plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr120$cycle_start &
   				                          d$time_min < newdata_mmr120$cycle_end),r]~
   				                  d[which(d$time_min > newdata_mmr120$cycle_start &
   				                            d$time_min < newdata_mmr120$cycle_end),"time_min"]),
@@ -376,21 +375,21 @@ MMR<-function(data.MMR,
 				  plot(d[,r]~time_min, data=d, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="MMR");
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 				  if(nrow(newdata_mmr60)>0){
-				    ablineclip(lm(d[which(d$time_min > newdata_mmr60$cycle_start &
+				    plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr60$cycle_start &
   				                          d$time_min < newdata_mmr60$cycle_end),r]~
   				                  d[which(d$time_min > newdata_mmr60$cycle_start &
   				                            d$time_min < newdata_mmr60$cycle_end),"time_min"]), # purple
   				             col=rgb(red = 128, green = 0, blue = 128, alpha = 230, maxColorValue = 255),
   				             lty = "solid" , lwd=4,lend="round",
   				             x1=newdata_mmr60$cycle_start, x2=newdata_mmr60$cycle_end);
-  				  ablineclip(lm(d[which(d$time_min > newdata_mmr90$cycle_start &
+  				  plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr90$cycle_start &
   				                          d$time_min < newdata_mmr90$cycle_end),r]~
   				                  d[which(d$time_min > newdata_mmr90$cycle_start &
   				                            d$time_min < newdata_mmr90$cycle_end),"time_min"]), # orange
   				             col=rgb(red = 255, green = 127, blue = 80, alpha = 230, maxColorValue = 255),
   				             lty = "solid", lwd=4, lend="round",
   				             x1=newdata_mmr90$cycle_start, x2=newdata_mmr90$cycle_end);
-  				  ablineclip(lm(d[which(d$time_min > newdata_mmr120$cycle_start &
+  				  plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr120$cycle_start &
   				                          d$time_min < newdata_mmr120$cycle_end),r]~
   				                  d[which(d$time_min > newdata_mmr120$cycle_start &
   				                            d$time_min < newdata_mmr120$cycle_end),"time_min"]),

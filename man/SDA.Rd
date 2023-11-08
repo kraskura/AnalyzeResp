@@ -11,7 +11,7 @@ SDA(
   r2_threshold_smr,
   sda_threshold_level,
   scaling_exponent_smr = 1,
-  date_format = c("\%Y-\%m-\%d \%H:\%M:\%S", "\%m/\%d/\%Y \%H:\%M:\%S"),
+  date_format = c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT"),
   data.SDA = NULL,
   analyzed_MR = NULL,
   SMR_calc = TRUE,

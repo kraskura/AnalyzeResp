@@ -20,7 +20,7 @@ MMR(
   N_Ch = 4,
   local_path = TRUE,
   date_format = c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT"),
-  inv.data = NULL
+  inventory_data = NULL
 )
 }
 \arguments{
@@ -54,7 +54,7 @@ MMR(
 
 \item{date_format}{The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")}
 
-\item{inv.data}{The name of an inventory data dataframe that provides dertails in "cleaning"}
+\item{inventory_data}{The name of an inventory data dataframe that provides dertails in "cleaning"}
 }
 \value{
 The output from \code{\link{print}}

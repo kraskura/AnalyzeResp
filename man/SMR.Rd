@@ -35,7 +35,7 @@ SMR(
 
 \item{N_Ch}{The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel Firesting has 4 temperature and 4 oxygen sensors}
 
-\item{date_format}{The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")}
+\item{date_format}{Common format of from the CSV conversion.}
 
 \item{inventory_data}{The inventory file (.csv file), default = NULL}
 
