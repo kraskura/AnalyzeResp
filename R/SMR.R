@@ -70,6 +70,9 @@ SMR<-function(data,
                     plot_temp,
                     N_Ch2){ # Ch = colum of the channel not the actual channel
 
+    print("herehere")
+    print(newdata)
+    print(inv.data)
 
     if(plot_temp==TRUE){
       # temp plot name
@@ -142,7 +145,7 @@ SMR<-function(data,
   			b<-round(lm_coef[1],2) # get intercept
 
   				# if this is the first cycle for this fish - start a new data file]
-  			  print(newdata)
+
   				if(newdata[1,1]=="new"){
 
   					newdata<-matrix(ncol=15,nrow=0)
@@ -316,7 +319,7 @@ SMR<-function(data,
 
   				n2<-which((inv.data.clean[,5]>=start-1 & inv.data.clean[,5]=end+1) | (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<=end+1))
 
-          print(n2)
+          # print(n2)
 
   				if(length(n2)==0){
   					cycle_use<-"use full cycle"
