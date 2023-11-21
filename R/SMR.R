@@ -760,12 +760,14 @@ SMR<-function(data,
   			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==1),]
 		  }else{
-        inv.data<-data2
-		  }
+        inv.data <- data2
+      }
 
+      print(data2)
+		  print(inv.data)
 			newdata<-Channel(Ch=rows[1], temp=rows_temp[1], seq_st, seq_end,
 				                 plotname2.1, data1, chop_start, chop_end,
-				                 inv.data, newdata, plot_temp, N_Ch)
+				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
 
 		}
 
@@ -780,7 +782,7 @@ SMR<-function(data,
 
 			newdata<-Channel(Ch=rows[2], temp=rows_temp[2], seq_st, seq_end,
 				                 plotname2.1, data1, chop_start, chop_end,
-				                 inv.data, newdata, plot_temp, N_Ch)
+				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
 
 		}
 
@@ -795,7 +797,7 @@ SMR<-function(data,
 
 			newdata<-Channel(Ch=rows[3], temp=rows_temp[3], seq_st, seq_end,
 				                 plotname2.1, data1, chop_start, chop_end,
-				                 inv.data, newdata, plot_temp, N_Ch)
+				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
 
 		}
 
@@ -810,7 +812,7 @@ SMR<-function(data,
 
 			newdata<-Channel(Ch=rows[4], temp=rows_temp[4], seq_st, seq_end,
 				                 plotname2.1, data1, chop_start, chop_end,
-				                 inv.data, newdata, plot_temp, N_Ch)
+				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
 		}
 
 	newdata$min_start<-as.numeric(as.character(newdata$min_start))
