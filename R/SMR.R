@@ -763,8 +763,6 @@ SMR<-function(data,
         inv.data <- data2
       }
 
-      print(data2)
-		  print(inv.data)
 			newdata<-Channel(Ch=rows[1], temp=rows_temp[1], seq_st, seq_end,
 				                 plotname2.1, data1, chop_start, chop_end,
 				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
