@@ -71,7 +71,7 @@ SDA(
 
 \item{background_slope}{Manually assigned background slope used to correct metabolic rate in all individuals. Provide numeric value in mgO2 L-1 h-1v}
 
-\item{background.V}{Manually assigned respirometer volumes (L). A vector with 4 numeric variables, one for each channel.}
+\item{background.V}{Manually assigned respirometry chamber volumes (L). A vector with 4 numeric variables, one for each channel.}
 
 \item{match_background_Ch}{Logical. If TRUE, the background respiration is estimated and applied channel-specific. The background_prior and background_post are used to estimate background respiration specific to each channel (or individual), which then is used to correct each individual’s MO2 independently. By default, the mean background respiration rate from all channels is calculated and applied to correct all individual’s MO2}
 
@@ -79,7 +79,7 @@ SDA(
 
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
-\item{handling_delay}{a delay of SDA due to handling, anesthsia, or any other experimental factor. in hours}
+\item{handling_delay}{a delay of SDA due to handling, anesthesia, or any other experimental factor. in hours}
 
 \item{begin_smr_hr_zero}{logical. Whether to force the integral SDA costs still be calculated from hour 0, that is assumed to be at SMR level (refer to sda_threshold_level)}
 }

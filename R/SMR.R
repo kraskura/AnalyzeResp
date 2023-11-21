@@ -756,45 +756,61 @@ SMR<-function(data,
 
 		if (!data1$Ch1_O2[1]==0){
 
-			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
-			                      & as.numeric(data2[,3])==1),]
+		  if(!nrow(inv.data)==0 ){
+  			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
+  			                      & as.numeric(data2[,3])==1),]
+		  }else{
+        inv.data<-data2
+		  }
 
-			if(nrow(inv.data)==0 || (!nrow(inv.data)==0 )){
-
-				newdata<-Channel(Ch=rows[1], temp=rows_temp[1], seq_st, seq_end,
+			newdata<-Channel(Ch=rows[1], temp=rows_temp[1], seq_st, seq_end,
 				                 plotname2.1, data1, chop_start, chop_end,
 				                 inv.data, newdata, plot_temp, N_Ch)
-			}
 
 		}
 
 		if (!data1$Ch2_O2[1]==0){
-			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2])) & as.numeric(data2[,3])==2),]
 
-			if(nrow(inv.data)==0 || (!nrow(inv.data)==0)){
-				newdata<-Channel(Ch=rows[2], temp=rows_temp[2], seq_st, seq_end,
-				                 plotname2.2, data1, chop_start, chop_end,
+		  if(!nrow(inv.data)==0 ){
+  			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
+  			                      & as.numeric(data2[,3])==2),]
+		  }else{
+        inv.data<-data2
+		  }
+
+			newdata<-Channel(Ch=rows[2], temp=rows_temp[2], seq_st, seq_end,
+				                 plotname2.1, data1, chop_start, chop_end,
 				                 inv.data, newdata, plot_temp, N_Ch)
-			}
 
 		}
 
 		if (!data1$Ch3_O2[1]==0){
-		  inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2])) & as.numeric(data2[,3])==3),]
 
-			if(nrow(inv.data)==0 || (!nrow(inv.data)==0 )){
-				newdata<-Channel(Ch=rows[3], temp=rows_temp[3], seq_st, seq_end, plotname2.3, data1, chop_start, chop_end, inv.data, newdata, plot_temp, N_Ch) # Ch 3 (col 7 in data1)
-			}
+		  if(!nrow(inv.data)==0 ){
+  			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
+  			                      & as.numeric(data2[,3])==3),]
+		  }else{
+        inv.data<-data2
+		  }
+
+			newdata<-Channel(Ch=rows[3], temp=rows_temp[3], seq_st, seq_end,
+				                 plotname2.1, data1, chop_start, chop_end,
+				                 inv.data, newdata, plot_temp, N_Ch)
 
 		}
 
 		if (!data1$Ch4_O2[1]==0){
-		  inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2])) & as.numeric(data2[,3])==4),]
 
-			if(nrow(inv.data)==0 || (!nrow(inv.data)==0 )){
-				newdata<-Channel(Ch=rows[4], temp=rows_temp[4], seq_st, seq_end, plotname2.4, data1, chop_start, chop_end, inv.data, newdata, plot_temp, N_Ch) # Ch 4 (col 8 in data1)
-			}
+		  if(!nrow(inv.data)==0 ){
+  			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
+  			                      & as.numeric(data2[,3])==4),]
+		  }else{
+        inv.data<-data2
+		  }
 
+			newdata<-Channel(Ch=rows[4], temp=rows_temp[4], seq_st, seq_end,
+				                 plotname2.1, data1, chop_start, chop_end,
+				                 inv.data, newdata, plot_temp, N_Ch)
 		}
 
 	newdata$min_start<-as.numeric(as.character(newdata$min_start))
@@ -808,8 +824,8 @@ SMR<-function(data,
 		geom_point()+
 		geom_line()+
 		theme_classic()+
-		ylab("Slope (in absolute value)")+
-		xlab("Time (min)")+
+		ylab("Slope (in absolute value; mg/O2/min)")+
+		xlab("Time experiment (min)")+
 		theme(legend.title=element_blank())
 
 
