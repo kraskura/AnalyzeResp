@@ -756,7 +756,7 @@ SMR<-function(data,
 
 		if (!data1$Ch1_O2[1]==0){
 
-		  if(!nrow(inv.data)==0 ){
+		  if(!nrow(data2)==0 ){
   			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==1),]
 		  }else{
@@ -771,7 +771,7 @@ SMR<-function(data,
 
 		if (!data1$Ch2_O2[1]==0){
 
-		  if(!nrow(inv.data)==0 ){
+		  if(!nrow(data2)==0 ){
   			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==2),]
 		  }else{
@@ -786,7 +786,7 @@ SMR<-function(data,
 
 		if (!data1$Ch3_O2[1]==0){
 
-		  if(!nrow(inv.data)==0 ){
+		  if(!nrow(data2)==0 ){
   			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==3),]
 		  }else{
@@ -801,7 +801,7 @@ SMR<-function(data,
 
 		if (!data1$Ch4_O2[1]==0){
 
-		  if(!nrow(inv.data)==0 ){
+		  if(!nrow(data2)==0 ){
   			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==4),]
 		  }else{

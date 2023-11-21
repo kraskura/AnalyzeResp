@@ -37,11 +37,11 @@ SDA(
 
 \item{BW.animal}{Indicates individual mass; must be a vector of 4 characters. When missing, enter "0"}
 
-\item{resp.V}{Indicated the volume (L) of respirometer chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)}
+\item{resp.V}{Indicated the volume (L) of respirometry chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)}
 
 \item{r2_threshold_smr}{R2 threshold for SMR, measurements below the threshold are excluded}
 
-\item{sda_threshold_level}{Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to sda_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as threshold for full digestion, enter sda_threshold = 1.2.}
+\item{sda_threshold_level}{Indicates the threshold relevant to an individuals SMR to calculate the end time of recovery (the time at which metabolic rate has returned to sda_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as threshold for full digestion, enter sda_threshold = 1.2.}
 
 \item{scaling_exponent_smr}{Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])}
 
