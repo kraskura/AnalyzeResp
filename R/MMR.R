@@ -683,7 +683,7 @@ MMR<-function(data.MMR,
 
 
 	dataMMR$date<-as.character(dataMMR$date)
-	if(grepl(pattern = "M", as.character(dataMMR$time))){
+	if(grepl(pattern = "M", as.character(dataMMR$time[1]))){
     dataMMR$time<-format(strptime(dataMMR$time, format = '%I:%M:%S %p'), format='%H:%M:%S')
 	}
 	dataMMR$time<-as.character(dataMMR$time)

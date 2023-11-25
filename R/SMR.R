@@ -683,7 +683,7 @@ SMR<-function(data,
 	               round(O2_min4,2), "] (mgO2/L)", sep=""))
 
 	data1$date<-as.character(data1$date)
-	if(grepl(pattern = "M", as.character(data1$time))){
+	if(grepl(pattern = "M", as.character(data1$time[1]))){
     data1$time<-format(strptime(data1$time, format = '%I:%M:%S %p'), format='%H:%M:%S')
 	}
 	data1$time<-as.character(data1$time) # this
