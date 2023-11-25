@@ -685,6 +685,9 @@ MMR<-function(data.MMR,
 
 	dataMMR$date<-as.character(dataMMR$date)
 	dataMMR$time<-as.character(dataMMR$time)
+
+	print(dataMMR$time)
+
   DateTime<-strptime(paste(dataMMR$date, dataMMR$time), format=date_format[1], tz=date_format[2])
   dataMMR$DateTime<-DateTime
 

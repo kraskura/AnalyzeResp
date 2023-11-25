@@ -684,7 +684,9 @@ SMR<-function(data,
 	               round(O2_min4,2), "] (mgO2/L)", sep=""))
 
 	data1$date<-as.character(data1$date)
-	data1$time<-as.character(data1$time)
+  # herehere 24 h clock
+	data1$time<-as.character(data1$time) # this
+	print(data1$time)
 
 	DateTime<-strptime(paste(data1$date, data1$time), format = date_format[1], tz = date_format[2])
 

@@ -1187,7 +1187,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     }
 
   	d_SMR<-data_glued
-
+    print(d_SMR)
 			# drop any unwanted channels
 	  if(!is.null(drop_ch[1])){
 	    n_ch_drop<-length(drop_ch)
@@ -2070,6 +2070,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   				d$time_mo2[j]<-difftime(d$DateTime_start[j], d$DateTime_start[1], units=c("mins"))
   			}
 
+    		print(d)
   		  end_EPOC<-end_EPOC_Ch[as.numeric(substr(d$Ch[1], start=3, stop=3))]
     		## The EPOC calculation
 

@@ -34,11 +34,10 @@ textFileConvert<-function(txt_file,
                           atm_pressure = 1,
                           temperature = NULL){
 
-  if(!is.numeric(nrowSkip)){
-    stop("Must provide how many rows to skip from raw datafile; e.g. 4-Ch and 2-Ch fireSting commonly need 19, 8-Ch Firesting needs 26")
-  }
-
-  # must be provided ("firesting_v2023")
+  # if(!is.numeric(nrowSkip)){
+  #   stop("Must provide how many rows to skip from raw datafile;
+  #        e.g. 4-Ch and 2-Ch fireSting commonly need 19, 8-Ch Firesting needs 26")
+  # }
 
   if(type_file == "Firesting_pre2023"){
 
@@ -166,8 +165,8 @@ textFileConvert<-function(txt_file,
       if(is.null(nrowSkip)){
         nrowSkip <-21
       }
-      d<-read.csv(txt_file, skip = nrowSkip + exclude_first_measurement_s,
-               fileEncoding = "UTF-16", sep = "\t", header = FALSE)
+      d<-read.table(txt_file, skip = nrowSkip + exclude_first_measurement_s,
+                    sep = "\t", skipNul = TRUE, header = FALSE)
       colnames(d)<-d[1,]
       d<-d[-1,]
 
