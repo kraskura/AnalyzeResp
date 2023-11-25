@@ -798,7 +798,6 @@ SMR<-function(data,
 				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
 
 		}
-
 		if (!data1$Ch4_O2[1]==0){
 
 		  if(!nrow(data2)==0 ){

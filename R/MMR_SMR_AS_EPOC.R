@@ -650,22 +650,72 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   # START -- >>> MMR file available ---------
   if (!is.null(data.MMR)){
 
-    if(file.exists(data.MMR) | file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
-    	  if(file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR, sep=""))){
-          d_MMR<-read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR, sep=""))
-        }
-        if(file.exists(data.MMR)){
-          d_MMR<-read.csv(data.MMR)
-        }
-    	}else{
-        stop_function<-TRUE
-        if(stop_function){
-          stop("Cannot locate the indicated data.MMR data file.")
-        }
-    }
-    # d_MMR<-read.csv(data.MMR)
+    # if(file.exists(data.MMR) | file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+    # 	  if(file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR, sep=""))){
+    #       d_MMR<-read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR, sep=""))
+    #     }
+    #     if(file.exists(data.MMR)){
+    #       d_MMR<-read.csv(data.MMR)
+    #     }
+    # 	}else{
+    #     stop_function<-TRUE
+    #     if(stop_function){
+    #       stop("Cannot locate the indicated data.MMR data file.")
+    #     }
+    # }
 
-    # feb 23 note:
+    # ********************************************
+    # read in MMR files, one or multiple:
+    if(file.exists(data.MMR[1]) | file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
+
+      if(file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR[1], sep=""))){
+        data_glued_mmr<-read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR[1], sep=""))
+        if(length(data.MMR) > 1){
+          message("Multiple SMR files are combined")
+          for(i in 2:length(data.MMR)){
+            data_glued_mmr0 <- read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR[i], sep=""))
+            data_glued_mmr <- rbind(data_glued_mmr, data_glued_mmr0)
+          }
+        }
+      }
+
+      if(file.exists(data.MMR[1])){
+        data_glued_mmr<-read.csv(data.MMR[1])
+        if(length(data.MMR) > 1){
+          message("Multiple MMR files are combined")
+          for(i in 2:length(data.MMR)){
+            data_glued_mmr0 <- read.csv(data.MMR[i])
+            data_glued_mmr <- rbind(data_glued_mmr, data_glued_mmr0)
+          }
+        }
+      }
+
+    }else{
+      stop_function<-TRUE
+      if(stop_function){
+        stop("Cannot locate the indicated 'data.MMR' data file(s).")
+      }
+    }
+
+    # first order all data by channels
+    data_glued_mmr <- data_glued_mmr[order(data_glued_mmr$Ch), ] # even if only one file
+    data_glued_mmr$DateTime_start<- strptime(data_glued_mmr$DateTime_start, format = date_format[1], tz = date_format[2])
+
+    if(length(data.MMR) > 1){
+      data_glued_mmr$time_diff<-NA
+
+      for(i in 2:nrow(data_glued_mmr)){
+        data_glued_mmr$time_diff[i]<-data_glued_mmr$min_start[1]+(as.numeric(difftime(data_glued_mmr$DateTime_start[i],data_glued_mmr$DateTime_start[1], units="min")))
+      }
+
+      data_glued_mmr$time_diff[1]<-data_glued_mmr$min_start[1]
+    	data_glued_mmr$min_start<-data_glued_mmr$time_diff
+    	data_glued_mmr<-data_glued_mmr[,1:16]
+    }
+    # ********************************************
+
+
+
     # the previous version of the code before MMR became a flexible version (beginning of feb 2020), has an extra column: the delay is still there. If that is still there, but that file is desired to be used in the "new" MMR_SMR_AS_EPOC, thne get rid of that column and write a warning message:
     if(colnames(d_MMR)[4] == "delay_min"){
       d_MMR<-d_MMR[, -4]
@@ -674,8 +724,13 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 
     ### getting the right data frame of MMR values / choosing the right "sliding"
-  	if (!c(min_length_mmr == 1 | min_length_mmr == 60 | min_length_mmr == 90 | min_length_mmr == 120 | min_length_mmr == 180)){
-      message(paste("MMR: not identified duration of MMR measurement:", min_length_mmr, "seconds, re-assigning it to min_length_mmr = 1 (full measurement cycle)"))
+  	if (!c(min_length_mmr == 1 |
+  	       min_length_mmr == 60 |
+  	       min_length_mmr == 90 |
+  	       min_length_mmr == 120 |
+  	       min_length_mmr == 180)){
+      message(paste("MMR: not identified duration of MMR measurement:", min_length_mmr,
+                    "seconds, re-assigning it to min_length_mmr = 1 (full measurement cycle)"))
   	  min_length_mmr<-1
   	 }
 
@@ -696,8 +751,14 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	d_MMR$Ch<-factor(d_MMR$Ch)
 
 
-  	d_MMR$cycle_mmr[d_MMR$cycle_mmr=="1" | d_MMR$cycle_mmr=="2"| d_MMR$cycle_mmr=="3"| d_MMR$cycle_mmr=="4"]<-1 # 1 is an arbritrary number indicating that this is a "full length MMR file slope"
-  	d_MMR$cycle_mmr[(d_MMR$cycle_mmr=="1" | d_MMR$cycle_mmr=="2"| d_MMR$cycle_mmr=="3"| d_MMR$cycle_mmr=="4") & grepl("cycle", as.character(d_MMR$cycle_type))]<-10 # 10 is an arbitrary number that is not going to show up anywhere else/ needed to indicate teh cycle "full length" slope
+  	d_MMR$cycle_mmr[d_MMR$cycle_mmr=="1" |
+  	                  d_MMR$cycle_mmr=="2"|
+  	                  d_MMR$cycle_mmr=="3"|
+  	                  d_MMR$cycle_mmr=="4"]<-1 # 1 is an arbitrary number indicating that this is a "full length slope" for MMR
+  	d_MMR$cycle_mmr[(d_MMR$cycle_mmr=="1" |
+  	                   d_MMR$cycle_mmr=="2"|
+  	                   d_MMR$cycle_mmr=="3"|
+  	                   d_MMR$cycle_mmr=="4") & grepl("cycle", as.character(d_MMR$cycle_type))]<-10 # 10 is an arbitrary number that is not going to show up anywhere else/ needed to indicate the non-MMR cycle "full length" slope
 
   	#### SELECT the type of MMR SLOPES as wanted
   	# select either the absolute steepest slopes or the mean lowest slope
@@ -714,7 +775,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
   	d<-d_MMR %>%
   		dplyr::group_by(Ch) %>%
-  		filter(cycle_mmr== min_length_mmr| cycle_mmr== 1 | cycle_type=="cycle2" | cycle_type=="cycle3" | cycle_type=="cycle4")
+  		filter(cycle_mmr== min_length_mmr|
+  		         cycle_mmr== 1 |
+  		         cycle_type=="cycle2" |
+  		         cycle_type=="cycle3" |
+  		         cycle_type=="cycle4")
   	d<-as.data.frame(d)
 
   	d_MMR_list<-split(d_MMR, d_MMR$Ch)
@@ -1069,13 +1134,13 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	# START -- >>> SMR data available --------
 	if(!is.null(data.SMR[1])){
 
-	   # read in SMR files, one or multiple:
+	  # read in SMR files, one or multiple:
     if(file.exists(data.SMR[1]) | file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR[1], sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
 
       if(file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR[1], sep=""))){
         data_glued<-read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR[1], sep=""))
         if(length(data.SMR) > 1){
-          message("Multiple SDA files are combined")
+          message("Multiple SMR files are combined")
           for(i in 2:length(data.SMR)){
             data_glued0 <- read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.SMR[i], sep=""))
             data_glued <- rbind(data_glued, data_glued0)
@@ -1191,20 +1256,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 				d_SMR$resp.V[n.row]<-resp.Vol
 			}
 		}
-
-
-    ## this is where lines indicated with NA in the individual animal argument are ditched
-#     d_SMR<-d_SMR[d_SMR$ID!="NA",]
-#     d_MMR<-d_MMR[d_MMR$ID!="NA",]
-#
-# 		d_MMR<-d_MMR[as.character(d_MMR$ID)!="blank",]
-# 		d_SMR<-d_SMR[as.character(d_SMR$ID)!="blank",]
-#
-#     d_SMR$ID<-factor(d_SMR$ID)
-#     d_MMR$ID<-factor(d_MMR$ID)
-
-
-
 
 		# **********************************************
     # START -- >>> background corrections SMR
