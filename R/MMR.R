@@ -469,8 +469,7 @@ MMR<-function(data.MMR,
             }
 				  }
 				}
-				# print("here -here")
-				# print(c(start_c3, end_c3))
+
 				DateTime_start<-as.character(d3$DateTime[1])
 				cycle_type<-"cycle3"
 				Ch<-paste("Ch",j, sep="")
@@ -684,7 +683,12 @@ MMR<-function(data.MMR,
 
 
 	dataMMR$date<-as.character(dataMMR$date)
+	if(grepl(pattern = "M", as.character(dataMMR$time))){
+    dataMMR$time<-format(strptime(dataMMR$time, format = '%I:%M:%S %p'), format='%H:%M:%S')
+	}
 	dataMMR$time<-as.character(dataMMR$time)
+
+	  # format(strptime(bc$time, format='%H:%M:%S'), '%I:%M:%S %p')
 
 	print(dataMMR$time)
 

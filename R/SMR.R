@@ -168,7 +168,6 @@ SMR<-function(data,
     		    if(length(seq_st)>375 ){
     			   	png(plotname, width=65, height=80, units="in",  res=200)
     			  	par(mfrow=c(18,35))
-    			  	# print("here")
     		    }
   				}
 
@@ -684,7 +683,9 @@ SMR<-function(data,
 	               round(O2_min4,2), "] (mgO2/L)", sep=""))
 
 	data1$date<-as.character(data1$date)
-  # herehere 24 h clock
+	if(grepl(pattern = "M", as.character(data1$time))){
+    data1$time<-format(strptime(data1$time, format = '%I:%M:%S %p'), format='%H:%M:%S')
+	}
 	data1$time<-as.character(data1$time) # this
 	print(data1$time)
 
