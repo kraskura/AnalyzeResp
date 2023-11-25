@@ -671,7 +671,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       if(file.exists(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR[1], sep=""))){
         data_glued_mmr<-read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR[1], sep=""))
         if(length(data.MMR) > 1){
-          message("Multiple SMR files are combined")
+          message("Multiple MMR files are combined")
           for(i in 2:length(data.MMR)){
             data_glued_mmr0 <- read.csv(paste("./MMR_SMR_AS_EPOC/csv_input_files/", data.MMR[i], sep=""))
             data_glued_mmr <- rbind(data_glued_mmr, data_glued_mmr0)
@@ -701,21 +701,23 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     data_glued_mmr <- data_glued_mmr[order(data_glued_mmr$Ch), ] # even if only one file
     data_glued_mmr$DateTime_start<- strptime(data_glued_mmr$DateTime_start, format = date_format[1], tz = date_format[2])
 
-    if(length(data.MMR) > 1){
-      data_glued_mmr$time_diff<-NA
-
-      for(i in 2:nrow(data_glued_mmr)){
-        data_glued_mmr$time_diff[i]<-data_glued_mmr$min_start[1]+(as.numeric(difftime(data_glued_mmr$DateTime_start[i],data_glued_mmr$DateTime_start[1], units="min")))
-      }
-
-      data_glued_mmr$time_diff[1]<-data_glued_mmr$min_start[1]
-    	data_glued_mmr$min_start<-data_glued_mmr$time_diff
-    	data_glued_mmr<-data_glued_mmr[,1:12]
-    }
+    # if(length(data.MMR) > 1){
+    #   data_glued_mmr$time_diff<-NA
+    #
+    #   for(i in 2:nrow(data_glued_mmr)){
+    #     data_glued_mmr$time_diff[i]<-data_glued_mmr$cycle_start[1]+
+    #       (as.numeric(difftime(data_glued_mmr$DateTime_start[i],
+    #                            data_glued_mmr$DateTime_start[1], units="min")))
+    #   }
+    #
+    #   data_glued_mmr$time_diff[1]<-data_glued_mmr$cycle_start[1]
+    # 	data_glued_mmr$cycle_start<-data_glued_mmr$time_diff
+    # 	data_glued_mmr<-data_glued_mmr[,1:12]
+    # }
 
     d_MMR <- data_glued_mmr
+    print(d_MMR)
     # ********************************************
-
 
 
     # the previous version of the code before MMR became a flexible version (beginning of feb 2020), has an extra column: the delay is still there. If that is still there, but that file is desired to be used in the "new" MMR_SMR_AS_EPOC, thne get rid of that column and write a warning message:
