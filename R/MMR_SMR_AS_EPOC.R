@@ -710,8 +710,10 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
       data_glued_mmr$time_diff[1]<-data_glued_mmr$min_start[1]
     	data_glued_mmr$min_start<-data_glued_mmr$time_diff
-    	data_glued_mmr<-data_glued_mmr[,1:16]
+    	data_glued_mmr<-data_glued_mmr[,1:12]
     }
+
+    d_MMR <- data_glued_mmr
     # ********************************************
 
 
