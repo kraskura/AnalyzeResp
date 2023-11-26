@@ -338,7 +338,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   graphics.off()
 
  filename.SMR<-paste(gsub('.{4}$', '',data.SMR[1]), "_SMR", sep="")
- filename.MMR<-paste(gsub('.{4}$', '',data.MMR), "_MMR_", sep="")
+ filename.MMR<-paste(gsub('.{4}$', '',data.MMR[1]), "_MMR_", sep="")
 
   # **********************************************
   # START-- >>> background ------
@@ -443,7 +443,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
           back_regression_name<- paste("back_regression", Ch, sep="") # channel names with a channel # at the end
           if(background_gr == "linear"){
-            # print(back_ch_d[1:10,])
             regression<- lm(m~DateTime_start, data = back_ch_d)
             if(i==1){
               message("Background: linear change of bacterial respiration. Regressions are specific to the channel (respirometer)")
@@ -699,6 +698,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
     # first order all data by channels
     data_glued_mmr <- data_glued_mmr[order(data_glued_mmr$Ch), ] # even if only one file
+
     data_glued_mmr$DateTime_start<- strptime(data_glued_mmr$DateTime_start, format = date_format[1], tz = date_format[2])
 
     # if(length(data.MMR) > 1){
@@ -716,7 +716,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     # }
 
     d_MMR <- data_glued_mmr
-    print(d_MMR)
     # ********************************************
 
 
@@ -896,7 +895,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 			}
 		}
 
-# print(paste("2", length(unique(d_MMR$Ch))))
 
   	# **********************************************
     # START -- >>> background corrections MMR
@@ -1187,7 +1185,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     }
 
   	d_SMR<-data_glued
-    print(d_SMR)
 			# drop any unwanted channels
 	  if(!is.null(drop_ch[1])){
 	    n_ch_drop<-length(drop_ch)
@@ -1931,15 +1928,15 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	  if (local_path | !dir.exists("MMR_SMR_AS_EPOC")){
 		  	EPOCdata_name<-paste( filename.MMR, "_EPOC_DATA.csv", sep='')
 		  	# EPOCplot_name<-	paste( filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
-		  	filename.smr<-paste( gsub('.{4}$', '', data.SMR), "SMR_analyzed.csv", sep='')
-  	  	filename.mmr<-paste( gsub('.{4}$', '', data.MMR), "MMR_analyzed.csv", sep='')
-	    	filename.MR<-paste( gsub('.{4}$', '', data.MMR), "MR_analyzed.csv", sep='')
+		  	filename.smr<-paste( gsub('.{4}$', '', data.SMR[1]), "SMR_analyzed.csv", sep='')
+  	  	filename.mmr<-paste( gsub('.{4}$', '', data.MMR[1]), "MMR_analyzed.csv", sep='')
+	    	filename.MR<-paste( gsub('.{4}$', '', data.MMR[1]), "MR_analyzed.csv", sep='')
 		}else{
 		  	EPOCdata_name<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_EPOC/", filename.MMR, "_EPOC_DATA.csv", sep='')
 		  	# EPOCplot_name<-	paste("../plots_ch_EPOC/", filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
 		  	filename.smr<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_SMR/",gsub('.{4}$', '', data.SMR[1]), "SMR_analyzed.csv", sep='')
-  	  	filename.mmr<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_MMR/",gsub('.{4}$', '', data.MMR), "MMR_analyzed.csv", sep='')
-	    	filename.MR<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_MR/", gsub('.{4}$', '', data.MMR), "MR_analyzed.csv", sep='')
+  	  	filename.mmr<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_MMR/",gsub('.{4}$', '', data.MMR[1]), "MMR_analyzed.csv", sep='')
+	    	filename.MR<-paste("./MMR_SMR_AS_EPOC/csv_analyzed_MR/", gsub('.{4}$', '', data.MMR[1]), "MR_analyzed.csv", sep='')
 		}
 
 
@@ -2043,10 +2040,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     			d.mmr<-as.data.frame(Ch.dat.mmr[i])
     		}
 
-
   		  cols = c(1,2,5,13,14)
   		  d.smr[,cols] <- lapply(d.smr[, cols], as.character)
         d.mmr[,cols] <- lapply(d.mmr[, cols], as.character)
+
+
 
     		d<-rbind(d.mmr, d.smr)
     		colnames(d)<-c("ID", "time_frame", "min_start", "r2", "b", "m", "t_min", "t_max", "t_mean", "Ch", "bw", "mo2", "cycle_type", "DateTime_start", "scaling_exponent", "common_mass")
@@ -2070,7 +2068,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   				d$time_mo2[j]<-difftime(d$DateTime_start[j], d$DateTime_start[1], units=c("mins"))
   			}
 
-    		print(d)
   		  end_EPOC<-end_EPOC_Ch[as.numeric(substr(d$Ch[1], start=3, stop=3))]
     		## The EPOC calculation
 

@@ -119,9 +119,6 @@ MMR<-function(data.MMR,
   	      }
   		}
 
-  	  # end to cleaning times for cycles
-  		# print(c(clean_cycle2, start_c2, end_c2, j))
-
 			## these are standard cycles without any cleaning
 			if (cycles>=2){
 			  if(is.na(clean_cycle2)){
@@ -165,7 +162,6 @@ MMR<-function(data.MMR,
 			    if(start_c4==0 & end_c4 ==0){
 			    }
 			      d4<-as.data.frame(dataMMR[c(which(dataMMR$time_min>start_c4 & dataMMR$time_min<end_c4)),])
-			    # print(c(end_c4, start_c4))
 			  }
 				lm_coef.4<-coef(lm(d4[,r]~d4$time_min))
 				r2.4<-round(summary(lm(d4[,r]~d4$time_min))$r.squared,3)
@@ -207,8 +203,6 @@ MMR<-function(data.MMR,
 				newdata_mmr60<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 60),]
 				newdata_mmr90<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 90),]
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
-
-				# print(c(Ch_list[j], Ch))
 
 				p1 %<a-% {
 				  plot(d[,r]~time_min, data=d, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))), xlab="Time (min)",main="MMR");
@@ -416,8 +410,6 @@ MMR<-function(data.MMR,
 					mtext(bquote(y == .(lm_coef.2[2])*x + .(lm_coef[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
 					mtext(bquote(italic(R)^2 == .(format(r2.2, digits = 3))),adj=1, padj=0, cex=0.8, line=1);
 				  if(!is.na(clean_cycle2)){
-				    # print("here here")
-
 				    if(start_c2==0 & end_c2 ==0){
 				      legend("center","center", c("EXCLUDING \n from dataset"), col=c("red"), pch=" ", cex=2)
 				    }else{
@@ -684,13 +676,12 @@ MMR<-function(data.MMR,
 
 	dataMMR$date<-as.character(dataMMR$date)
 	if(grepl(pattern = "M", as.character(dataMMR$time[1]))){
+	  print("12 h clock convert to 24 h clock")
     dataMMR$time<-format(strptime(dataMMR$time, format = '%I:%M:%S %p'), format='%H:%M:%S')
 	}
 	dataMMR$time<-as.character(dataMMR$time)
 
 	  # format(strptime(bc$time, format='%H:%M:%S'), '%I:%M:%S %p')
-
-	print(dataMMR$time)
 
   DateTime<-strptime(paste(dataMMR$date, dataMMR$time), format=date_format[1], tz=date_format[2])
   dataMMR$DateTime<-DateTime
@@ -823,7 +814,6 @@ MMR<-function(data.MMR,
 
       	    inv.data.clean<-as.data.frame(matrix(nrow=0, ncol=0))
       	  }
-            print(inv.data.clean)
       		  newdata_mmr<-Channel_mmr(data.MMR, dataMMR, cycle_start, cycle_end,
       		                           clean_start_mmr, clean_end_mmr, Ch_list,
       		                           cycles, j, rows, rows_temp,

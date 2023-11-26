@@ -687,7 +687,6 @@ SMR<-function(data,
     data1$time<-format(strptime(data1$time, format = '%I:%M:%S %p'), format='%H:%M:%S')
 	}
 	data1$time<-as.character(data1$time) # this
-	print(data1$time)
 
 	DateTime<-strptime(paste(data1$date, data1$time), format = date_format[1], tz = date_format[2])
 
