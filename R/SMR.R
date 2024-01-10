@@ -110,7 +110,8 @@ SMR<-function(data,
   	  for (i in 1:length(seq_end)){
 
         # ************************************************************
-    	  cycle_time<-seq_end[2]-seq_end[1]
+  	    cycle_time<-seq_end[1]-seq_st[1]
+
   	    end_fullCycle<-seq_end[i]
         start_fullCycle<-end_fullCycle-cycle_time
 
@@ -121,13 +122,13 @@ SMR<-function(data,
   			end<-seq_end[i]-chop_end # chopping off last x min
 
   			d_fullCycle<-data1[c(which(data1$time_min>start_fullCycle & data1$time_min<end_fullCycle)),]
-  			d_NoChop<-data1[c(which(data1$time_min>start_NoChop & data1$time_min<end_NoChop)),] # from teh entire files, get only the data section we need
-        d<-data1[c(which(data1$time_min>start & data1$time_min<end)),] # from teh entire files, get only the data section we need
+  			d_NoChop<-data1[c(which(data1$time_min>start_NoChop & data1$time_min<end_NoChop)),] # from the entire files, get only the data section we need
+        d<-data1[c(which(data1$time_min>start & data1$time_min<end)),] # from the entire files, get only the data section we need
 
   			if(nrow(d) == 0){
           next_function <- TRUE
           if(Ch==4){ # print this only for the first channel - assuming this is system wide technical error
-            message(paste("! Missing data: some repeat cycles cannot be analyzed. Skip cycles: min", round(start), " to", round(end)))
+            message(paste("! Missing data: some measurement cycles cannot be analyzed. Skip cycles: min", round(start), " to", round(end)))
           }
           next
   			}
@@ -172,13 +173,16 @@ SMR<-function(data,
   				}
 
   			# # plotting each segment with slope, r2, and equations on it
-  			plot(d_fullCycle[,Ch]~time_min, data=d_fullCycle, ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)", col = "grey", cex = 0.5, pch = 1)
+  			plot(d_fullCycle[,Ch]~time_min, data=d_fullCycle,
+  			     ylab=expression(paste(O2~(mg~L^{-1}))),
+  			     xlab="Time (min)",
+  			     col = "grey", cex = 0.5, pch = 1)
         points(d_NoChop[,Ch]~time_min, data=d_NoChop, col = "blue", cex = 0.5, pch = 1)
   			points(d[,Ch]~time_min, data=d, col = "black", cex = 0.5, pch = 1)
         abline(v=start_NoChop, col="grey", lty = "dashed")
         abline(lm(d[,Ch]~d$time_min), col="red",lwd = 2)
   			mtext(bquote(y == .(lm_coef[2])*x + .(lm_coef[1])), adj=1, padj=0, cex=0.8, line=0) # display equation
-  			mtext(bquote(italic(R)^2 == .(format(r2, digits = 3))),adj=1, padj=0, cex=0.8, line=1)
+  			mtext(bquote(italic(R)^2 == .(format(r2, digits = 3))), adj=1, padj=0, cex=0.8, line=1)
   			# the bwlow code for the frames
 
 
