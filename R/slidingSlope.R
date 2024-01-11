@@ -2,38 +2,86 @@
 
 #' Title
 #'
-#' @param d Dataframe with each measurement present (O2 observed each second )
+#' @param data Dataframe with each measurement present (O2 observed each second )
 #' @param Ch Channel
-#' @param data.MMR The name of the export files
-#' @param r The column to use for oxygen trace
-#' @param r_temp The column to use for temperature trace
-#' @param newdata_mmr The ongoing dataframe of mmr that will be row-bind building as export
 #' @param local_path Logical. If TRUE (no default) all returned files will be saved in the local working directory. Can also provide a path if this function is run independently
 #'
 #' @return The output from \code{\link{print}}
 #' @export
-slidingSlope<-function(d,
+#'
+#'
+slidingSlope<-function(data,
                        Ch,
-                       data.MMR,
-                       r,
-                       r_temp,
-                       newdata_mmr,
-                       local_path){
+                       local_path,
+                       N_Ch){
+
+    d<-read.csv(data)
+    d$time_min<-round(d$time_sec/60,2)
 
     #  binding global variables locally to the function.
-    s60_1<-s90_1<-s120_1<-s180_1<-cycle_mmr<-m<-r2<-NULL
 
 		# for the sliding ones: cycle_type=MMR_slide
 		# for the sliding ones: cycle_start=the min on when the slide starts
 		# for the sliding ones: cycle_end=the min on when the slide ends
 		# for the sliding ones: delay_min=NA
 		# for the sliding ones: cycle_mmr= 60,90,120,180 (indicate the sliding length
-    newdata_set<-matrix(ncol=12, nrow=0)
-    colnames(newdata_set)<-c("cycle_type", "cycle_start","cycle_end",  "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max", "t_mean", "Ch", "DateTime_start")
+
+  # cycle through n channels
+
+  for(n in 1:length(Ch)){
+		if(n == 1){
+      newdata_mmr<-matrix(ncol = 11, nrow =0)
+      colnames(newdata_mmr)<-c("cycle_type","cycle_start","cycle_end",
+                              "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max",
+                              "t_mean", "Ch")
+		}
+
+    if(Ch[n] == 1){
+      # channel 1, column 4
+      r <- 4    # temperature only
+      r_temp<-5
+    }
+    if(Ch[n] == 2){
+      # channel 1, column 4
+      r <- 6
+      if(N_Ch==8){
+      	r_temp<-9 # the order Ch1, Ch2, Ch3, Ch4
+    	  }else {
+    	 	r_temp<-5 # the order Ch1, Ch2, Ch3, Ch4
+    	}
+    }
+    if(Ch[n] == 3){
+      # channel 1, column 4
+      r <- 7
+      if(N_Ch==8){
+      	r_temp<-10 # the order Ch1, Ch2, Ch3, Ch4
+    	  }else {
+    	 	r_temp<-5 # the order Ch1, Ch2, Ch3, Ch4
+    	}
+    }
+    if(Ch[n] == 4){
+      # channel 1, column 4
+      r = 8
+      if(N_Ch==8){
+      	r_temp<-11 # the order Ch1, Ch2, Ch3, Ch4
+    	  }else {
+    	 	r_temp<-5 # the order Ch1, Ch2, Ch3, Ch4
+    	}
+    }
+
+    newdata_set<-matrix(ncol=11, nrow=0)
+    colnames(newdata_set)<-c("cycle_type", "cycle_start","cycle_end",
+                             "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max",
+                             "t_mean", "Ch")
 
     newdata_setMean<-matrix(ncol=14, nrow=0)
-    colnames(newdata_setMean)<-c("cycle_type", "cycle_startMean","cycle_endMean", "cycle_mmrMean","min_m", "mean_m" ,"sd_m", "min_r2", "mean_r2" ,"sd_r2", "t_min", "t_max", "t_mean", "Ch")
-    #~ 		normalize time to have all files start at 0
+    colnames(newdata_setMean)<-c("cycle_type",
+                                 "cycle_startMean","cycle_endMean", "cycle_mmrMean",
+                                 "min_m", "mean_m" ,"sd_m",
+                                 "min_r2", "mean_r2" ,"sd_r2",
+                                 "t_min", "t_max", "t_mean",
+                                 "Ch")
+
 			cycle_type="MMR_slide"
 
 			for (i in 2:nrow(d)){
@@ -45,10 +93,7 @@ slidingSlope<-function(d,
 			starttime<-d$time_sec[1]
 
 			if(endtime>180){
-				# message("FILE > 3 min")
-##			length_slide<-c(10,20,30,60,90,120,180)
 				length_slide<-c(60,90,120,180)
-				# timeDiff_slide<-c(1)
 
 				for (k in 1:length(length_slide)){
 
@@ -75,8 +120,8 @@ slidingSlope<-function(d,
 							cycle_end<-data_set$time_min[nrow(data_set)]
 							cycle_mmr<-%s
 
-							values_set<-as.data.frame(t(c(cycle_type, cycle_start, cycle_end,  cycle_mmr, r2_set ,slope_set, interc_set , temp_min_set, temp_max_set, temp_mean_set, Ch, DateTime_start)))
-							colnames(values_set)<-c(\"cycle_type\", \"cycle_start\",\"cycle_end\", \"cycle_mmr\", \"r2\" ,\"m\", \"b\" , \"t_min\", \"t_max\", \"t_mean\", \"Ch\", \"DateTime_start\")
+							values_set<-as.data.frame(t(c(cycle_type, cycle_start, cycle_end,  cycle_mmr, r2_set ,slope_set, interc_set , temp_min_set, temp_max_set, temp_mean_set, Ch[n])))
+							colnames(values_set)<-c(\"cycle_type\", \"cycle_start\",\"cycle_end\", \"cycle_mmr\", \"r2\" ,\"m\", \"b\" , \"t_min\", \"t_max\", \"t_mean\", \"Ch\")
 
 							newdata_set<-rbind(newdata_set, values_set)
 
@@ -97,35 +142,37 @@ slidingSlope<-function(d,
 
 				}
 
-					list<-list(s60_1, s90_1, s120_1, s180_1)
+				list_slideSets<-list(s60_1, s90_1, s120_1, s180_1)
 
 
     		newdata_set$cycle_mmr<- as.numeric(as.character(newdata_set$cycle_mmr))
 
     		if(local_path){
-    		  filename_set<-paste( gsub('.{4}$', '', data.MMR), "_SLIDINGset", Ch , ".csv", sep='')
-    		  filename_setMean<-paste( gsub('.{4}$', '', data.MMR), "_SLIDINGsetMean", Ch , ".csv", sep='')
-    		  plotnameMean<-paste( gsub('.{4}$', '', data.MMR), "_SLIDING_MMRanalysis", Ch , ".png", sep='')
+    		  filename_set<-paste( gsub('.{4}$', '', data), "_SLIDINGset", Ch[n] , ".csv", sep='')
+    		  filename_setMean<-paste( gsub('.{4}$', '', data), "_SLIDINGsetMean", Ch[n] , ".csv", sep='')
+    		  plotnameMean<-paste( gsub('.{4}$', '', data), "_SLIDING_MMRanalysis", Ch[n] , ".png", sep='')
+    		  plotname<-paste( gsub('.{4}$', '', data), "_slidingSlope", Ch[n] , ".png", sep='')
 
     		}else{
     		  if(!is.character(local_path) & dir.exists("MMR")){
-            filename_set<-paste("./MMR/channel_sliding_sets/", gsub('.{4}$', '', data.MMR), "_SLIDINGset", Ch , ".csv", sep='')
-      		  filename_setMean<-paste("./MMR/channel_sliding_sets/", gsub('.{4}$', '', data.MMR), "_SLIDINGsetMean", Ch , ".csv", sep='')
-      		  plotnameMean<-paste("./MMR/channel_plots_MMRanalysis/", gsub('.{4}$', '', data.MMR), "_SLIDING_MMRanalysis", Ch , ".png", sep='')
+            filename_set<-paste("./MMR/Ch[n]annel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGset", Ch[n] , ".csv", sep='')
+      		  filename_setMean<-paste("./MMR/Ch[n]annel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGsetMean", Ch[n] , ".csv", sep='')
+      		  plotnameMean<-paste("./MMR/Ch[n]annel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_SLIDING_MMRanalysis", Ch[n] , ".png", sep='')
+      		  plotname<-paste("./MMR/Ch[n]annel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_slidingSlope", Ch[n] , ".png", sep='')
     		  }
           if(is.character(local_path)){
             message(paste("MMR sliding window analysis: returns are saved at a specified working directory: \n", local_path))
 
-            filename_set<-paste(local_path, "/channel_sliding_sets/", gsub('.{4}$', '', data.MMR), "_SLIDINGset", Ch , ".csv", sep='')
-      		  filename_setMean<-paste(local_path, "/channel_sliding_sets/", gsub('.{4}$', '', data.MMR), "_SLIDINGsetMean", Ch , ".csv", sep='')
-      		  plotnameMean<-paste(local_path, "/channel_plots_MMRanalysis/", gsub('.{4}$', '', data.MMR), "_SLIDING_MMRanalysis", Ch , ".png", sep='')
+            filename_set<-paste(local_path, "/Ch[n]annel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGset", Ch[n] , ".csv", sep='')
+      		  filename_setMean<-paste(local_path, "/Ch[n]annel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGsetMean", Ch[n] , ".csv", sep='')
+      		  plotnameMean<-paste(local_path, "/Ch[n]annel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_SLIDING_MMRanalysis", Ch[n] , ".png", sep='')
+      		  plotname<-paste(local_path, "/Ch[n]annel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_slidingSlope", Ch[n] , ".png", sep='')
           }
         }
 
-    		write.csv(newdata_set,file=filename_set, row.names=FALSE)
+    		write.csv(newdata_set, file=filename_set, row.names=FALSE)
 
     		newdata_set<-as.data.frame(newdata_set)
-    		## Jan 2022:
     		newdata_set$cycle_mmr<-factor(newdata_set$cycle_mmr)
     		newdata_set$m<-as.numeric(as.character(newdata_set$m))
     		newdata_set$r2<-as.numeric(as.character(newdata_set$r2))
@@ -145,9 +192,9 @@ slidingSlope<-function(d,
           ggtitle(paste(Ch, " - MMR metrics", sep="")))
         dev.off()
 
-    		for (i in 1:length(list)){
+    		for (i in 1:length(list_slideSets)){
 
-    			df_s<-list[[i]]
+    			df_s<-list_slideSets[[i]]
 
     			df_s$r2<-as.numeric(as.character(df_s$r2))
     			df_s$m<-as.numeric(as.character(df_s$m))
@@ -169,7 +216,6 @@ slidingSlope<-function(d,
     						message(df_s$Ch[1], ": Steepest slopes with best R2 selected", sep="")
     						bestr2<-which(maxset$r2 == max(maxset$r2))
     						mmrMax<-maxset[bestr2,]
-
     					}
     			}
 
@@ -181,131 +227,45 @@ slidingSlope<-function(d,
     			mmrMax[,cols] <- lapply(mmrMax[,cols], as.numeric)
 
     			newdata_mmr<-rbind(newdata_mmr,mmrMax)
+    		}
 
+        newdata_mmr60<-newdata_mmr[newdata_mmr$cycle_mmr == 60, ]
+        newdata_mmr90<-newdata_mmr[newdata_mmr$cycle_mmr == 90, ]
+        newdata_mmr120<-newdata_mmr[newdata_mmr$cycle_mmr == 120, ]
 
-    			# auto correlation
+    		png(filename = plotname, height=5, width=6, res=200, units="in")
+				  plot(d[,r]~time_min, data=d, col="grey",
+				       ylab=expression(paste(O2~(mg~L^{-1}))), xlab="Time (min)",
+				       main="steepest slope analysis");
+				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 
-    			### create a sliding for the mean slopes
-    			# if(nrow(df_s) > 60){
-    				# for (t in 1:(nrow(df_s)-60)){
-    				#
-    				# 	k<-t+60
-    				#
-    				# 	data_setMean<-df_s[t:k, ]
-    				#
-    				# 	temp_mean_setMean<-mean(as.numeric(as.character(data_setMean$t_mean)))
-    				# 	temp_min_setMean<-min(as.numeric(as.character(data_setMean$t_min)))
-    				# 	temp_max_setMean<-max(as.numeric(as.character(data_setMean$t_max)))
-    				#
-    				# 	cycle_startMean<-as.character(data_setMean$cycle_start[1])
-    				# 	cycle_endMean<-as.character(data_setMean$cycle_start[nrow(data_setMean)])
-    				# 	cycle_mmrMean<-as.character(data_setMean$cycle_mmr[1])
-    				#
-    				# 	mean_m<-mean(as.numeric(as.character(data_setMean$m)))
-    				# 	min_m<-min(as.numeric(as.character(data_setMean$m)))
-    				# 	sd_m<-sd(as.numeric(as.character(data_setMean$m)))
-    				#
-    				# 	mean_r2<-mean(as.numeric(as.character(data_setMean$r2)))
-    				# 	min_r2<-min(as.numeric(as.character(data_setMean$r2)))
-    				# 	sd_r2<-sd(as.numeric(as.character(data_setMean$r2)))
-    				#
-    				# 	# get mean and sd for r2
-    				#
-    				# 	values_setMean<-as.data.frame(t(c("Mean_1minSlopes", cycle_startMean, cycle_endMean, cycle_mmrMean, min_m, mean_m , sd_m, min_r2, mean_r2, sd_r2, temp_min_setMean, temp_max_setMean, temp_mean_setMean, Ch)))
-    				# 	colnames(values_setMean)<-c("cycle_type", "cycle_startMean","cycle_endMean", "cycle_mmrMean","min_m", "mean_m" ,"sd_m", "min_r2", "mean_r2" ,"sd_r2", "t_min", "t_max", "t_mean", "Ch")
-    				#
-    				# 	newdata_setMean<-rbind(newdata_setMean, values_setMean)
-    				#
-    				# }
-    			# }
-
-    	  	}
-      # find the lowest value and add it to a dataframe
-    		#
-    		# listMean<-split(newdata_setMean, newdata_setMean$cycle_mmrMean)
-    		#
-    		# for (v in 1:length(listMean)){
-    		#   df_sMean<-listMean[[v]]
-    		#
-    		# 	df_sMean$mean_r2<-as.numeric(as.character(df_sMean$mean_r2))
-    		# 	df_sMean$min_r2<-as.numeric(as.character(df_sMean$min_r2))
-    		# 	df_sMean$mean_m<-as.numeric(as.character(df_sMean$mean_m))
-    		# 	r2_set_maxMean<-(which(df_sMean$mean_r2 == max(df_sMean$mean_r2)))
-    		# 	slope_set_maxMean<-(which(df_sMean$mean_m == min(df_sMean$mean_m)))# slope is negative steepest slope is the min(slope)
-    		#
-    		# 	if(length(slope_set_maxMean)==1){
-    		# 		mmrMaxMean<-df_sMean[slope_set_maxMean,]
-    		#     }else{
-    		# 		# selecting the one with the lowest mo2 included, and then with the highest min r2
-    		# 		maxsetMean<-df_sMean[c(slope_set_maxMean),]
-    		# 		mmrMaxMean<-maxsetMean[which(maxsetMean$min_r2==max(maxsetMean$min_r2))[1],] # if the same them I am selecting the first one, with the highest r2
-    		#   }
-    		#
-    		# 	cols<-c(9,6,7,11)
-    		# 	mmrMaxMean[,cols] %<>% lapply(function(x) as.numeric(as.character(x)))
-    		#
-    		# 	mmrMaxMean_vals<-as.data.frame(t(c("Mean_1minSlopes", mmrMaxMean[,2],
-    		# 	                                   as.character(mmrMaxMean[,3]), as.character( mmrMaxMean[,4]),
-    		# 	                                   as.character(round(mmrMaxMean[,9],4)), as.character(round(mmrMaxMean[,6], 4)),
-    		# 	                                   paste("SD_slope:",as.character(round(mmrMaxMean[,7], 4))), as.character(mmrMaxMean[,11]),
-    		# 	                                   as.character(mmrMaxMean[,12]), as.character(mmrMaxMean[,13]), as.character(mmrMaxMean[,14]),
-    		# 	                                   as.character(df_s$DateTime_start[1]))))
-    		# 	colnames(mmrMaxMean_vals)<-c("cycle_type", "cycle_start","cycle_end",  "cycle_mmr", "r2" ,"m", "b" , "t_min", "t_max", "t_mean", "Ch", "DateTime_start")
-    		#
-    		# 	newdata_mmr<-rbind(newdata_mmr, mmrMaxMean_vals)
-    		# }
-
-    #     cols<-c(2:13)
-    # 	  newdata_setMean[,cols] %<>% lapply(function(x) as.numeric(as.character(x)))
-    # 		newdata_setMean[,cols] %<>% lapply(function(x) as.numeric(as.character(x)))
-    #
-    # 		# best slopes using the singly fastest slope analysis
-    # 		bestdata<-newdata_mmr[c(newdata_mmr$cycle_type=="MMR_slide" & newdata_mmr$Ch==Ch), ]
-    # 		names(bestdata)[names(bestdata) == 'cycle_mmr'] <- 'cycle_mmrMean'
-    #
-    # 		bestdata$cycle_mmrMean<-as.numeric(as.character(bestdata$cycle_mmrMean))
-    # 		# newdata_setMean$cycle_mmrMean<-factor(newdata_setMean$cycle_mmrMean, levels=c('60','90','120','180'))
-    #
-    # 		newdata_setMean$cycle_startMean+0.5
-    #
-    #   	 error_plot_m<-ggplot(data=newdata_setMean, aes(y=mean_m, x=cycle_startMean+0.5))+
-    #   	    geom_point(pch=21, size=2, fill="black")+
-    #   	    geom_point(aes(y=min_m, x=cycle_startMean+0.5), pch=1, size=1)+
-    #   	    geom_errorbar(aes(ymin=mean_m+sd_m, ymax=mean_m-sd_m), width=0.1, size=0.2)+
-    #   	    theme_light()+
-    #   	    geom_abline(data=bestdata, aes(slope=0, intercept=as.numeric(as.character(m))), lty=2, colour="red", size=1)+
-    #   	    ggtitle(paste(Ch, " slope", sep=""))+
-    #   	    facet_grid(cycle_mmrMean~.)
-    #
-    #   	 error_plot_r2<-ggplot(data=newdata_setMean, aes(y=mean_r2, x=cycle_startMean+0.5))+
-    #   	    geom_point(pch=21, size=2, color="red", fill="red")+
-    #   	    geom_point(aes(y=min_r2, x=cycle_startMean+0.5), pch=1, color="red", size=1)+
-    #   	    geom_errorbar(aes(ymin=mean_r2+sd_r2, ymax=mean_r2-sd_r2), width=0.1, size=0.2, colour="red")+
-    #   	    theme_light()+
-    #   	    ggtitle(paste(Ch, " r2", sep=""))+
-    #   	    facet_grid(cycle_mmrMean~.)
-    #
-    #      png(plotnameMean, height=10, width=5, res=300, units="in")
-    #   	   grid.arrange(error_plot_m, error_plot_r2, ncol=1, nrow=2)
-    #      dev.off()
-    #
-    #      write.csv(newdata_setMean,file=filename_setMean, row.names=FALSE)
-    #
-
-    		#      png(plotnameMean, height=10, width=5, res=300, units="in")
-    		#   	   grid.arrange(mmrMeans_plot_m, error_plot_r2, ncol=1, nrow=2)
-    		#      dev.off()
-
-
+				    plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr60$cycle_start &
+				                            d$time_min < newdata_mmr60$cycle_end),r]~
+				                    d[which(d$time_min > newdata_mmr60$cycle_start &
+				                              d$time_min < newdata_mmr60$cycle_end),"time_min"]), # purple
+				               col=rgb(red = 128, green = 0, blue = 128, alpha = 230, maxColorValue = 255),
+				               lty = "solid", lwd=4,lend="round",
+				               x1=newdata_mmr60$cycle_start, x2=newdata_mmr60$cycle_end);
+				    plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr90$cycle_start &
+				                            d$time_min < newdata_mmr90$cycle_end),r]~
+				                    d[which(d$time_min > newdata_mmr90$cycle_start &
+				                              d$time_min < newdata_mmr90$cycle_end),"time_min"]), # orange
+				               col=rgb(red = 255, green = 127, blue = 80, alpha = 230, maxColorValue = 255),
+				               lty = "solid", lwd=4, lend="round",
+				               x1=newdata_mmr90$cycle_start, x2=newdata_mmr90$cycle_end);
+				    plotrix::ablineclip(lm(d[which(d$time_min > newdata_mmr120$cycle_start &
+				                            d$time_min < newdata_mmr120$cycle_end),r]~
+				                    d[which(d$time_min > newdata_mmr120$cycle_start &
+				                              d$time_min < newdata_mmr120$cycle_end),"time_min"]),
+				               col=rgb(red = 0, green = 128, blue = 128, alpha = 230, maxColorValue = 255), # teal
+				               lty = "solid", lwd=4, lend="round",
+				               x1=newdata_mmr120$cycle_start, x2=newdata_mmr120$cycle_end);
+          dev.off()
 			}else{
-
 		  	message(paste(Ch, ": file < 3 min: no steepest slope analysis"))
-			# message(c(starttime, endtime))
 			}
-
+    }
 
 		return(newdata_mmr)
-
-
 
 	}

@@ -105,7 +105,6 @@ SMR<-function(data,
     # no inventory data-----
   	if(nrow(inv.data)==0){
 
-
   		# run through each "measure cycle" and get slope, intercept, r2. All channel cycles plotted together in one file
   	  for (i in 1:length(seq_end)){
 
@@ -785,7 +784,7 @@ SMR<-function(data,
 		  }
 
 			newdata<-Channel(Ch=rows[2], temp=rows_temp[2], seq_st, seq_end,
-				                 plotname2.1, data1, chop_start, chop_end,
+				                 plotname2.2, data1, chop_start, chop_end,
 				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
 
 		}
@@ -800,7 +799,7 @@ SMR<-function(data,
 		  }
 
 			newdata<-Channel(Ch=rows[3], temp=rows_temp[3], seq_st, seq_end,
-				                 plotname2.1, data1, chop_start, chop_end,
+				                 plotname2.3, data1, chop_start, chop_end,
 				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
 
 		}
@@ -814,7 +813,7 @@ SMR<-function(data,
 		  }
 
 			newdata<-Channel(Ch=rows[4], temp=rows_temp[4], seq_st, seq_end,
-				                 plotname2.1, data1, chop_start, chop_end,
+				                 plotname2.4, data1, chop_start, chop_end,
 				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
 		}
 

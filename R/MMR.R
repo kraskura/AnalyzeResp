@@ -12,7 +12,7 @@
 #' @param clean_Ch2 See mmr_Ch1 argument for description. This applies to Channel 2
 #' @param clean_Ch3 See mmr_Ch1 argument for description. This applies to Channel 3
 #' @param clean_Ch4 See mmr_Ch1 argument for description. This applies to Channel 4
-#' @param N_Ch The number of FireSting channels. Options include 2, 4, and 8. This argument can be ignored if 2-Channel FireSting was used.
+#' @param N_Ch The number of oxygen and temperature channels. Options include 2, 4, and 8. This argument can be ignored if 2-Channel oxygen meter was used.
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param date_format The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")
 #' @param inventory_data The name of an inventory data dataframe that provides dertails in "cleaning"
