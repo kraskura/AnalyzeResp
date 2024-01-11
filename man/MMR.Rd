@@ -48,7 +48,7 @@ MMR(
 
 \item{clean_Ch4}{See mmr_Ch1 argument for description. This applies to Channel 4}
 
-\item{N_Ch}{The number of FireSting channels. Options include 2, 4, and 8. This argument can be ignored if 2-Channel FireSting was used.}
+\item{N_Ch}{The number of oxygen and temperature channels. Options include 2, 4, and 8. This argument can be ignored if 2-Channel oxygen meter was used.}
 
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 

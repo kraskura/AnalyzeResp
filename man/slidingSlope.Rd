@@ -4,20 +4,12 @@
 \alias{slidingSlope}
 \title{Title}
 \usage{
-slidingSlope(d, Ch, data.MMR, r, r_temp, newdata_mmr, local_path)
+slidingSlope(data, Ch, local_path, N_Ch)
 }
 \arguments{
-\item{d}{Dataframe with each measurement present (O2 observed each second )}
+\item{data}{Dataframe with each measurement present (O2 observed each second )}
 
 \item{Ch}{Channel}
-
-\item{data.MMR}{The name of the export files}
-
-\item{r}{The column to use for oxygen trace}
-
-\item{r_temp}{The column to use for temperature trace}
-
-\item{newdata_mmr}{The ongoing dataframe of mmr that will be row-bind building as export}
 
 \item{local_path}{Logical. If TRUE (no default) all returned files will be saved in the local working directory. Can also provide a path if this function is run independently}
 }
