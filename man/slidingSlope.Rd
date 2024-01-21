@@ -9,9 +9,11 @@ slidingSlope(data, Ch, local_path, N_Ch)
 \arguments{
 \item{data}{Dataframe with each measurement present (O2 observed each second )}
 
-\item{Ch}{Channel}
+\item{Ch}{Channel that needs to be analyzed (use format: c(1, 2), c(3), etc. up to 4 channels)}
 
 \item{local_path}{Logical. If TRUE (no default) all returned files will be saved in the local working directory. Can also provide a path if this function is run independently}
+
+\item{N_Ch}{Number of channels for the oxygen meter}
 }
 \value{
 The output from \code{\link{print}}

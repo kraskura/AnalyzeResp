@@ -3,9 +3,9 @@
 #' Title
 #'
 #' @param data Dataframe with each measurement present (O2 observed each second )
-#' @param Ch Channel
+#' @param Ch Channel that needs to be analyzed (use format: c(1, 2), c(3), etc. up to 4 channels)
 #' @param local_path Logical. If TRUE (no default) all returned files will be saved in the local working directory. Can also provide a path if this function is run independently
-#'
+#' @param N_Ch Number of channels for the oxygen meter
 #' @return The output from \code{\link{print}}
 #' @export
 #'
@@ -19,6 +19,7 @@ slidingSlope<-function(data,
     d$time_min<-round(d$time_sec/60,2)
 
     #  binding global variables locally to the function.
+    s60_1<-s90_1<-s120_1<-s180_1<-cycle_mmr<-m<-r2-NULL
 
 		# for the sliding ones: cycle_type=MMR_slide
 		# for the sliding ones: cycle_start=the min on when the slide starts
@@ -156,17 +157,17 @@ slidingSlope<-function(data,
     		}else{
     		  if(!is.character(local_path) & dir.exists("MMR")){
             filename_set<-paste("./MMR/Ch[n]annel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGset", Ch[n] , ".csv", sep='')
-      		  filename_setMean<-paste("./MMR/Ch[n]annel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGsetMean", Ch[n] , ".csv", sep='')
-      		  plotnameMean<-paste("./MMR/Ch[n]annel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_SLIDING_MMRanalysis", Ch[n] , ".png", sep='')
-      		  plotname<-paste("./MMR/Ch[n]annel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_slidingSlope", Ch[n] , ".png", sep='')
+      		  filename_setMean<-paste("./MMR/Channel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGsetMean", Ch[n] , ".csv", sep='')
+      		  plotnameMean<-paste("./MMR/Channel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_SLIDING_MMRanalysis", Ch[n] , ".png", sep='')
+      		  plotname<-paste("./MMR/Channel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_slidingSlope", Ch[n] , ".png", sep='')
     		  }
           if(is.character(local_path)){
             message(paste("MMR sliding window analysis: returns are saved at a specified working directory: \n", local_path))
 
-            filename_set<-paste(local_path, "/Ch[n]annel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGset", Ch[n] , ".csv", sep='')
-      		  filename_setMean<-paste(local_path, "/Ch[n]annel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGsetMean", Ch[n] , ".csv", sep='')
-      		  plotnameMean<-paste(local_path, "/Ch[n]annel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_SLIDING_MMRanalysis", Ch[n] , ".png", sep='')
-      		  plotname<-paste(local_path, "/Ch[n]annel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_slidingSlope", Ch[n] , ".png", sep='')
+            filename_set<-paste(local_path, "/Channel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGset", Ch[n] , ".csv", sep='')
+      		  filename_setMean<-paste(local_path, "/Channel_sliding_sets/", gsub('.{4}$', '', data), "_SLIDINGsetMean", Ch[n] , ".csv", sep='')
+      		  plotnameMean<-paste(local_path, "/Channel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_SLIDING_MMRanalysis", Ch[n] , ".png", sep='')
+      		  plotname<-paste(local_path, "/Channel_plots_MMRanalysis/", gsub('.{4}$', '', data), "_slidingSlope", Ch[n] , ".png", sep='')
           }
         }
 
