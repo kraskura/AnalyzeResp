@@ -19,7 +19,7 @@ slidingSlope<-function(data,
     d$time_min<-round(d$time_sec/60,2)
 
     #  binding global variables locally to the function.
-    s60_1<-s90_1<-s120_1<-s180_1<-cycle_mmr<-m<-r2-NULL
+    s60_1<-s90_1<-s120_1<-s180_1<-cycle_mmr<-m<-r2<-NULL
 
 		# for the sliding ones: cycle_type=MMR_slide
 		# for the sliding ones: cycle_start=the min on when the slide starts
