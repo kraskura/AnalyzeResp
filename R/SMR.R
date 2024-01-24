@@ -284,12 +284,6 @@ SMR<-function(data,
   		inv.data.clean<-inv.data[!(inv.data$type=="slope_analysis"),]
 
   		for (i in 1:length(seq_end)){
-  			# if this is the first cycle for this fish - start a new data file
-  				# if(as.character(newdata[1,1])=="new"){
-  				# 	newdata<-matrix(ncol=15,nrow=0)
-  				# 	colnames(newdata)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
-  				# }
-
   				# if this is the first cycle for this fish - start a new plot
   				if (i == 1){
 
@@ -311,7 +305,7 @@ SMR<-function(data,
   			start<-seq_st[i]+chop_start # chopping off first x min from the beginning of each slopes
   			end<-seq_end[i]-chop_end # chopping off last x min from the end of each slope
 
-  				n2<-which((inv.data.clean[,5]>=start-1 & inv.data.clean[,5]<=end+1) |
+  			n2<-which((inv.data.clean[,5]>=start-1 & inv.data.clean[,5]<=end+1) |
   				            (inv.data.clean[,6]>=start-1 & inv.data.clean[,6]<=end+1))
 
   				if(length(n2)==0){
@@ -325,7 +319,7 @@ SMR<-function(data,
   				    cycle_use<-"use cleaned cycle"
   				  }
 
-  				  if(inv.data.clean[n2,4]==0){
+  				  if(inv.data.clean[n2,4] == 0){
   						inv.data.clean[n2,5]<-start
   					}
 
@@ -761,8 +755,9 @@ SMR<-function(data,
 
 		if (!data1$Ch1_O2[1]==0){
 
-		  if(!nrow(data2)==0 ){
-  			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
+		  if(!nrow(data2)==0){
+
+  			inv.data<-data2[which(grepl(paste("[", data, "]"), as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==1),]
 		  }else{
         inv.data <- data2
@@ -777,7 +772,7 @@ SMR<-function(data,
 		if (!data1$Ch2_O2[1]==0){
 
 		  if(!nrow(data2)==0 ){
-  			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
+  			inv.data<-data2[which(grepl(paste("[", data, "]"), as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==2),]
 		  }else{
         inv.data<-data2
@@ -792,7 +787,7 @@ SMR<-function(data,
 		if (!data1$Ch3_O2[1]==0){
 
 		  if(!nrow(data2)==0 ){
-  			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
+  			inv.data<-data2[which(grepl(paste("[", data, "]"), as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==3),]
 		  }else{
         inv.data<-data2
@@ -806,7 +801,7 @@ SMR<-function(data,
 		if (!data1$Ch4_O2[1]==0){
 
 		  if(!nrow(data2)==0 ){
-  			inv.data<-data2[which(grepl(x = data, pattern = as.character(data2[,2]))
+  			inv.data<-data2[which(grepl(paste("[", data, "]"), as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==4),]
 		  }else{
         inv.data<-data2
