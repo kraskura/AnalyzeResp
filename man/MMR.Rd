@@ -52,9 +52,9 @@ MMR(
 
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
-\item{date_format}{The date format used in the original FireSting files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")}
+\item{date_format}{The date format used in the original files. Must specify one of the following: c("m/d/y","d/m/y","y-m-d")}
 
-\item{inventory_data}{The name of an inventory data dataframe that provides dertails in "cleaning"}
+\item{inventory_data}{The name of an inventory data dataframe that provides details of "cleaning" requirements}
 }
 \value{
 The output from \code{\link{print}}

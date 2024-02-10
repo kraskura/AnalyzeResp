@@ -25,7 +25,7 @@ textFileConvert(
 
 \item{type_file}{Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox"}
 
-\item{nrowSkip}{The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox" = 21; these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings}
+\item{nrowSkip}{The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox" = 41; these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings}
 
 \item{N_Ch}{The number of FireSting channels. Options include 2, 4, 8. If a 2-channel FireSting was used, this argument could be ignored, or enter 4}
 
@@ -33,7 +33,7 @@ textFileConvert(
 
 \item{exclude_first_measurement_s}{The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)}
 
-\item{convert_units}{Logical (FALSE = default). If true, the funciton is passed to rMR function DO.unit.convert to convert O2 content units.}
+\item{convert_units}{Logical (FALSE = default). If true, the function is passed to rMR function DO.unit.convert to convert O2 content units.}
 
 \item{units_from}{default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.in}
 

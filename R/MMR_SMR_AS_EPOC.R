@@ -4,19 +4,18 @@
 #' @param data.SMR The name of the SMR data file (“…analyzed.csv”; a character string); an output file from the SMR function.
 #' @param AnimalID Indicates individual ID; must be a vector of 4 characters. When missing, enter "NA"
 #' @param BW.animal Indicates individual mass; must be a vector of 4 characters. When missing, enter "0"
-#' @param resp.V Indicated the volume (L) of respirometer chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
+#' @param resp.V Indicates the volume (L) of respirometery chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
 #' @param r2_threshold_smr R2 threshold for SMR, measurements below the threshold are excluded
 #' @param r2_threshold_mmr R2 threshold for MMR, measurements below the threshold are excluded
 #' @param min_length_mmr The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s)
 #' @param scaling_exponent_mmr Body mass scaling exponent to correct MMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
 #' @param scaling_exponent_smr Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
-#' @param common_mass Metabolic performances are often calculated per unit mass. Use this argument to define what standardized mass should be. (default is MO2 mgO2kg-1^ min-1^, a common mass of 1 kg). Units = kg
-#' @param mo2_val_for_calc Units of metabolic rates represented on export figures. mo2_common_mass_kg (standardized MO2 to 1 kg fish using scaling exponents provided); mg O2 min-1 kg-1), mo2_individual_kg (MO2 of the whole individual, mgO2 min-1)
-#' @param plot_smr_quantile Indicating what percentile lower MO2 values to plot; must be 10, 15, or 20
-#' @param date_format The date format used in the original FireSting data files. Must specify one of the following: "m/d/y", "d/m/y", "y-m-d"
-#' @param N_Ch The number of channels of the FireSting. It must be either 4 or 8.
+#' @param common_mass Metabolic performances are often calculated per unit mass. Use this argument to define what the standardized mass should be. (default is MO2 mgO2kg-1^ min-1^, a common mass of 1 kg). Units = kg
+#' @param mo2_val_for_calc Units of metabolic rates represented on export figures. mo2_common_mass_kg (standardized MO2 to 1 kg fish using scaling exponents provided; mg O2 min-1 kg-1), mo2_individual_kg (MO2 of the whole individual, mgO2 min-1)
+#' @param plot_smr_quantile Indicating what percentile lower MO2 values to plot; must be either 10, 15, or 20
+#' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8 (8 channem meter has 4 oxygen probes and 4 temperature probes)
 #' @param drop_ch Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)
-#' @param MLND Logical argument. If TRUE, SMR is estimated also using Mean Lowest Normal Distribution analysis. More details in Chabot et al 2016.
+#' @param MLND Logical argument. If TRUE, SMR is estimated also using Mean Lowest Normal Distribution analysis. More details in Chabot et al 2016
 #' @param epoc_threshold Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to epoc_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as a recovery threshold, enter epoc_threshold = 1.2.
 #' @param recovMMR_threshold Short-term recovery threshold relevant to individual’s MMR. Indicates the (percent) level of MMR to calculate recovery indices. The default indicates 50 percent MMR, e.g., the time it takes to recover to 50 percent MMR (default). Enter 0.3 for 30 percent MMR, 0.8 for 80 percent MMR)
 #' @param end_EPOC_Ch Manually assigned end time (min) of full recovery (EPOC). The time can be assigned for each channel independently; use a numerical vector of 4 variables, one for each channel (e.g., c(120, 120, NA, 180), for 2 h, 2h, SMR level, and 3 h EPOC end times, respectively)
@@ -31,8 +30,9 @@
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param verbose.MLND From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).
 #' @param calc_EPOC Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourcly recovery, etc.)
+#' @param date_format The date format used in the original data files. Argument is passed to strptime. default is c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT").
 #'
-#' @importFrom stats lm coef var integrate predict quantile sd smooth.spline
+#' @importFrom stats lm coef var integrate predict quantile sd smooth.spline IQR
 #' @import graphics
 #' @import grDevices
 #' @importFrom gridExtra grid.arrange
@@ -1835,9 +1835,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
   	 }else{ # end of if(MLND=TRUE){
 
-  	    if(substr(Y.Ch, start=3, stop=3)=="1"){
-  	      message("SMR/RMR: MLND method (mean MO2 of the lowest normal distribution) to estimate RMR/SMR measurement is not applied.")
-  	    }
+  	    message("SMR/RMR: MLND method (mean MO2 of the lowest normal distribution) to estimate RMR/SMR measurement is not applied.")
   	    distr <- NA
     		mlnd <- 0
     		CVmlnd <- 0
@@ -1866,16 +1864,21 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		NA, mmr_overall,
   		NA, NA, NA, NA, NA,
   		AS_smr_mean10minVal_overall, AS_SMR_low10quant_overall, AS_SMR_low15quant_overall, AS_SMR_low20quant_overall, AS_smr_mlnd_overall, #5
-  		NA, scaling_exponent_mmr, scaling_exponent_smr, common_mass)))#13
+  		NA, scaling_exponent_mmr, scaling_exponent_smr, common_mass)))#4
 
-  		colnames(values_smr)<-c("filename", "ID", "Ch", "BW","t_min","t_max", "t_mean", "N_mo2", #8
-    	"smr_mean10minVal","smr_SD10minVal", "smr_CV10minVal", "SMR_low10quant","SMR_low15quant","SMR_low20quant", #6
-    	"smr_mlnd", "smr_CVmlnd", "smr_Nmlnd", #3
-    	"mmr", "mmr_overall", #2
-    	"AS_smr_mean10minVal", "AS_SMR_low10quant", "AS_SMR_low15quant", "AS_SMR_low20quant", "AS_smr_mlnd", #5
-    	"AS_smr_mean10minVal_overall", "AS_SMR_low10quant_overall", "AS_SMR_low15quant_overall", "AS_SMR_low20quant_overall", "AS_smr_mlnd_overall", #5
-    	"mmr_length_cycle", "scaling_exponent_mmr", "scaling_exponent_smr", "common_mass")#1
-  		newdata.smr<-rbind(newdata.smr, values_smr)
+    	if(length(values_smr) == 33){
+  	    colnames(values_smr)<-c("filename", "ID", "Ch", "BW","t_min","t_max", "t_mean", "N_mo2", #8
+        	"smr_mean10minVal","smr_SD10minVal", "smr_CV10minVal", "SMR_low10quant","SMR_low15quant","SMR_low20quant", #6
+        	"smr_mlnd", "smr_CVmlnd", "smr_Nmlnd", #3
+        	"mmr", "mmr_overall", #2
+        	"AS_smr_mean10minVal", "AS_SMR_low10quant", "AS_SMR_low15quant", "AS_SMR_low20quant", "AS_smr_mlnd", #5
+        	"AS_smr_mean10minVal_overall", "AS_SMR_low10quant_overall", "AS_SMR_low15quant_overall", "AS_SMR_low20quant_overall", "AS_smr_mlnd_overall", #5
+        	"mmr_length_cycle", "scaling_exponent_mmr", "scaling_exponent_smr", "common_mass")#4
+    		newdata.smr<-rbind(newdata.smr, values_smr)
+    	}else{
+        message("Some metrics could not be estimated, cannot merge datafiles. Could it be aerobic scopes? MLND? not enough data for EPOC?")
+    	}
+
 
 		}# end of the loop for which MLND is a part of
 
@@ -2029,7 +2032,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		colnames(EPOCdata) <- c("ID", "smr_type", "smr","spar", "EPOC_full", "end_EPOC_min", "SMR_intergral_full", "SMR_threshold", "EPOC_1hr", "MO2_1hr", "EPOC_2hr", "MO2_2hr", "EPOC_3hr", "MO2_3hr", "EPOC_4hr", "MO2_4hr",  "EPOC_5hr", "MO2_5hr", "end_EPOC.mmr", "EPOC_mmr", "MO2_mmr", "MMR", "MMR_percent", "scaling_exponent_mmr",  "scaling_exponent_smr", "common_mass")
 
       # apply EPOC.spar function and combined mmr smr data
-    	# loop through all available chanels
+    	# loop through all available channels
   		for(i in 1:length(unique(dat_SMR$Ch))){
 
     		if (length(unique(dat_SMR$Ch))==1){
@@ -2073,7 +2076,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
   		  spars <- c(0.1, 0.2, 0.3)
 
-    			if(nrow(d) ==4 || nrow(d)>4){
+    			if(nrow(d) ==4 || nrow(d)>4 & IQR(d$mo2) > 0){
     				for (n in 1:length(spars)){
     					if (n == 1) {
     					  # length(spars)

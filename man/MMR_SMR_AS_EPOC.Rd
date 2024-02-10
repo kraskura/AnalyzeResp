@@ -47,7 +47,7 @@ MMR_SMR_AS_EPOC(
 
 \item{BW.animal}{Indicates individual mass; must be a vector of 4 characters. When missing, enter "0"}
 
-\item{resp.V}{Indicated the volume (L) of respirometer chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)}
+\item{resp.V}{Indicates the volume (L) of respirometery chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)}
 
 \item{r2_threshold_smr}{R2 threshold for SMR, measurements below the threshold are excluded}
 
@@ -59,19 +59,19 @@ MMR_SMR_AS_EPOC(
 
 \item{scaling_exponent_smr}{Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])}
 
-\item{common_mass}{Metabolic performances are often calculated per unit mass. Use this argument to define what standardized mass should be. (default is MO2 mgO2kg-1^ min-1^, a common mass of 1 kg). Units = kg}
+\item{common_mass}{Metabolic performances are often calculated per unit mass. Use this argument to define what the standardized mass should be. (default is MO2 mgO2kg-1^ min-1^, a common mass of 1 kg). Units = kg}
 
-\item{mo2_val_for_calc}{Units of metabolic rates represented on export figures. mo2_common_mass_kg (standardized MO2 to 1 kg fish using scaling exponents provided); mg O2 min-1 kg-1), mo2_individual_kg (MO2 of the whole individual, mgO2 min-1)}
+\item{mo2_val_for_calc}{Units of metabolic rates represented on export figures. mo2_common_mass_kg (standardized MO2 to 1 kg fish using scaling exponents provided; mg O2 min-1 kg-1), mo2_individual_kg (MO2 of the whole individual, mgO2 min-1)}
 
-\item{plot_smr_quantile}{Indicating what percentile lower MO2 values to plot; must be 10, 15, or 20}
+\item{plot_smr_quantile}{Indicating what percentile lower MO2 values to plot; must be either 10, 15, or 20}
 
-\item{date_format}{The date format used in the original FireSting data files. Must specify one of the following: "m/d/y", "d/m/y", "y-m-d"}
+\item{date_format}{The date format used in the original data files. Argument is passed to strptime. default is c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT").}
 
-\item{N_Ch}{The number of channels of the FireSting. It must be either 4 or 8.}
+\item{N_Ch}{The number of channels of the oxygen meter. It must be either 4 or 8 (8 channem meter has 4 oxygen probes and 4 temperature probes)}
 
 \item{drop_ch}{Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)}
 
-\item{MLND}{Logical argument. If TRUE, SMR is estimated also using Mean Lowest Normal Distribution analysis. More details in Chabot et al 2016.}
+\item{MLND}{Logical argument. If TRUE, SMR is estimated also using Mean Lowest Normal Distribution analysis. More details in Chabot et al 2016}
 
 \item{verbose.MLND}{From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).}
 

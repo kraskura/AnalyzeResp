@@ -1,12 +1,12 @@
 #' Title
 #'
 #' @param txt_file The name of the original “.txt” file from FireSting
-#' @param nrowSkip The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox" = 21; these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings
+#' @param nrowSkip The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox" = 41; these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings
 #' @param type_file Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox"
 #' @param N_Ch The number of FireSting channels. Options include 2, 4, 8. If a 2-channel FireSting was used, this argument could be ignored, or enter 4
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param exclude_first_measurement_s The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)
-#' @param convert_units Logical (FALSE = default). If true, the funciton is passed to rMR function DO.unit.convert to convert O2 content units.
+#' @param convert_units Logical (FALSE = default). If true, the function is passed to rMR function DO.unit.convert to convert O2 content units.
 #' @param units_from default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.in
 #' @param units_to = default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.out
 #' @param channels = c(1,2,3,4), indicate which channels to apply the conversion to
@@ -163,7 +163,7 @@ textFileConvert<-function(txt_file,
   else if (type_file == "Witrox_2023"){
       new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
       if(is.null(nrowSkip)){
-        nrowSkip <-21
+        nrowSkip <-41
       }
       d<-read.table(txt_file, skip = nrowSkip + exclude_first_measurement_s,
                     sep = "\t", skipNul = TRUE, header = FALSE)

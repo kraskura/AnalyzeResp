@@ -7,7 +7,7 @@
 #' @param first_cycle whether the first cycle is a flush or metabolic rate measurement. provide either: "flush" or "measurement"
 #' @param chop_start The time (min) to be chopped off at the start of each measurement cycle
 #' @param chop_end The time (min) to be chopped off at the end of each measurement cycle
-#' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel Firesting has 4 temperature and 4 oxygen sensors
+#' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel oxygen meter has 4 temperature and 4 oxygen sensors
 #' @param inventory_data The inventory file (.csv file), default = NULL
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param date_format Common format of from the CSV conversion.
@@ -139,37 +139,14 @@ SMR<-function(data,
   			m<-round(lm_coef[2],5) # get slope
   			b<-round(lm_coef[1],2) # get intercept
 
-  				# if this is the first cycle for this fish - start a new data file]
-#
-#   				if(newdata[1,1]=="new"){
-#   					newdata<-matrix(ncol=15,nrow=0)
-#   					colnames(newdata)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
-#   				}
+				# if this is the first cycle for this fish - start a new plot
+				if (i == 1){
 
-  				# if this is the first cycle for this fish - start a new plot
+				  n_plot_rows<- ceiling(length(seq_st) / 5)
 
-  				if (i == 1){
-  					if(length(seq_st)<=100){
-  						png(plotname, width=40, height=40, units="in",  res=200)
-  						par(mfrow=c(10,10)) # This will fit 100 plots.
-  					}
-  					if(length(seq_st)>100 & length(seq_st)<=150){
-  						png(plotname, width=40, height=60, units="in",  res=200)
-  						par(mfrow=c(15,10)) # This will fit 150 plots
-  					}
-  					if(length(seq_st)>150 & length(seq_st)<=225){
-  						png(plotname, width=50, height=50, units="in",  res=200)
-  						par(mfrow=c(15,15)) # This will fit 150 plots
-  					}
-  					if(length(seq_st)>=225 & length(seq_st)<=375){
-    			  	png(plotname, width=50, height=70, units="in",  res=200)
-    				  par(mfrow=c(15,25)) # This will fit 375 plots
-    		    }
-    		    if(length(seq_st)>375 ){
-    			   	png(plotname, width=65, height=80, units="in",  res=200)
-    			  	par(mfrow=c(18,35))
-    		    }
-  				}
+			  	png(plotname, height=n_plot_rows*3, width=15, units="in",  res=200)
+					par(mfrow = c(n_plot_rows, 5))
+				}
 
   			# # plotting each segment with slope, r2, and equations on it
   			plot(d_fullCycle[,Ch]~time_min, data=d_fullCycle,
@@ -757,8 +734,9 @@ SMR<-function(data,
 
 		  if(!nrow(data2)==0){
 
-  			inv.data<-data2[which(grepl(paste("[", data, "]"), as.character(data2[,2]))
+  			inv.data<-data2[which(grepl(data, as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==1),]
+      print(inv.data)
 		  }else{
         inv.data <- data2
       }
@@ -772,7 +750,7 @@ SMR<-function(data,
 		if (!data1$Ch2_O2[1]==0){
 
 		  if(!nrow(data2)==0 ){
-  			inv.data<-data2[which(grepl(paste("[", data, "]"), as.character(data2[,2]))
+  			inv.data<-data2[which(grepl(data, as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==2),]
 		  }else{
         inv.data<-data2
@@ -787,7 +765,7 @@ SMR<-function(data,
 		if (!data1$Ch3_O2[1]==0){
 
 		  if(!nrow(data2)==0 ){
-  			inv.data<-data2[which(grepl(paste("[", data, "]"), as.character(data2[,2]))
+  			inv.data<-data2[which(grepl(data, as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==3),]
 		  }else{
         inv.data<-data2
@@ -801,7 +779,7 @@ SMR<-function(data,
 		if (!data1$Ch4_O2[1]==0){
 
 		  if(!nrow(data2)==0 ){
-  			inv.data<-data2[which(grepl(paste("[", data, "]"), as.character(data2[,2]))
+  			inv.data<-data2[which(grepl(data, as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==4),]
 		  }else{
         inv.data<-data2
@@ -821,9 +799,9 @@ SMR<-function(data,
 
 	plot<-ggplot(data=newdata, aes(min_start, m, col=Ch) )+
 		geom_point()+
-		geom_line()+
+		# geom_line()+
 		theme_classic()+
-		ylab("Slope (in absolute value; mg/O2/min)")+
+		ylab("Slope (in absolute value; [chosen O2 measurement unit])")+
 		xlab("Time experiment (min)")+
 		theme(legend.title=element_blank())
 
