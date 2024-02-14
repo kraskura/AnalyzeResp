@@ -1,4 +1,7 @@
-#' Title
+#' @title convenient function to create a set of local working directories to streamline workflow
+#'
+#' @description
+#' Creates a collection of local directories that help organizing the analysis by exporting output files to specific folders associated with each metabolic performance function (not required for smooth data analysis).
 #'
 #' @param SMR.folder create a local SMR folder, default = TRUE
 #' @param MMR.folder create a local MMR folder, default = TRUE

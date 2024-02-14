@@ -1,4 +1,7 @@
-#' Title
+#' @title estimates indivudal specific metabolic rates and recovery
+#'
+#' @description
+#' Estimates aerobic metabolic performances in animals: MMR, SMR, EPOC (recovery), and Absolute Aerobic Scope. Relies on outputs from SMR and MMR functions
 #'
 #' @param data.MMR The name of the MMR data file (“…analyzed.csv”; a character string); an output file from the MMR function.
 #' @param data.SMR The name of the SMR data file (“…analyzed.csv”; a character string); an output file from the SMR function.

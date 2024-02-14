@@ -2,7 +2,7 @@
 % Please edit documentation in R/slidingSlope.R
 \name{slidingSlope}
 \alias{slidingSlope}
-\title{Title}
+\title{steepest slope analysis}
 \usage{
 slidingSlope(data, Ch, local_path, N_Ch)
 }
@@ -19,5 +19,5 @@ slidingSlope(data, Ch, local_path, N_Ch)
 The output from \code{\link{print}}
 }
 \description{
-Title
+Estimates slopes at every time iteration (often second), and pulls out the steepest 30 s, 60 s, 90 s, and 180 s slopes, as well as the regression slope for the entire recorded duration.
 }

@@ -1,4 +1,7 @@
-#' Title
+#' @title filters and converts raw data files
+#'
+#' @description
+#' Uses to convert and format (strip from unused columns and rows) the raw '.txt' data file to produce a .csv file that is required for `MMR` and `SMR` functions.
 #'
 #' @param txt_file The name of the original “.txt” file from FireSting
 #' @param nrowSkip The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox" = 41; these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings

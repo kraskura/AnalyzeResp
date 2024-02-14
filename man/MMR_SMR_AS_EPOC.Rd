@@ -2,7 +2,7 @@
 % Please edit documentation in R/MMR_SMR_AS_EPOC.R
 \name{MMR_SMR_AS_EPOC}
 \alias{MMR_SMR_AS_EPOC}
-\title{Title}
+\title{estimates indivudal specific metabolic rates and recovery}
 \usage{
 MMR_SMR_AS_EPOC(
   data.MMR = NULL,
@@ -105,5 +105,5 @@ MMR_SMR_AS_EPOC(
 The output from \code{\link{print}}
 }
 \description{
-Title
+Estimates aerobic metabolic performances in animals: MMR, SMR, EPOC (recovery), and Absolute Aerobic Scope. Relies on outputs from SMR and MMR functions
 }

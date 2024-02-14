@@ -1,5 +1,7 @@
-
-#' Title
+#' @title Estimates regressions for automatically timed measurement cycles
+#'
+#' @description
+#' Analyzes O~2~ and temperature data recorded continuously using repeat open(flush):closed(measure) cycles to obtain regressions representative of metabolic rates.
 #'
 #' @param data The name of the raw input file .csv, character.
 #' @param cycle_start The stat time (min) of auto cycle. This indicates the start of the measurement (relative to min 0).
@@ -206,32 +208,17 @@ SMR<-function(data,
 
     			d<-data1[c(which(data1$time_min>start & data1$time_min<end)),] # from teh entire files, get only the data section we need
     			# print(plotname_temperature)
-          ### only temp plots:
-      			# if this is the first cycle for this fish - start a new plot
-      			if (i == 1){
 
-      				if(length(seq_st)<=100){
-      					png(plotname_temperature, width=40, height=40, units="in",  res=200)
-      					par(mfrow=c(10,10)) # This will fit 100 plots.
-      				}
-      				if(length(seq_st)>100 & length(seq_st)<=150){
-      					png(plotname_temperature, width=40, height=60, units="in",  res=200)
-      					par(mfrow=c(15,10)) # This will fit 150 plots
-      				}
-      				if(length(seq_st)>150 & length(seq_st)<=225){
-      					png(plotname_temperature, width=50, height=50, units="in",  res=200)
-      					par(mfrow=c(15,15)) # This will fit 150 plots
-      				}
-          		if(length(seq_st)>=225 & length(seq_st)<=375){
-      			  	png(plotname_temperature, width=50, height=70, units="in",  res=200)
-      				  par(mfrow=c(15,25)) # This will fit 375 plots
-      		    }
-      		    if(length(seq_st)>375 ){
-      			   	png(plotname_temperature, width=65, height=80, units="in",  res=200)
-      			  	par(mfrow=c(18,35)) # This will > 525 plots
-      		    }
+    			### only temp plots:
+      		# if this is the first cycle for this fish - start a new plot
+				# if this is the first cycle for this fish - start a new plot
+				if (i == 1){
 
-      			}
+				  n_plot_rows<- ceiling(length(seq_st) / 5)
+
+			  	png(plotname_temperature, height=n_plot_rows*3, width=15, units="in",  res=200)
+					par(mfrow = c(n_plot_rows, 5))
+				}
 
       				# plotting each segment with slope, r2, and equations on it
       			plot(d[,temp]~time_min, d=d, ylab="Temperature (C)", xlab="Time (min)", col="darkgreen")
@@ -253,31 +240,20 @@ SMR<-function(data,
   	    cat(paste("Ch",Ch-4 ,": Data are cleaned for quality sections only \n", sep =""))
   	  }
 
-  	  cols = c(3, 4, 5, 6)
-  	  for (i in 1:length(cols)){
-	       inv.data[, i]<-as.numeric(as.character(inv.data[, i]))
-  	  }
+      inv.data[, 3:6]<-lapply(inv.data[, 3:6], as.numeric)
 
   		inv.data.clean<-inv.data[!(inv.data$type=="slope_analysis"),]
 
   		for (i in 1:length(seq_end)){
-  				# if this is the first cycle for this fish - start a new plot
-  				if (i == 1){
 
-  					if(length(seq_st)<=100){
-  						png(plotname, width=40, height=40, units="in",  res=200)
-  						par(mfrow=c(10,10)) # This will fit 100 plots.
-  					}
-  					if(length(seq_st)>100 & length(seq_st)<=150){
-  						png(plotname, width=40, height=60, units="in",  res=200)
-  						par(mfrow=c(15,10)) # This will fit 150 plots
-  					}
-  					if(length(seq_st)>150){
-  						png(plotname, width=50, height=50, units="in",  res=200)
-  						par(mfrow=c(15,15)) # This will fit 150 plots
-  					}
+				# if this is the first cycle for this fish - start a new plot
+				if (i == 1){
 
-  				}
+				  n_plot_rows<- ceiling(length(seq_st) / 5)
+
+			  	png(plotname, height=n_plot_rows*3, width=15, units="in",  res=200)
+					par(mfrow = c(n_plot_rows, 5))
+				}
 
   			start<-seq_st[i]+chop_start # chopping off first x min from the beginning of each slopes
   			end<-seq_end[i]-chop_end # chopping off last x min from the end of each slope
@@ -296,9 +272,10 @@ SMR<-function(data,
   				    cycle_use<-"use cleaned cycle"
   				  }
 
-  				  if(inv.data.clean[n2,4] == 0){
-  						inv.data.clean[n2,5]<-start
-  					}
+  				  # depracted:
+  				#   if(inv.data.clean[n2,4] == 0){
+  				# 		inv.data.clean[n2,5]<-start
+  				# 	}
 
   					d_clean<-data1[c(which(data1$time_min>inv.data.clean[n2,5] & data1$time_min<inv.data.clean[n2,6])),]
 
@@ -359,11 +336,6 @@ SMR<-function(data,
     						  values<-as.data.frame(t(c(time_frame, start, r20, b0, m0, temp_min0, temp_max0, temp_mean0,O2_min0, O2_max0, O2_mean0, substr(colnames(d0[Ch]), start=1, stop=3), DateTime_start0, type, n_min0)))
     						  colnames(values)<-c("time_frame","min_start", "r2" ,"b", "m" , "t_min", "t_max", "t_mean","O2_min", "O2_max", "O2_mean", "Ch", "DateTime_start", "type", "n_min")
     						}
-  # 						  if(cycle_use == "skip cycle" & i == 1){
-  #                 # if this is the first cycle for this fish and the newdata is empty
-  # 						    # reset newdata to "new
-  #           	    newdata<-as.data.frame("new")
-  # 						  }
   						}
 
   				# plotting each segment with slope, r2, and equations on it
@@ -436,16 +408,17 @@ SMR<-function(data,
   					cycle_use<-"use full cycle"
   				  }else{
 
-  					# replace zeros in the inventory data to real values; in inv. data clean - this is where in invenotory file I added 0 when it just starts from the "start" of teh cycle and ends at the "end" of the cycle
-  					if(inv.data.clean[n2,4]==0){
-  						inv.data.clean[n2,4]<-start
-  					}
-  					if(inv.data.clean[n2,5]==0){
-  						inv.data.clean[n2,5]<-start
-  					}
-  					if(inv.data.clean[n2,6]==0){
-  						inv.data.clean[n2,6]<-end
-  					}
+  					# deprecated: replace zeros in the inventory data to real values; in inv. data clean - this is where in invenotory file I added 0 when it just starts from the "start" of teh cycle and ends at the "end" of the cycle
+  					# if(inv.data.clean[n2,4]==0){
+  					# 	inv.data.clean[n2,4]<-start
+  					# }
+  					# deprecated:
+  				#   if(inv.data.clean[n2,5]==0){
+  				# 		inv.data.clean[n2,5]<-start
+  				# 	}
+  					# if(inv.data.clean[n2,6]==0){
+  					# 	inv.data.clean[n2,6]<-end
+  					# }
   					if(start==inv.data.clean[n2,5] & end==inv.data.clean[n2,6]){
   						cycle_use<-"skip cycle"
   					}else{
@@ -460,20 +433,14 @@ SMR<-function(data,
   				d0<-data1[c(which(data1$time_min>start & data1$time_min<end)),] # use the entire files to get only the data section sectin secified by cleaning
 
       		# if this is the first cycle for this fish - start a new temperature plot
-      		if (i == 1){
-      			if(length(seq_st)<=100){
-      				png(plotname_temperature, width=40, height=40, units="in",  res=200)
-      				par(mfrow=c(10,10)) # This will fit 100 plots.
-      			}
-      			if(length(seq_st)>100 & length(seq_st)<=150){
-      				png(plotname_temperature, width=40, height=60, units="in",  res=200)
-      				par(mfrow=c(15,10)) # This will fit 150 plots
-      			}
-      			if(length(seq_st)>150){
-      				png(plotname_temperature, width=50, height=50, units="in",  res=200)
-      				par(mfrow=c(15,15)) # This will fit 150 plots
-      			}
-      		}
+				# if this is the first cycle for this fish - start a new plot
+				if (i == 1){
+
+				  n_plot_rows<- ceiling(length(seq_st) / 5)
+
+			  	png(plotname_temperature, height=n_plot_rows*3, width=15, units="in",  res=200)
+					par(mfrow = c(n_plot_rows, 5))
+				}
 
     			# plotting each segment with slope, r2, and equations on it
     		  plot(d0[,temp]~time_min, d=d0, ylab="Temperature (C)", xlab="Time (min)", col="darkgreen")
@@ -660,6 +627,7 @@ SMR<-function(data,
 	if(grepl(pattern = "M", as.character(data1$time[1]))){
     data1$time<-format(strptime(data1$time, format = '%I:%M:%S %p'), format='%H:%M:%S')
 	}
+
 	data1$time<-as.character(data1$time) # this
 
 	DateTime<-strptime(paste(data1$date, data1$time), format = date_format[1], tz = date_format[2])
@@ -736,7 +704,6 @@ SMR<-function(data,
 
   			inv.data<-data2[which(grepl(data, as.character(data2[,2]))
   			                      & as.numeric(data2[,3])==1),]
-      print(inv.data)
 		  }else{
         inv.data <- data2
       }
@@ -744,7 +711,7 @@ SMR<-function(data,
 			newdata<-Channel(Ch=rows[1], temp=rows_temp[1], seq_st, seq_end,
 				                 plotname2.1, data1, chop_start, chop_end,
 				                 inv.data = inv.data, newdata, plot_temp, N_Ch)
-
+# HERE
 		}
 
 		if (!data1$Ch2_O2[1]==0){

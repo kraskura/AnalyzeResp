@@ -1,4 +1,7 @@
-#' Title
+#' @title Estimates regressions for MMR.
+#'
+#' @description
+#' Analyzes O~2~ and temperature data recorded to obtain regressions representative of individual's maximum metabolic rate. The function can handle 4 measurement cycles.
 #'
 #' @param data.MMR The name of the raw input file; .csv, a character.
 #' @param cycles The number of measurement cycles recording metabolic rate in an animal (a single number value 1 through 4).

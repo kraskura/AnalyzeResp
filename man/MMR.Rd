@@ -2,7 +2,7 @@
 % Please edit documentation in R/MMR.R
 \name{MMR}
 \alias{MMR}
-\title{Title}
+\title{Estimates regressions for MMR.}
 \usage{
 MMR(
   data.MMR,
@@ -60,5 +60,5 @@ MMR(
 The output from \code{\link{print}}
 }
 \description{
-Title
+Analyzes O~2~ and temperature data recorded to obtain regressions representative of individual's maximum metabolic rate. The function can handle 4 measurement cycles.
 }

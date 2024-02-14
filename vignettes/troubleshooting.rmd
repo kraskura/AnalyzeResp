@@ -1,0 +1,120 @@
+---
+title: "Troubleshooting and common errors"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+<div class="page-header">
+  <h2 style="font-size: 30px; text-align:left;">QA for troubleshooting</h2>
+</div>
+
+<div class="well">
+All functions have been updated since they were first used in 2017. Please reach out if noticing any bugs. It will be fixed as soon as possible.
+The core functionality and methods to estimate metabolic rate performances have remained the same through time.
+</div>
+
+<div class="well">
+  <p style="color:green;  text-align: left">Updates in progress</p>
+</div>
+
+<h4 style="color:#495057; font-weight: bold;  text-align: left">Topics</h4>
+<ul class="breadcrumb" style="background-color:#fff; border:none; color:#3e3f3a">
+  <li><a href="#setupanddata">Setup and data formats</a></li>
+  <li><a href="#MMR">MMR</a></li>
+  <li><a href="#SMR">SMR</a></li>
+  <li><a href="#AS">Aerobic scopes</a></li>
+  <li><a href="#Recovery">Recovery</a></li>
+  <li><a href="#SDA">Digestion</a></li>
+  <li><a href="#Back">Background</a></li>
+  <li><a href="#Temp">Temperature</a></li>
+  <li><a href="#QC">QC</a></li>
+</ul>
+
+
+
+
+
+<br><h5><a name = "setupanddata" style = "color:green; font-weight:bold;">Setup and data format</a></h5>
+
+**Are my data in the correct format for the `txt_csv_convert` function?**
+
+  + See an example file here: <a href = "https://github.com/kraskura/AnalyzeResp_0/blob/main/Test/jul04_2019_opasize_box4_mmr.txt" style = "color:gray;">AnalyzeResp_0/Test/</a>
+
+**Can the code be used with 2-channel Firesting?** 
+  
+  + Yes. The functions were written using 4-channel FireSting text files. It should work for 2-channel FireSting if the missing data are correctly indicated for channels 3 and 4.
+
+**Where are the converted .csv files after using txt_csv_convert function?**
+
+  + If using `organize_MR_analysis` for organization, be sure to have original .txt files in the directory containing folders (i.e., 'AUTO', 'MANUAL', 'MMR_SMR_AS_EPOC'), otherwise the code will not be able to find the specific 'csv_files' subfolder.
+  + Alternatively, do not specify the path and it will default save everything locally in an active working direction.
+
+**What should the R^2 threshold be set to?**
+
+  + If it is high, all measurement cycle data may be discarded. 
+  + If it is low, the measurement cycle data may not meet the quality metrics as desired
+
+**Cannot locate files or working directory**
+
++ Set working directory appropriate to each set of analysis (e.g., for SMR, locate to the ./AUTO/csv_files). See the example script for further guidance.  
+
+<br><h5><a name = "MMR" style = "color:green; font-weight:bold;">MMR </a></h5>
+
+**How to choose what length measurement to use?**
+
+**What if my animals reach MMR during any other cycle and not at the beginning, e.g., from chasing?**
+
++ The output code from `MMR_SMR_AS_EPOC` will provide "mmr_overall", which is the highest MO~2~ measurement recorded during
+
+**Warning messages about reading files**
+
+  + This is most likely related to an inventory .csv file. It likely reads in the file and applied the directed 'cleaning' instructions with no problem (however, it is always a responsibility of our own to check the result of cleaning data). 
+  `Warning message: In read.table(file = file, header = header, sep = sep, quote = quote,  : incomplete final line found by readTableHeader on 'MMR_template_TESTJan2022.csv'`
+
+<br><h5><a name = "SMR" style = "color:green; font-weight:bold;"> SMR</a></h5>
+
+Updating...
+
+<br><h5><a name = "AS" style = "color:green; font-weight:bold;"> Aerobic scopes</a></h5>
+
+Updating...
+
+<br><h5><a name = "Recovery" style = "color:green; font-weight:bold;"> Recovery</a></h5>
+
+Updating...
+
+<br><h5><a name = "SDA" style = "color:green; font-weight:bold;"> Digestion, SDA</a></h5>
+
+Updating...
+
+<br><h5><a name = "Back" style = "color:green; font-weight:bold;"> Background respiration</a></h5>
+
+**How to account for background respiration if using one empty respirometer that has different volume than the one with an animal?**
+  
+  + In function `MMR_SMR_AS_EPOC`: `background_slope` and `background.V` must be provided together. The function will fail to have only one without the other
+
+**How to apply a priori known background respiration estimates?**
+  
+  + In function `MMR_SMR_AS_EPOC`: use `background_linear_gr = TRUE`, and both `background_prior` and `background_post` must be provided
+
+<br><h5><a name = "Temp" style = "color:green; font-weight:bold;"> Temperature</a></h5>
+
+Updating...
+
+<br><h5><a name = "Warnings" style = "color:green; font-weight:bold;"> Warning messages</a></h5>
+
+
+**Warning message about reading files**
+
+`Warning message: In read.table(file = file, header = header, sep = sep, quote = quote,  : incomplete final line found by readTableHeader on 'MMR_template_TESTJan2022.csv'`
+
+This is most likely related to an inventory csv file. It likely reads in the file and applied the directed 'cleaning' with no problem (it is always a responsibility of our own to check!). 
+
+
+
+

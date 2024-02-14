@@ -1,0 +1,88 @@
+---
+title: "Some quality control options and guidance"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+<div class="page-header">
+<h2 style="font-size: 30px; text-align:left;">Visual assessment and modifications of data: example approach</h2>
+</div>
+
+
+<h4 style="color:#495057; font-weight: bold;  text-align: left">Data Analysis Pipeline</h4>
+ 
+1. **Visualize Data:**
+    - Plot all MO~2~ data using the AnalyzeResp_0 code (`MMR` and `SMR` functions only at this point)
+    - Visually inspect all MO~2~ plots (list of key plots to inspect below)
+        + [/AUTO/plots_channel](https://github.com/kraskura/AnalyzeResp_0/tree/main/Test/AUTO/plots_channel)
+        + [/AUTO/plots_channel_cycle](https://github.com/kraskura/AnalyzeResp_0/tree/main/Test/AUTO/plots_channel_cycle) (when `flush = TRUE` when running `SMR` function)
+        + [/AUTO/plots_channel_temperature_cycle](https://github.com/kraskura/AnalyzeResp_0/tree/main/Test/AUTO/plots_channel_temperature_cycle)
+        + [/MANUAL/channel_plots](https://github.com/kraskura/AnalyzeResp_0/tree/main/Test/MANUAL/channel_plots)
+
+2. **Group and Clean Data** 
+    - Identify linear decline MO~2~ regressions - <span style = "color: #93c54b; font-weight: bold;" >keep</span>
+    - Identify regressions with minor issues - <span style = "color: #f47c3c; font-weight: bold;" >correct</span>
+    - Identify non-linear MO~2~ regression - <span style = "color: #d9534f; font-weight: bold;" >remove</span>
+
+3. **Background**
+    - Assess if the background is present (`SMR` function run for background respiration)
+    - If the background is present, correct all MO~2~ regressions for background respiration 
+        + See Rosewarne et al 2016 for guidance
+        + To customize the analysis use `MMR_SMR_AS_EPOC` function arguments: `background_prior = NA, background_post = NA, background_slope = NULL, background.V = NULL, background_linear_gr = FALSE, match_background_Ch = FALSE, mmr_background = "SAME_slope"`
+    - We generally assume a linear increase between the "before" and "after" background and apply that to correct each MO~2~ value for background respiration.
+        + Use `background_linear_gr = TRUE`
+
+4. **Plot the data and calculate MR values**
+    - Plot the (cleaned) data. Plot MO~2~ vs. time and temperature vs. time.
+    - Calculate SMR, RMR, MMR, EPOC, time to 50% MMR (Time[MMR50]) or 75% MMR (Time[MMR75]) 
+    - Many ways to do this - talk to collogues and peers (i.e., which sliding measurement window for MMR; which SMR value; which EPOC threshold)
+
+5. **Assess metabolic scaling**
+    - Plot the data - SMR vs. body mass; MMR vs. body mass (use log-log plots and raw data plots)
+    - Adjust for scaling if needed (see above).
+        + To customize the analysis use `MMR_SMR_AS_EPOC` function arguments: `scaling_exponent_mmr=1, scaling_exponent_smr=1, common_mass=1`
+
+<br>
+<h4 style="color:#495057; font-weight: bold;  text-align: left">Additional notes and suggestions from the Eliason Lab</h4>
+
+1. **Check for leaks**
+    - Plot the full measurement cycle at least once for a few respirometry trials runs: 
+         + `SMR( ..., flush_plot = "ON"`)
+    - Are 'L' shapes for measurement cycles (measure phase) consistent across files? If yes, there might be a leak. 
+
+2. **Notes and suggestions:** 
+    - Do not cut the recovery or resting metabolic rate measurement down below the "sliding window" length selected for MMR.
+    - For cleaning: measurement cycles with R^2^ below 0.7 are immediately rejected: <span style = "color: #d9534f; font-weight: bold;" >remove / no cleaning</span>
+    - Experimental notes: If there are any measurements with a complementary note that anyone was messing with the respirometry chamber (relieving a bubble, etc.) or where data is missing from the measurement (low signal in the probe can cause this), it is advised to exclude the measurement. 
+
+
+<br>
+<h4 style="color:#495057; font-weight: bold;  text-align: left"> Some identified occasional data anomalies and possible solutions</h4>
+
+```{r image-ref-for-in-text, echo = FALSE, message=FALSE, fig.align='center', fig.pos='H'}
+knitr::include_graphics("./files/resources/qc_Eliason_lab.pdf")
+```
+
+<!-- <p>Source: <a href = "https://github.com/kraskura/AnalyzeResp_0/blob/main/docs/files/resources/qc_Eliason_lab.pdf" style = "color:gray;">PDF file</a></p> -->
+
+<!-- <div style="background-color: #f8f5f0;  border: 2px solid #484f4f; padding: 10px"> -->
+
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide5.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide6.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide7.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide8.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide9.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide10.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide11.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide12.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide13.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide14.png" alt="scatter"></img> -->
+<!-- <img src= "./files/resources/qc_Eliason_lab/slide15.png" alt="scatter"></img> -->
+
+
+<!-- </div> -->

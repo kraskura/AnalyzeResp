@@ -2,7 +2,7 @@
 % Please edit documentation in R/textFileConvert.R
 \name{textFileConvert}
 \alias{textFileConvert}
-\title{Title}
+\title{filters and converts raw data files}
 \usage{
 textFileConvert(
   txt_file,
@@ -51,5 +51,5 @@ textFileConvert(
 The output from \code{\link{print}}
 }
 \description{
-Title
+Uses to convert and format (strip from unused columns and rows) the raw '.txt' data file to produce a .csv file that is required for `MMR` and `SMR` functions.
 }

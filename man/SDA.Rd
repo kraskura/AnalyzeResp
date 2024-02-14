@@ -2,7 +2,7 @@
 % Please edit documentation in R/dev_SDA.R
 \name{SDA}
 \alias{SDA}
-\title{Title}
+\title{estimates regressions for SDA (digestion) measurements}
 \usage{
 SDA(
   AnimalID,
@@ -87,5 +87,5 @@ SDA(
 The output from \code{\link{print}}
 }
 \description{
-Title
+Estimates metabolic performances associated with digestion (SDA refers to specific dynamic action, digestion costs). (updates in progress)
 }

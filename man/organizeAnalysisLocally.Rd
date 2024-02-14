@@ -2,7 +2,7 @@
 % Please edit documentation in R/organizeAnalysisLocally.R
 \name{organizeAnalysisLocally}
 \alias{organizeAnalysisLocally}
-\title{Title}
+\title{convenient function to create a set of local working directories to streamline workflow}
 \usage{
 organizeAnalysisLocally(
   SMR.folder = TRUE,
@@ -27,5 +27,5 @@ organizeAnalysisLocally(
 The output from \code{\link{print}}
 }
 \description{
-Title
+Creates a collection of local directories that help organizing the analysis by exporting output files to specific folders associated with each metabolic performance function (not required for smooth data analysis).
 }

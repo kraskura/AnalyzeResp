@@ -2,7 +2,7 @@
 % Please edit documentation in R/SMR.R
 \name{SMR}
 \alias{SMR}
-\title{Title}
+\title{Estimates regressions for automatically timed measurement cycles}
 \usage{
 SMR(
   data,
@@ -51,5 +51,5 @@ SMR(
 The output from \code{\link{print}}
 }
 \description{
-Title
+Analyzes O~2~ and temperature data recorded continuously using repeat open(flush):closed(measure) cycles to obtain regressions representative of metabolic rates.
 }

@@ -1,4 +1,7 @@
-#' Title
+#' @title estimates regressions for SDA (digestion) measurements
+#'
+#' @description
+#' Estimates metabolic performances associated with digestion (SDA refers to specific dynamic action, digestion costs). (updates in progress)
 #'
 #' @param AnimalID Indicates individual ID; must be a vector of 4 characters. When missing, enter "NA"
 #' @param BW.animal Indicates individual mass; must be a vector of 4 characters. When missing, enter "0"
