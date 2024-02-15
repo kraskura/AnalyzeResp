@@ -31,7 +31,7 @@ Currently, there are two options:
 To setup the current working directory with all subfolders run the following code:
 
 ``` r
-organizeAnalysisLocally(create = "Full") # will create a full suite of folders and subfolders within in prep to analyze SMR, MMR, AAS
+organizeAnalysisLocally() 
 
 ```
 
