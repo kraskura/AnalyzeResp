@@ -21,13 +21,13 @@ textFileConvert(
 )
 }
 \arguments{
-\item{txt_file}{The name of the original “.txt” file from FireSting}
+\item{txt_file}{The name of the original “.txt” file from oxygen meter}
 
-\item{type_file}{Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox"}
+\item{type_file}{Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox", "PreSense_microplate"}
 
-\item{nrowSkip}{The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox" = 41; these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings}
+\item{nrowSkip}{The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox" = 41; "PreSense_microplate" = 10, these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings}
 
-\item{N_Ch}{The number of FireSting channels. Options include 2, 4, 8. If a 2-channel FireSting was used, this argument could be ignored, or enter 4}
+\item{N_Ch}{The number of oxygen meter channels. Options include 2, 4, 8, 24. (microplate). If a 2-channel oxygen meter was used, this argument could be ignored, or enter 4}
 
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
@@ -41,9 +41,9 @@ textFileConvert(
 
 \item{channels}{= c(1,2,3,4), indicate which channels to apply the conversion to}
 
-\item{salinity}{= 0, passed down to rM::DO.unit.convert arg. salinity (must be in "pp.thou")}
+\item{salinity}{= 0, passed down to rMR::DO.unit.convert arg. salinity (must be in "pp.thou")}
 
-\item{atm_pressure}{= 1, passed down to rM::DO.unit.convert arg. bar.press (must be in "atm")}
+\item{atm_pressure}{= 1, passed down to rMR::DO.unit.convert arg. bar.press (must be in "atm")}
 
 \item{temperature}{user set consistent temperature for all channels (ºC)}
 }

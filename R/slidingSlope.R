@@ -1,4 +1,4 @@
-#' @title steepest slope analysis
+#' @title steepest slope analysis only
 #'
 #' @description
 #' Estimates slopes at every time iteration (often second), and pulls out the steepest 30 s, 60 s, 90 s, and 180 s slopes, as well as the regression slope for the entire recorded duration.

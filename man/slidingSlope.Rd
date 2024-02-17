@@ -2,7 +2,7 @@
 % Please edit documentation in R/slidingSlope.R
 \name{slidingSlope}
 \alias{slidingSlope}
-\title{steepest slope analysis}
+\title{steepest slope analysis only}
 \usage{
 slidingSlope(data, Ch, local_path, N_Ch)
 }

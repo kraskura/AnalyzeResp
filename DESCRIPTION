@@ -2,8 +2,8 @@ Package: AnalyzeResp
 Title: Analyze Oxygen Uptake Rate data in Aquatic Animals
 Version: 0.0.1
 Depends: R (>= 3.6.2)
-Author: Krista Kraskura <k.kraskura@gmail.com>
-Maintainer: The package maintainer <k.kraskura@gmail.com>
+Author: Krista Kraskura <kkraskura@towson.edu>
+Maintainer: The package maintainer <kkraskura@towson.edu>
 Description: Functions used to analyze experimentally collected oxygen uptake data of aquatic animals to obtain estimates of metabolism. 
 License: GPL-3
 Encoding: UTF-8
@@ -24,5 +24,7 @@ Imports:
   mclust,
   gridExtra,
   DescTools,
-  rMR
+  rMR,
+  readxl
 URL: https://kraskura.github.io/AnalyzeResp/
+VignetteBuilder: utils
