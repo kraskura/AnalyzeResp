@@ -531,7 +531,7 @@ textFileConvert<-function(txt_file,
       write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "3_converted.csv", sep=''), new_csv3, row.names=FALSE)
       write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "4_converted.csv", sep=''), new_csv4, row.names=FALSE)
       write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "5_converted.csv", sep=''), new_csv5, row.names=FALSE)
-      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "6_converted.csv", sep=''), new_csv, row.names=FALSE)
+      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "6_converted.csv", sep=''), new_csv6, row.names=FALSE)
     }else{
       write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "_converted.csv", sep=''), new_csv, row.names=FALSE)
     }
