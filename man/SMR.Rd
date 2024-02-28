@@ -33,7 +33,7 @@ SMR(
 
 \item{chop_end}{The time (min) to be chopped off at the end of each measurement cycle}
 
-\item{N_Ch}{The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel oxygen meter has 4 temperature and 4 oxygen sensors}
+\item{N_Ch}{The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel oxygen meter has 4 temperature and 4 oxygen sensors. The microplate reader files have 4 at this step.}
 
 \item{date_format}{Common format of from the CSV conversion.}
 

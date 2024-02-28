@@ -167,24 +167,24 @@ textFileConvert<-function(txt_file,
         nrowSkip <-41
       }
       d<-read.table(txt_file, skip = nrowSkip + exclude_first_measurement_s,
-                    sep = "\t", skipNul = TRUE, header = FALSE)
+                    sep = "\t", skipNul = TRUE, blank.lines.skip = TRUE, header = FALSE)
       colnames(d)<-d[1,]
       d<-d[-1,]
 
     	names<-colnames(d)
-      O2_ch1_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch 1", x = names, ignore.case = T)))
-      O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch 2", x = names, ignore.case = T)))
-      O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch 3", x = names, ignore.case = T)))
-      O2_ch4_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch 4", x = names, ignore.case = T)))
-      temp_ch1_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch 1", x = names, ignore.case = T)))
-      temp_ch2_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch 2", x = names, ignore.case = T)))
-      temp_ch3_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch 3", x = names, ignore.case = T)))
-      temp_ch4_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch 4", x = names, ignore.case = T)))    	# d<-d[,1:15]
+      O2_ch1_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 1", x = names, ignore.case = T, useBytes = TRUE)))
+      O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 2", x = names, ignore.case = T, useBytes = TRUE)))
+      O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 3", x = names, ignore.case = T, useBytes = TRUE)))
+      O2_ch4_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 4", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch1_name<-which(c(grepl("temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 1", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch2_name<-which(c(grepl("temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 2", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch3_name<-which(c(grepl("temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 3", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch4_name<-which(c(grepl("temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 4", x = names, ignore.case = T, useBytes = TRUE)))    	# d<-d[,1:15]
 
       new_csv<-d[, c(1:2)]
 
       new_csv$time_sec<-
-        sapply(strsplit(d$`Relative time [HH:MM:SS]`,":"),
+      sapply(strsplit(d$`Relative time [HH:MM:SS]`,":"),
         function(x) {
           x <- as.numeric(x)
           x[3]+x[2]*60+x[1]*60*60
@@ -432,12 +432,12 @@ textFileConvert<-function(txt_file,
 
           if(N_Ch == 8){
             new_csv$Ch2_O2 <- DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                        bar.press = atm_pressure, temp.C = new_csv$Ch1_temp, bar.units.out = "atm",
+                        bar.press = atm_pressure, temp.C = new_csv$Ch2_temp, bar.units.out = "atm",
                         salinity = salinity, salinity.units = "pp.thou")
 
           }else{
             new_csv$Ch2_O2 <- DO.unit.convert(new_csv$Ch2_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                        bar.press = atm_pressure, temp.C = new_csv$Ch2_temp, bar.units.out = "atm",
+                        bar.press = atm_pressure, temp.C = new_csv$Ch1_temp, bar.units.out = "atm",
                         salinity = salinity, salinity.units = "pp.thou")
           }
       }
@@ -498,13 +498,13 @@ textFileConvert<-function(txt_file,
               bar.press = atm_pressure, temp.C = new_csv6$Ch1_temp, bar.units.out = "atm",
               salinity = salinity, salinity.units = "pp.thou")
       }else{
-        if (N_Ch!= 8){
+        if (N_Ch == 8){
           new_csv$Ch4_O2 <- DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                        bar.press = atm_pressure, temp.C = new_csv$Ch1_temp, bar.units.out = "atm",
+                        bar.press = atm_pressure, temp.C = new_csv$Ch4_temp, bar.units.out = "atm",
                         salinity = salinity, salinity.units = "pp.thou")
         }else{
           new_csv$Ch4_O2 <- DO.unit.convert(new_csv$Ch4_O2, DO.units.in = units_from, DO.units.out = units_to, bar.units.in ="atm",
-                                                      bar.press = atm_pressure, temp.C = new_csv$Ch4_temp, bar.units.out = "atm",
+                                                      bar.press = atm_pressure, temp.C = new_csv$Ch1_temp, bar.units.out = "atm",
                                                       salinity = salinity, salinity.units = "pp.thou")
         }
       }

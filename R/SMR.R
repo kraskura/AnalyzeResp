@@ -9,7 +9,7 @@
 #' @param first_cycle whether the first cycle is a flush or metabolic rate measurement. provide either: "flush" or "measurement"
 #' @param chop_start The time (min) to be chopped off at the start of each measurement cycle
 #' @param chop_end The time (min) to be chopped off at the end of each measurement cycle
-#' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel oxygen meter has 4 temperature and 4 oxygen sensors
+#' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel oxygen meter has 4 temperature and 4 oxygen sensors. The microplate reader files have 4 at this step.
 #' @param inventory_data The inventory file (.csv file), default = NULL
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param date_format Common format of from the CSV conversion.
