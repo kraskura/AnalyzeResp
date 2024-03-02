@@ -1197,6 +1197,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	  }
     d_SMR$Ch<-factor(d_SMR$Ch)
 
+  	# print(d_SMR) # correct
 
   	if (local_path | !dir.exists("MMR_SMR_AS_EPOC")){
   		plotname.freq<-paste( filename.SMR,"_PLOT_SMR_analyses.png", sep="")
@@ -1211,21 +1212,26 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 			d_SMR<-d_SMR[,c("time_frame", "min_start", "r2", "b", "m", "t_min", "t_max", "t_mean" ,"Ch", "DateTime_start", "type", "n_min", "ID_code" )]
 		}
 
+  	# print(d_SMR) # correct
 
 		## choose what to keep and what not for the SMR
 		# 2) keep only > 1 min sections for SMR calculations any type  selected above (SMR, pre-, post-shallow slopes) and exclude "SMR-cut", "SMR-cut1", "SMR-cut2"
-		d_SMR.1<-d_SMR[d_SMR$n_min>=1,]
-		if (nrow(d_SMR.1)==0){
-		  warning("All SMR measurements shorter than 1 min !!")
-	   }else{
-	    d_SMR<-d_SMR[d_SMR$n_min>=1,]
-	    d_SMR.2<-d_SMR[d_SMR$n_min<=1,]
-	      if(nrow(d_SMR.2)==0){
-            # message("All SMR/RMR measurements are > 1 min")
-	        }else{
-            message(paste("Using only SMR measurements > 1 min: ", "Not using", nrow(d_SMR.2), " cycles", sep=""))
-        }
-		}
+		# d_SMR.1<-d_SMR[d_SMR$n_min>=1,]
+# 		if (nrow(d_SMR.1)==0){
+# 		  warning("All SMR measurements shorter than 1 min !!")
+# 	   }else{
+# 	    d_SMR.2<-d_SMR[d_SMR$n_min<=1,]
+# 	    d_SMR<-d_SMR[d_SMR$n_min>=1,]
+# 	    print(d_SMR$n_min)
+# 	      if(nrow(d_SMR.2)==0){
+#             # message("All SMR/RMR measurements are > 1 min")
+# 	        }else{
+# 	          print("here")
+#             message(paste("Using only SMR measurements > 1 min: ", "Not using", nrow(d_SMR.2), " cycles", sep=""))
+#         }
+# 		}
+
+  	# print(d_SMR) # correct
 
 
 		# 3) keep only sections with cycles above a set threshold of R2
