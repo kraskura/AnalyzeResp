@@ -2057,7 +2057,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
         d.mmr[,cols] <- lapply(d.mmr[, cols], as.character)
 
 
-
     		d<-rbind(d.mmr, d.smr)
     		colnames(d)<-c("ID", "time_frame", "min_start", "r2", "b", "m", "t_min", "t_max", "t_mean", "Ch", "bw", "mo2", "cycle_type", "DateTime_start", "scaling_exponent", "common_mass")
 

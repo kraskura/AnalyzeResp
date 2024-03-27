@@ -820,13 +820,13 @@ MMR<-function(data.MMR,
 	if(as.character(dataMMR$Ch1_O2[1])=="--- " || as.character(dataMMR$Ch1_O2[1])=="---" || is.na(dataMMR$Ch1_O2[1])){
 		dataMMR$Ch1_O2<-0
 	}
-	if(as.character(dataMMR$Ch2_O2[1])=="--- " || as.character(dataMMR$Ch2_O2[1])=="---" || is.na(dataMMR$Ch1_O2[1])){
+	if(as.character(dataMMR$Ch2_O2[1])=="--- " || as.character(dataMMR$Ch2_O2[1])=="---" || is.na(dataMMR$Ch2_O2[1])){
 		dataMMR$Ch2_O2<-0
 	}
-	if(as.character(dataMMR$Ch3_O2[1])=="--- " || as.character(dataMMR$Ch3_O2[1])=="---" || is.na(dataMMR$Ch1_O2[1])){
+	if(as.character(dataMMR$Ch3_O2[1])=="--- " || as.character(dataMMR$Ch3_O2[1])=="---" || is.na(dataMMR$Ch3_O2[1])){
 		dataMMR$Ch3_O2<-0
 	}
-	if(as.character(dataMMR$Ch4_O2[1])=="--- " || as.character(dataMMR$Ch4_O2[1])=="---" || is.na(dataMMR$Ch1_O2[1])){
+	if(as.character(dataMMR$Ch4_O2[1])=="--- " || as.character(dataMMR$Ch4_O2[1])=="---" || is.na(dataMMR$Ch4_O2[1])){
 		dataMMR$Ch4_O2<-0
 	}
 
