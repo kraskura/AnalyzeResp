@@ -1,11 +1,8 @@
 pandoc: 3.1.11
 pkgdown: 2.0.7
 pkgdown_sha: ~
-articles:
-  Example_run: Example_run.html
-  QC_protocol: QC_protocol.html
-  troubleshooting: troubleshooting.html
-last_built: 2024-04-09T19:51Z
+articles: {}
+last_built: 2024-04-09T20:06Z
 urls:
   reference: https://kraskura.github.io/AnalyzeResp/reference
   article: https://kraskura.github.io/AnalyzeResp/articles
