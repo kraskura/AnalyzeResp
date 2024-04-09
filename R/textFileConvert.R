@@ -117,11 +117,16 @@ textFileConvert<-function(txt_file,
     if(is.null(nrowSkip)){
       nrowSkip <-70
     }
-  	d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s) # 70
+  	d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s,
+  	              check.names = TRUE, quote = "", comment.char = "") # 70
     colnames(d)<-d[1,]
     d<-d[-1,]
 
   	names<-colnames(d)
+    names <- gsub(x = names, pattern = "\xb0",
+                     replacement = " ", useBytes = TRUE)
+
+  	# print(names)
     O2_ch1_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.1", x = names, ignore.case = T)))
     O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.2", x = names, ignore.case = T)))
     O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.3", x = names, ignore.case = T)))
