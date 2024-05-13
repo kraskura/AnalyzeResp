@@ -34,6 +34,8 @@
 #' @param verbose.MLND From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).
 #' @param calc_EPOC Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourcly recovery, etc.)
 #' @param date_format The date format used in the original data files. Argument is passed to strptime. default is c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT").
+#' @param SMR_vals Channel specific SMR values for EPOC calculations (mgO2/kg/min)
+#'
 #'
 #' @importFrom stats lm coef var integrate predict quantile sd smooth.spline IQR
 #' @import graphics
@@ -66,9 +68,10 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
                           date_format = c("%Y-%m-%d %H:%M:%S", "GMT"),
                           N_Ch = 4,
                           drop_ch = NULL,
-                          MLND = TRUE,
+                          MLND = FALSE,
                           verbose.MLND = FALSE,
                           calc_EPOC = TRUE,
+                          SMR_vals = c(NULL, NULL, NULL, NULL),
                           epoc_threshold = 1,
                           recovMMR_threshold = 0.5,
                           end_EPOC_Ch = c(NA, NA, NA, NA),
@@ -105,20 +108,28 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
                         recovMMR_threshold ,
                         newdata.smr,
                         MLND,
+                        b_manual,
                         end_EPOC,
                         scaling_exponent_mmr,
                         scaling_exponent_smr,
                         common_mass){
 
-  	#1 smooth and then predict the curve f
-    fit<-smooth.spline(d$time_mo2,d$mo2, spar=spar)
-  	f = function(x) {predict(fit, x)$y}
+    # using smooth spline and spar levels
+  	if(spar > 0){
 
-  	end<-round(d$time_mo2[nrow(d)],1)
-  	newx<-seq(0,end, by=1)
-  	newy<-predict(fit, newx, deriv=0)
-  	lapply(newy, as.numeric)
-  	newVal<-data.frame(Reduce(cbind,newy)) # creating dummy dataset with predicted values
+    	#1 smooth and then predict the curve f
+      fit <- smooth.spline(d$time_mo2,d$mo2, spar=spar)
+  	  f <- function(x) {predict(fit, x)$y}
+
+      end<-round(d$time_mo2[nrow(d)],1)
+    	newx<-seq(0,end, by=1)
+    	newy<-predict(fit, newx, deriv=0)
+    	lapply(newy, as.numeric)
+    	newVal<-data.frame(Reduce(cbind,newy)) # creating dummy dataset with predicted values
+  	}else{# the actual values, trapezoid integral
+    	newVal<-d[, c("time_mo2", "mo2")]
+    	names(newVal) <- c("init", "V2")
+  	}
 
   	smr.row<-newdata.smr[which(as.character(newdata.smr$Ch)==as.character(d$Ch[1])),]
   	ID<-smr.row["ID"]
@@ -129,154 +140,214 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	b1.3<-as.numeric(round(smr.row["SMR_low15quant"],2))
   	b1.4<-as.numeric(round(smr.row["SMR_low20quant"],2))
 
+  	b1.man<-as.numeric(b_manual)
+
   	if(MLND == TRUE){ # need this argument because MLND gives another SMR thresholdm that with MLND = FALSE is not available.
     	b1.5<-as.numeric(round(smr.row["smr_mlnd"],2))
   	}else{
   	  b1.5<-0
   	}
 
-  	smr_type_list<-c("smr_mean10minVal", "SMR_low10quant", "SMR_low15quant", "SMR_low20quant", "smr_mlnd")
-  	b_list<-c(b1.1,b1.2,b1.3,b1.4,b1.5)
+  	smr_type_list<-c("smr_mean10minVal", "SMR_low10quant", "SMR_low15quant", "SMR_low20quant", "smr_mlnd", "manual/default= 0")
+  	b_list<-c(b1.1, b1.2, b1.3, b1.4, b1.5, b1.man)
 
-  	for (i in 1:5){
+  	for (i in 1:6){
 
   		if(i == 1){
-  			EPOCdata.temp<-matrix(ncol=26, nrow=0)
-  			colnames(EPOCdata.temp) <- c("ID", "smr_type", "smr","spar", "EPOC_full", "end_EPOC_min", "SMR_intergral_full", "SMR_threshold", "EPOC_1hr", "MO2_1hr", "EPOC_2hr", "MO2_2hr", "EPOC_3hr", "MO2_3hr", "EPOC_4hr", "MO2_4hr",  "EPOC_5hr", "MO2_5hr", "end_EPOC.mmr", "EPOC_mmr", "MO2_mmr", "MMR", "MMR_percent",  "scaling_exponent_mmr",  "scaling_exponent_smr", "common_mass")
+  			EPOCdata.temp<-matrix(ncol=18, nrow=0)
+  			colnames(EPOCdata.temp) <- c("ID", "smr_type", "smr","spar",
+  			                             "EPOC_full", "end_EPOC_min",
+  			                             "SMR_intergral_full", "SMR_threshold",
+  			                             "EPOC_1hr", "MO2_1hr", "EPOC_2hr",
+  			                             "MO2_2hr", "EPOC_3hr", "MO2_3hr",
+  			                             "EPOC_4hr", "MO2_4hr",  "EPOC_5hr",
+  			                             "MO2_5hr")
   		}
 
 
   	  # adjustable epoc threshold (default is just SMR values as calculated using different methods)
   		if (epoc_threshold == 1){
   		  	b <- b_list[i]
-
   		}else{
   		    b <- b_list[i] * epoc_threshold
   		}
 
-  	  b.mmr <- recovMMR_threshold * mmr.val # recv thresholds gives a proportion (or percent) and the mmr is the MMR is the MO2 value
-
   		smr_type <- smr_type_list[i]
-  		#2-1- establish SMR threshold m1 and b1 for SMR (b1= y intercept, m1=slope)
+  		#2-1- establish SMR threshold m1 and b1 for SMR (b= y intercept, m=slope)
   		m0 <- 0 # slope
 
   		# smr function
   		f.smr <- function(x)(m0*x)+b
 
-  		# % mmr recovery function; default 50%
-  		f.mmr <- function(x)(m0*x)+b.mmr # smr function
-
   		# if manually provided EPOC threshold does not exist then find when EPOC ends
-  		if (is.na(end_EPOC)){
+  		if (is.na(end_EPOC)){ # end EPOC provided manually
     		# Calculate the area under the SMR for all types of SMR calculated in the MMR_SMR_analyze function
     		# 2-2 the EPOC cutoff in the smoothed function / this is used also for the SMR block
-    		end_EPOC <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]]
+    		end_EPOC_perSMR <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]] # end epoc conditional to each smr level
 
-    		if(is.na(end_EPOC)){
-    			end_EPOC<-newVal$init[nrow(newVal)]
+    		if(is.na(end_EPOC_perSMR)){
+    			end_EPOC_perSMR<-newVal$init[nrow(newVal)] # take last value if not present
+    		}
+  		}else{
+  		  end_EPOC_perSMR <- end_EPOC #use the manually provided one
+  		}
+
+  		if(spar == 0){ # Trapezoid method: area under the curve
+    		# from zero to full
+    		man_auc<-sum(diff(d[1:which(d$time_mo2 == end_EPOC_perSMR), "time_mo2"]) *
+    		               (head(d[1:which(d$time_mo2 == end_EPOC_perSMR), "mo2"],-1) +
+    		                  tail(d[1:which(d$time_mo2 == end_EPOC_perSMR), "mo2"],-1)))/2 # mo2 values
+    		SMR<-integrate(f.smr, lower=0, upper=end_EPOC_perSMR)$value
+    		EPOC_full<-round(man_auc-SMR,3)
+
+    		EPOC_1hr<-NA
+    		MO2_1hr<-NA
+    		EPOC_2hr<-NA
+    		MO2_2hr<-NA
+    		EPOC_3hr<-NA
+    		MO2_3hr<-NA
+    		EPOC_4hr<-NA
+    		MO2_4hr<-NA
+    		EPOC_5hr<-NA
+    		MO2_5hr<-NA
+  		# man_auc_smr<-sum(diff(d$time_mo2) * (head(d$mo2,-1) + tail(d$mo2,-1)))/2 # smr level
+
+  		}else{
+
+    		#3 integrate recovery curve with to the provided end EPOC time
+    		f.int = function(x) {integrate(f, lower=0, upper=end_EPOC_perSMR)$value}
+    		f.int.vec = Vectorize(f.int, vectorize.args='x')
+    		full<-f.int.vec(end_EPOC_perSMR)
+    		# SMR block
+    		SMR<-integrate(f.smr, lower=0, upper=end_EPOC_perSMR)$value
+    		EPOC_full<-round(full-SMR,3)
+    		MO2_full<-round(newVal$V2[which(newVal$init==end_EPOC_perSMR)],3)
+
+    		#3.1 integrate revovery curve for the first hr
+    		if(any(d$time_mo2>=60) & any(d$time_mo2<120)){
+      		f.int_1hr = function(x) {integrate(f, lower=0, upper=60)$value}
+      		f.int.vec_1hr = Vectorize(f.int_1hr, vectorize.args='x')
+      		full_1hr<-f.int.vec_1hr(60)
+      		# SMR block
+      		SMR_1hr<-integrate(f.smr, lower=0, upper=60)$value
+      		EPOC_1hr<-round(full_1hr-SMR_1hr,3)
+      		MO2_1hr<-round(newVal$V2[60],3)
+    		}else{
+      		EPOC_1hr<-NA
+      		MO2_1hr<-NA
+      		EPOC_2hr<-NA
+      		MO2_2hr<-NA
+      		EPOC_3hr<-NA
+      		MO2_3hr<-NA
+      		EPOC_4hr<-NA
+      		MO2_4hr<-NA
+      		EPOC_5hr<-NA
+      		MO2_5hr<-NA
+    		}
+
+
+    		#3.2 integrate revovery curve for the first 2hrs
+    		if(any(d$time_mo2>=120) & any(d$time_mo2<180)){
+      		f.int_2hr = function(x) {integrate(f, lower=0, upper=120)$value}
+      		f.int.vec_2hr = Vectorize(f.int_2hr, vectorize.args='x')
+      		full_2hr<-f.int.vec_2hr(120)
+      		# SMR block
+      		SMR_2hr<-integrate(f.smr, lower=0, upper=120)$value
+      		EPOC_2hr<-round(full_2hr-SMR_2hr,3)
+      		MO2_2hr<-round(newVal$V2[120],3)
+    		}else{
+    		  EPOC_2hr<-NA
+      		MO2_2hr<-NA
+      		EPOC_3hr<-NA
+      		MO2_3hr<-NA
+      		EPOC_4hr<-NA
+      		MO2_4hr<-NA
+      		EPOC_5hr<-NA
+      		MO2_5hr<-NA
+    		}
+
+    		if(any(d$time_mo2>=180) & any(d$time_mo2<240)){
+      		#3.3 integrate revovery curve for the first 3hrs
+      		f.int_3hr = function(x) {integrate(f, lower=0, upper=180)$value}
+      		f.int.vec_3hr = Vectorize(f.int_3hr, vectorize.args='x')
+      		full_3hr<-f.int.vec_3hr(180)
+      		# SMR block
+      		SMR_3hr<-integrate(f.smr, lower=0, upper=180)$value
+      		EPOC_3hr<-round(full_3hr-SMR_3hr,3)
+      		MO2_3hr<-round(newVal$V2[180],3)
+    		}else{
+      		EPOC_3hr<-NA
+      		MO2_3hr<-NA
+      		EPOC_4hr<-NA
+      		MO2_4hr<-NA
+      		EPOC_5hr<-NA
+      		MO2_5hr<-NA
+    		}
+
+    		if(any(d$time_mo2>=240) & any(d$time_mo2<300)){
+      		#3.4 integrate revovery curve for the first 4hrs
+      		f.int_4hr = function(x) {integrate(f, lower=0, upper=240)$value}
+      		f.int.vec_4hr = Vectorize(f.int_4hr, vectorize.args='x')
+      		full_4hr<-f.int.vec_4hr(240)
+      		# SMR block
+      		SMR_4hr<-integrate(f.smr, lower=0, upper=240)$value
+      		EPOC_4hr<-round(full_4hr-SMR_4hr,3)
+      		MO2_4hr<-round(newVal$V2[240],3)
+    		}else{
+      		EPOC_4hr<-NA
+      		MO2_4hr<-NA
+      		EPOC_5hr<-NA
+      		MO2_5hr<-NA
+    		}
+
+    		if(any(d$time_mo2>=300)){
+      		#3.5 integrate revovery curve for the first 5hrs
+      		f.int_5hr = function(x) {integrate(f, lower=0, upper=300)$value}
+      		f.int.vec_5hr = Vectorize(f.int_5hr, vectorize.args='x')
+      		full_5hr<-f.int.vec_5hr(300)
+      		# SMR block
+      		SMR_5hr<-integrate(f.smr, lower=0, upper=300)$value
+      		EPOC_5hr<-round(full_5hr-SMR_5hr,3)
+      		MO2_5hr<-round(newVal$V2[300],3)
     		}
   		}
 
-  		# % mmr end EPOC
-  		end_EPOC.mmr <- newVal$init[(which(round(newVal$V2, 3)<=b.mmr))[1]]
-  		if(is.na(end_EPOC.mmr)){
-  			end_EPOC.mmr<-newVal$init[nrow(newVal)]
-  			# message(paste("The animal does not reach % MMR recovery threshold: ", recovMMR_threshold, sep=""))
+  		if(smr_type == "smr_mlnd"){
+  		values<-as.data.frame(t(c(as.character(d$ID[1]),smr_type, b,
+  		                          spar, NA, NA, NA, NA,
+  		                          EPOC_1hr, MO2_1hr, EPOC_2hr, MO2_2hr, EPOC_3hr,
+  		                          MO2_3hr, EPOC_4hr, MO2_4hr, EPOC_5hr, MO2_5hr)))
+
+      }else{
+  		values<-as.data.frame(t(c(as.character(d$ID[1]),smr_type, b,
+  		                          spar, EPOC_full, end_EPOC_perSMR, as.numeric(SMR), epoc_threshold,
+  		                          EPOC_1hr, MO2_1hr, EPOC_2hr, MO2_2hr, EPOC_3hr,
+  		                          MO2_3hr, EPOC_4hr, MO2_4hr, EPOC_5hr, MO2_5hr)))
   		}
 
-  		#2-3 the Breakpoit cuttoff
-  		#bp1<-round(d$bp[1],0) # smr - or the y intercept ### This is the one Emily settled on for data analyses
+  		# print(
+  		#   str(values)
+  		# )
 
-  		f.int_mmr = function(x) {integrate(f, lower=0, upper=end_EPOC.mmr)$value}
-  		f.int.vec_mmr = Vectorize(f.int_mmr, vectorize.args='x')
-  		# f.int.vec_mmr = Vectorize(f.int_mmr, vectorize.args='x')
-  		full_mmr<-f.int.vec_mmr(end_EPOC.mmr)
-  		# SMR block
-  		recovMMR<-integrate(f.mmr, lower=0, upper=end_EPOC.mmr)$value
-  		EPOC_mmr<-round(full_mmr-recovMMR,3)
-  		MO2_mmr<-round(newVal$V2[which(newVal$init==end_EPOC.mmr)],3)
-
-  		#3 integrate recovery curve with to the provided end EPOC time
-  		f.int = function(x) {integrate(f, lower=0, upper=end_EPOC)$value}
-  		f.int.vec = Vectorize(f.int, vectorize.args='x')
-  		f.int.vec = Vectorize(f.int, vectorize.args='x')
-  		full<-f.int.vec(end_EPOC)
-  		# SMR block
-  		SMR<-integrate(f.smr, lower=0, upper=end_EPOC)$value
-  		EPOC_full<-round(full-SMR,3)
-  		MO2_full<-round(newVal$V2[which(newVal$init==end_EPOC)],3)
-
-  		#3.1 integrate revovery curve for the first hr
-  		f.int_1hr = function(x) {integrate(f, lower=0, upper=60)$value}
-  		f.int.vec_1hr = Vectorize(f.int_1hr, vectorize.args='x')
-  		full_1hr<-f.int.vec_1hr(60)
-  		# SMR block
-  		SMR_1hr<-integrate(f.smr, lower=0, upper=60)$value
-  		EPOC_1hr<-round(full_1hr-SMR_1hr,3)
-  		MO2_1hr<-round(newVal$V2[60],3)
-
-  		#3.2 integrate revovery curve for the first 2hrs
-  		f.int_2hr = function(x) {integrate(f, lower=0, upper=120)$value}
-  		f.int.vec_2hr = Vectorize(f.int_2hr, vectorize.args='x')
-  		full_2hr<-f.int.vec_2hr(120)
-  		# SMR block
-  		SMR_2hr<-integrate(f.smr, lower=0, upper=120)$value
-  		EPOC_2hr<-round(full_2hr-SMR_2hr,3)
-  		MO2_2hr<-round(newVal$V2[120],3)
-
-  		#3.3 integrate revovery curve for the first 3hrs
-  		f.int_3hr = function(x) {integrate(f, lower=0, upper=180)$value}
-  		f.int.vec_3hr = Vectorize(f.int_3hr, vectorize.args='x')
-  		full_3hr<-f.int.vec_3hr(180)
-  		# SMR block
-  		SMR_3hr<-integrate(f.smr, lower=0, upper=180)$value
-  		EPOC_3hr<-round(full_3hr-SMR_3hr,3)
-  		MO2_3hr<-round(newVal$V2[180],3)
-
-  		#3.4 integrate revovery curve for the first 4hrs
-  		f.int_4hr = function(x) {integrate(f, lower=0, upper=240)$value}
-  		f.int.vec_4hr = Vectorize(f.int_4hr, vectorize.args='x')
-  		full_4hr<-f.int.vec_4hr(240)
-  		# SMR block
-  		SMR_4hr<-integrate(f.smr, lower=0, upper=240)$value
-  		EPOC_4hr<-round(full_4hr-SMR_4hr,3)
-  		MO2_4hr<-round(newVal$V2[240],3)
-
-  		#3.5 integrate revovery curve for the first 5hrs
-  		f.int_5hr = function(x) {integrate(f, lower=0, upper=300)$value}
-  		f.int.vec_5hr = Vectorize(f.int_5hr, vectorize.args='x')
-  		full_5hr<-f.int.vec_5hr(300)
-  		# SMR block
-  		SMR_5hr<-integrate(f.smr, lower=0, upper=300)$value
-  		EPOC_5hr<-round(full_5hr-SMR_5hr,3)
-  		MO2_5hr<-round(newVal$V2[300],3)
-
-  		# 3.bp1 integrate revovery curve for the first breakpoint
-  		#f.int_bp1 = function(x) {integrate(f, lower=0, upper=bp1)$value}
-  		#f.int.vec_bp1 = Vectorize(f.int_bp1, vectorize.args='x')
-  		#full_bp1<-f.int.vec_bp1(bp1_val)
-  		# SMR block
-  		#SMR_bp1<-integrate(f.smr, lower=0, upper=bp1)$value
-  		#EPOC_bp1<-round(full_bp1-SMR_bp1,2)
-  		#MO2_bp1<-round(newVal$V2[bp1],2)
-    	if(end_EPOC.mmr == 0){
-    		  MO2_mmr=0
-    	}
-
-  		values<-as.data.frame(t(c(as.character(d$ID[1]),smr_type, b,  spar, EPOC_full, end_EPOC, SMR, epoc_threshold, EPOC_1hr, MO2_1hr, EPOC_2hr, MO2_2hr, EPOC_3hr, MO2_3hr, EPOC_4hr, MO2_4hr, EPOC_5hr, MO2_5hr, end_EPOC.mmr, EPOC_mmr, MO2_mmr, mmr.val, (MO2_mmr/mmr.val*100), scaling_exponent_mmr, scaling_exponent_smr, common_mass)))
-
-  		colnames(values)<-c("ID", "smr_type", "smr","spar", "EPOC_full", "end_EPOC_min", "SMR_intergral_full", "SMR_threshold",
-  		"EPOC_1hr", "MO2_1hr", "EPOC_2hr", "MO2_2hr", "EPOC_3hr", "MO2_3hr", "EPOC_4hr", "MO2_4hr",  "EPOC_5hr", "MO2_5hr", "end_EPOC.mmr", "EPOC_mmr", "MO2_mmr", "MMR", "MMR_percent", "scaling_exponent_mmr",  "scaling_exponent_smr", "common_mass")
+  		colnames(values)<-c("ID", "smr_type", "smr","spar", "EPOC_full",
+  		                    "end_EPOC_min", "SMR_intergral_full", "SMR_threshold",
+  		                    "EPOC_1hr", "MO2_1hr", "EPOC_2hr", "MO2_2hr",
+  		                    "EPOC_3hr", "MO2_3hr", "EPOC_4hr", "MO2_4hr",
+  		                    "EPOC_5hr", "MO2_5hr")
 
 
   		EPOCdata.temp<-rbind(EPOCdata.temp,values)
 
-  		col_smr<-c("black",  "darkmagenta", "darkred", "darkorange","darkgreen")
-  		scale<-c(0.02,0.07,0.12,0.17,0.22)
+  		col_smr<-c("black",  "darkmagenta", "darkred", "darkorange","darkgreen", "blue")
+  		scale<-c(0.02, 0.07, 0.12, 0.17, 0.22, 0.25)
 
-  		if(MLND == TRUE){ # need this argument because MLND gives another SMR thresholdm that with MLND = FALSE is not available.
-  			if(i==1){
-  				plot(x=range(newVal$init), xlim=c(0,max(d$time_mo2, na.rm=TRUE)+50), ylim=c(0,max(d$mo2, na.rm=TRUE)),type='n', ylab="MO2", xlab="time (min)", main=paste("Smoothness=",spar, sep=""))
+  		if(MLND == TRUE){ # need this argument because MLND gives another SMR threshold that with MLND = FALSE is not available.
+
+  		  if(spar>0){ # smoothing
+  		    if(i==1){
+  				plot(x=range(newVal$init), xlim=c(0,max(d$time_mo2, na.rm=TRUE)+50),
+  				     ylim=c(0,max(d$mo2, na.rm=TRUE)),type='n',
+  				     ylab="MO2", xlab="time (min)", main=paste("Smoothness=",spar, sep=""))
   				points(d$time_mo2,d$mo2)
   				lines(newy[[1]], newy[[2]], col="blue")
   				abline(v=60, col="grey", lty=2)
@@ -285,63 +356,127 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   				abline(v=240, col="grey", lty=2)
   				abline(v=300, col="grey", lty=2)
   				abline(h=b, col=col_smr[i],lty=1, lwd=1)
-  				abline(v=end_EPOC, col=col_smr[i], lty=1)
-  				abline(v=end_EPOC.mmr, col="magenta", lty=2,lwd=2)
-  				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2))-(scale[i]*(max(d$mo2))), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
+  				abline(v=end_EPOC_perSMR, col=col_smr[i], lty=1)
+  				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
+  				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
+  				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""),
+  				     cex=0.8, col=col_smr[i], pos=2)
 
   			}else{
   				abline(h=b, col=col_smr[i],lty=1, lwd=1)
-  				abline(v=end_EPOC, col=col_smr[i], lty=1)
-  				abline(v=end_EPOC.mmr, col="magenta", lty=2,lwd=2)
-  				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2))-(scale[i]*(max(d$mo2))), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
+  				abline(v=end_EPOC_perSMR, col=col_smr[i], lty=1)
+  				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
+  				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
+  				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""),
+  				     cex=0.8, col=col_smr[i], pos=2)
 
   			}
+  		  }else{ # aboslute integral
+          if(i==1){
+    				plot(x=range(newVal$init), xlim=c(0,max(d$time_mo2, na.rm=TRUE)+50),
+    				     ylim=c(0,max(d$mo2, na.rm=TRUE)),type='n',
+    				     ylab="MO2", xlab="time (min)", main=paste("Smoothness=",spar, sep=""))
+    				points(d$time_mo2,d$mo2)
+    				lines(d$time_mo2, d$mo2, col="blue")
+    				abline(v=60, col="grey", lty=2)
+    				abline(v=120, col="grey", lty=2)
+    				abline(v=180, col="grey", lty=2)
+    				abline(v=240, col="grey", lty=2)
+    				abline(v=300, col="grey", lty=2)
+    				abline(h=b, col=col_smr[i],lty=1, lwd=1)
+    				abline(v=end_EPOC_perSMR, col=col_smr[i], lty=1)
+    				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
+    				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
+    				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""),
+    				     cex=0.8, col=col_smr[i], pos=2)
 
-  		}else{
-  			if(i==1){
-  				plot(x=range(newVal$init), xlim=c(0,max(d$time_mo2, na.rm=TRUE)+50), ylim=c(0,max(d$mo2, na.rm=TRUE)),type='n', ylab="MO2", xlab="time (min)", main=paste("Smoothness=",spar, sep=""))
-  				points(d$time_mo2,d$mo2)
-  				lines(newy[[1]], newy[[2]], col="blue")
-  				abline(v=60, col="grey", lty=2)
-  				abline(v=120, col="grey", lty=2)
-  				abline(v=180, col="grey", lty=2)
-  				abline(v=240, col="grey", lty=2)
-  				abline(v=300, col="grey", lty=2)
+    			}else{
+    				abline(h=b, col=col_smr[i],lty=1, lwd=1)
+    				abline(v=end_EPOC, col=col_smr[i], lty=1)
+    				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
+    				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
+    				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""),
+    				     cex=0.8, col=col_smr[i], pos=2)
+
+    			}
+  		  }
+
+  		}else{ # not MLND
+  		  if(spar>0){ # smoothing
+    			if(i==1){
+    				plot(x=range(newVal$init), xlim=c(0,max(d$time_mo2, na.rm=TRUE)+50),
+    				     ylim=c(0,max(d$mo2, na.rm=TRUE)),type='n',
+    				     ylab="MO2", xlab="time (min)", main=paste("Smoothness=",spar, sep=""))
+    				points(d$time_mo2,d$mo2)
+    				lines(newy[[1]], newy[[2]], col="blue")
+    				abline(v=60, col="grey", lty=2)
+    				abline(v=120, col="grey", lty=2)
+    				abline(v=180, col="grey", lty=2)
+    				abline(v=240, col="grey", lty=2)
+    				abline(v=300, col="grey", lty=2)
+    				abline(h=b, col=col_smr[i],lty=1, lwd=1)
+    				abline(v=end_EPOC_perSMR, col=col_smr[i], lty=1)
+    				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
+    				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
+    				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""),
+    				     cex=0.8, col=col_smr[i], pos=2)
+
+    			}
+  		    if(!i==1 & !i==5){ # exclude first and MLND
   				abline(h=b, col=col_smr[i],lty=1, lwd=1)
-  				abline(v=end_EPOC, col=col_smr[i], lty=1)
-  				abline(v=end_EPOC.mmr, col="magenta", lty=2,lwd=2)
-  				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2))-(scale[i]*(max(d$mo2))), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
-
+  				abline(v=end_EPOC_perSMR, col=col_smr[i], lty=1)
+  				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
+  				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
+  				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
 
   			}
-  		 if(!i==1 & !i==5){
+  		  }else{ # trapezoid integral
+    			if(i==1){
+    				plot(x=range(newVal$init), xlim=c(0,max(d$time_mo2, na.rm=TRUE)+50),
+    				     ylim=c(0,max(d$mo2, na.rm=TRUE)),type='n',
+    				     ylab="MO2", xlab="time (min)", main=paste("Smoothness=",spar, sep=""))
+    				points(d$time_mo2,d$mo2)
+    				lines(d$time_mo2, d$mo2, col="blue")
+    				abline(v=60, col="grey", lty=2)
+    				abline(v=120, col="grey", lty=2)
+    				abline(v=180, col="grey", lty=2)
+    				abline(v=240, col="grey", lty=2)
+    				abline(v=300, col="grey", lty=2)
+    				abline(h=b, col=col_smr[i],lty=1, lwd=1)
+    				abline(v=end_EPOC_perSMR, col=col_smr[i], lty=1)
+    				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
+    				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
+    				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""),
+    				     cex=0.8, col=col_smr[i], pos=2)
+
+    			}
+  		    if(!i==1 & !i==5){ # exclude first and MLND
   				abline(h=b, col=col_smr[i],lty=1, lwd=1)
-  				abline(v=end_EPOC, col=col_smr[i], lty=1)
-  				abline(v=end_EPOC.mmr, col="magenta", lty=2,lwd=2)
-  				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2))-(scale[i]*(max(d$mo2))), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
+  				abline(v=end_EPOC_perSMR, col=col_smr[i], lty=1)
+  				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
+  				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
+  				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
 
-  			}
+			    }
+  		  }
 
+  		}# end of "else(MLND == TRUE)"
 
-  		}# end of "if(MLND == TRUE)"
-
-  		if (i == 5){
-
+  		if (i == 6){ # six values of smr thresholds
   		  EPOCdata<-rbind(EPOCdata,EPOCdata.temp)
+  		  end_EPOC_perSMR <- NA # reset end EPOC
       }
 
   	}
 
   	return(EPOCdata)
-
-}# end of EPOC.spar plot function
-
+  }# end of EPOC.spar plot function
 
 
   graphics.off()
 
- filename.SMR<-paste(gsub('.{4}$', '',data.SMR[1]), "_SMR", sep="")
- filename.MMR<-paste(gsub('.{4}$', '',data.MMR[1]), "_MMR_", sep="")
+  filename.SMR<-paste(gsub('.{4}$', '',data.SMR[1]), "_SMR", sep="")
+  filename.MMR<-paste(gsub('.{4}$', '',data.MMR[1]), "_MMR_", sep="")
 
   # **********************************************
   # START-- >>> background ------
@@ -2037,8 +2172,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		}
   #~ 		data<-dat_MMR[-c(1:nrow(dat_MMR)), ]
 
-  		EPOCdata<-matrix(ncol=26, nrow=0)
-  		colnames(EPOCdata) <- c("ID", "smr_type", "smr","spar", "EPOC_full", "end_EPOC_min", "SMR_intergral_full", "SMR_threshold", "EPOC_1hr", "MO2_1hr", "EPOC_2hr", "MO2_2hr", "EPOC_3hr", "MO2_3hr", "EPOC_4hr", "MO2_4hr",  "EPOC_5hr", "MO2_5hr", "end_EPOC.mmr", "EPOC_mmr", "MO2_mmr", "MMR", "MMR_percent", "scaling_exponent_mmr",  "scaling_exponent_smr", "common_mass")
+  		EPOCdata<-matrix(ncol=18, nrow=0)
+  		colnames(EPOCdata) <- c("ID", "smr_type", "smr","spar", "EPOC_full",
+  		                        "end_EPOC_min", "SMR_intergral_full", "SMR_threshold",
+  		                        "EPOC_1hr", "MO2_1hr", "EPOC_2hr", "MO2_2hr", "EPOC_3hr",
+  		                        "MO2_3hr", "EPOC_4hr", "MO2_4hr",  "EPOC_5hr", "MO2_5hr")
 
       # apply EPOC.spar function and combined mmr smr data
     	# loop through all available channels
@@ -2058,7 +2196,9 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 
     		d<-rbind(d.mmr, d.smr)
-    		colnames(d)<-c("ID", "time_frame", "min_start", "r2", "b", "m", "t_min", "t_max", "t_mean", "Ch", "bw", "mo2", "cycle_type", "DateTime_start", "scaling_exponent", "common_mass")
+    		colnames(d)<-c("ID", "time_frame", "min_start", "r2", "b", "m",
+    		               "t_min", "t_max", "t_mean", "Ch", "bw", "mo2",
+    		               "cycle_type", "DateTime_start", "scaling_exponent", "common_mass")
 
     		# mmr value for MMR 50 recovery calculations
     		mmr.val <- max(d$mo2)
@@ -2068,7 +2208,8 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   			if (local_path | !dir.exists("MMR_SMR_AS_EPOC")){
   	    	EPOCplot_name<-	paste( filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
       	}else{
-  	    	EPOCplot_name<-	paste("./MMR_SMR_AS_EPOC/plots_ch_EPOC/", filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
+  	    	EPOCplot_name<-	paste("./MMR_SMR_AS_EPOC/plots_ch_EPOC/",
+  	    	                      filename.MMR, "_", d$Ch[1], "_EPOC_PLOT.png", sep='')
   	    }
 
       	 # d$DateTime_start<- strptime(d$DateTime_start, format="%Y-%m-%d %H:%M:%S") # the default strptime, that was already used above
@@ -2082,7 +2223,21 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		  end_EPOC<-end_EPOC_Ch[as.numeric(substr(d$Ch[1], start=3, stop=3))]
     		## The EPOC calculation
 
-  		  spars <- c(0.1, 0.2, 0.3)
+  		  spars <- c(0.1, 0.2, 0.3, 0)
+
+
+        if (any(is.numeric(SMR_vals))){
+          b_manual<-SMR_vals[as.numeric(substr(Y.Ch, start=3, stop=3))]
+          b_manual<-b_manual*as.numeric(epoc_threshold)
+
+          if(is.na(b_manual)){
+            b_manual<-0
+          }
+
+        }else{
+          b_manual <- 0 # goes to zero for full integral if SMR threshold is not specified
+
+        }
 
     			if(nrow(d) ==4 || nrow(d)>4 & IQR(d$mo2) > 0){
     				for (n in 1:length(spars)){
@@ -2092,7 +2247,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     						par(mfrow=c(length(spars),1), mar=c(4,4,3,1)+0.1)
     					}
 
-    					EPOCdata <- EPOC.spar(spars[n], d, EPOCdata, mmr.val, epoc_threshold, recovMMR_threshold, newdata.smr, MLND, end_EPOC, scaling_exponent_mmr, scaling_exponent_smr, common_mass)
+    					EPOCdata <- EPOC.spar(spars[n], d, EPOCdata, mmr.val,
+    					                      epoc_threshold, recovMMR_threshold,
+    					                      newdata.smr, MLND, end_EPOC, b_manual = b_manual,
+    					                      scaling_exponent_mmr, scaling_exponent_smr,
+    					                      common_mass)
 
     					if (n == length(spars)){
     						dev.off()

@@ -21,9 +21,10 @@ MMR_SMR_AS_EPOC(
   date_format = c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT"),
   N_Ch = 4,
   drop_ch = NULL,
-  MLND = TRUE,
+  MLND = FALSE,
   verbose.MLND = FALSE,
   calc_EPOC = TRUE,
+  SMR_vals = c(NULL, NULL, NULL, NULL),
   epoc_threshold = 1,
   recovMMR_threshold = 0.5,
   end_EPOC_Ch = c(NA, NA, NA, NA),
@@ -76,6 +77,8 @@ MMR_SMR_AS_EPOC(
 \item{verbose.MLND}{From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).}
 
 \item{calc_EPOC}{Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourcly recovery, etc.)}
+
+\item{SMR_vals}{Channel specific SMR values for EPOC calculations (mgO2/kg/min)}
 
 \item{epoc_threshold}{Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to epoc_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as a recovery threshold, enter epoc_threshold = 1.2.}
 
