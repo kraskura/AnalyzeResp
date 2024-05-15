@@ -11,7 +11,6 @@
 #' @return The output from \code{\link{print}}
 #' @export
 #'
-#' @examples
 #'
 csvSplit <- function (data,
                       split_data_name,

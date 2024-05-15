@@ -191,12 +191,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		}else{
   		  end_EPOC_perSMR <- end_EPOC #use the manually provided one
   		}
-
   		if(spar == 0){ # Trapezoid method: area under the curve
     		# from zero to full
-    		man_auc<-sum(diff(d[1:which(d$time_mo2 == end_EPOC_perSMR), "time_mo2"]) *
-    		               (head(d[1:which(d$time_mo2 == end_EPOC_perSMR), "mo2"],-1) +
-    		                  tail(d[1:which(d$time_mo2 == end_EPOC_perSMR), "mo2"],-1)))/2 # mo2 values
+    		man_auc<-sum(diff(d[1:(which(round(d$time_mo2, 2) <= end_EPOC_perSMR))[1], "time_mo2"]) *
+    		               (head(d[1:(which(round(d$time_mo2, 2) <= end_EPOC_perSMR))[1], "mo2"],-1) +
+    		                  tail(d[1:(which(round(d$time_mo2, 2) <= end_EPOC_perSMR))[1], "mo2"],-1)))/2 # mo2 values
     		SMR<-integrate(f.smr, lower=0, upper=end_EPOC_perSMR)$value
     		EPOC_full<-round(man_auc-SMR,3)
 
