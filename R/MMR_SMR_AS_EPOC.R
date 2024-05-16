@@ -1,4 +1,4 @@
-#' @title estimates indivudal specific metabolic rates and recovery
+#' @title estimates individual specific metabolic rates and recovery
 #'
 #' @description
 #' Estimates aerobic metabolic performances in animals: MMR, SMR, EPOC (recovery), and Absolute Aerobic Scope. Relies on outputs from SMR and MMR functions
@@ -7,7 +7,7 @@
 #' @param data.SMR The name of the SMR data file (“…analyzed.csv”; a character string); an output file from the SMR function.
 #' @param AnimalID Indicates individual ID; must be a vector of 4 characters. When missing, enter "NA"
 #' @param BW.animal Indicates individual mass; must be a vector of 4 characters. When missing, enter "0"
-#' @param resp.V Indicates the volume (L) of respirometery chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
+#' @param resp.V Indicates the volume (L) of respirometry chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
 #' @param r2_threshold_smr R2 threshold for SMR, measurements below the threshold are excluded
 #' @param r2_threshold_mmr R2 threshold for MMR, measurements below the threshold are excluded
 #' @param min_length_mmr The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s)
@@ -16,7 +16,7 @@
 #' @param common_mass Metabolic performances are often calculated per unit mass. Use this argument to define what the standardized mass should be. (default is MO2 mgO2kg-1^ min-1^, a common mass of 1 kg). Units = kg
 #' @param mo2_val_for_calc Units of metabolic rates represented on export figures. mo2_common_mass_kg (standardized MO2 to 1 kg fish using scaling exponents provided; mg O2 min-1 kg-1), mo2_individual_kg (MO2 of the whole individual, mgO2 min-1)
 #' @param plot_smr_quantile Indicating what percentile lower MO2 values to plot; must be either 10, 15, or 20
-#' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8 (8 channem meter has 4 oxygen probes and 4 temperature probes)
+#' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8 (8 channel meter has 4 oxygen probes and 4 temperature probes)
 #' @param drop_ch Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)
 #' @param MLND Logical argument. If TRUE, SMR is estimated also using Mean Lowest Normal Distribution analysis. More details in Chabot et al 2016
 #' @param epoc_threshold Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to epoc_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as a recovery threshold, enter epoc_threshold = 1.2.
@@ -193,9 +193,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		}
   		if(spar == 0){ # Trapezoid method: area under the curve
     		# from zero to full
-    		man_auc<-sum(diff(d[1:(which(round(d$time_mo2, 2) <= end_EPOC_perSMR))[1], "time_mo2"]) *
-    		               (head(d[1:(which(round(d$time_mo2, 2) <= end_EPOC_perSMR))[1], "mo2"],-1) +
-    		                  tail(d[1:(which(round(d$time_mo2, 2) <= end_EPOC_perSMR))[1], "mo2"],-1)))/2 # mo2 values
+  		    # 0.5*(y[1]+y[n]+2*sum(y[-c(1,n)]))
+
+    		man_auc<-sum(diff(d[1:(which(round(d$time_mo2, 2) >= end_EPOC_perSMR))[1], "time_mo2"]) *
+    		               (head(d[1:(which(round(d$time_mo2, 2) >= end_EPOC_perSMR))[1], "mo2"],-1) +
+    		                  tail(d[1:(which(round(d$time_mo2, 2) >= end_EPOC_perSMR))[1], "mo2"],-1)))/2 # mo2 values
     		SMR<-integrate(f.smr, lower=0, upper=end_EPOC_perSMR)$value
     		EPOC_full<-round(man_auc-SMR,3)
 
@@ -384,6 +386,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     				abline(v=300, col="grey", lty=2)
     				abline(h=b, col=col_smr[i],lty=1, lwd=1)
     				abline(v=end_EPOC_perSMR, col=col_smr[i], lty=1)
+    				abline(v=d[(which(round(d$time_mo2, 2) >= end_EPOC_perSMR))[1], "time_mo2"], col=col_smr[i], lty=2)
     				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
     				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
     				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""),
@@ -443,6 +446,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     				abline(v=300, col="grey", lty=2)
     				abline(h=b, col=col_smr[i],lty=1, lwd=1)
     				abline(v=end_EPOC_perSMR, col=col_smr[i], lty=1)
+    				abline(v=d[(which(round(d$time_mo2, 2) >= end_EPOC_perSMR))[1], "time_mo2"], col=col_smr[i], lty=2)
     				text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),
     				     y=(max(d$mo2))-(scale[i]*(max(d$mo2))),
     				     label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""),
