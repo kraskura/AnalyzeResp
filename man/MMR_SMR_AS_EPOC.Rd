@@ -2,7 +2,7 @@
 % Please edit documentation in R/MMR_SMR_AS_EPOC.R
 \name{MMR_SMR_AS_EPOC}
 \alias{MMR_SMR_AS_EPOC}
-\title{estimates indivudal specific metabolic rates and recovery}
+\title{estimates individual specific metabolic rates and recovery}
 \usage{
 MMR_SMR_AS_EPOC(
   data.MMR = NULL,
@@ -48,7 +48,7 @@ MMR_SMR_AS_EPOC(
 
 \item{BW.animal}{Indicates individual mass; must be a vector of 4 characters. When missing, enter "0"}
 
-\item{resp.V}{Indicates the volume (L) of respirometery chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)}
+\item{resp.V}{Indicates the volume (L) of respirometry chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)}
 
 \item{r2_threshold_smr}{R2 threshold for SMR, measurements below the threshold are excluded}
 
@@ -68,7 +68,7 @@ MMR_SMR_AS_EPOC(
 
 \item{date_format}{The date format used in the original data files. Argument is passed to strptime. default is c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT").}
 
-\item{N_Ch}{The number of channels of the oxygen meter. It must be either 4 or 8 (8 channem meter has 4 oxygen probes and 4 temperature probes)}
+\item{N_Ch}{The number of channels of the oxygen meter. It must be either 4 or 8 (8 channel meter has 4 oxygen probes and 4 temperature probes)}
 
 \item{drop_ch}{Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)}
 
