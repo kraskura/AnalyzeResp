@@ -17,7 +17,8 @@ textFileConvert(
   channels = c(1, 2, 3, 4),
   salinity = 0,
   atm_pressure = 1,
-  temperature = NULL
+  temperature = NULL,
+  device = "A"
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ textFileConvert(
 \item{atm_pressure}{= 1, passed down to rMR::DO.unit.convert arg. bar.press (must be in "atm")}
 
 \item{temperature}{user set consistent temperature for all channels (ºC)}
+
+\item{device}{only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".}
 }
 \value{
 The output from \code{\link{print}}

@@ -16,6 +16,7 @@
 #' @param salinity = 0, passed down to rMR::DO.unit.convert arg. salinity (must be in "pp.thou")
 #' @param atm_pressure = 1, passed down to rMR::DO.unit.convert arg. bar.press (must be in "atm")
 #' @param temperature user set consistent temperature for all channels (ºC)
+#' @param device only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".
 #'
 #' @return The output from \code{\link{print}}
 #' @export
@@ -36,7 +37,8 @@ textFileConvert<-function(txt_file,
                           channels = c(1,2,3,4),
                           salinity = 0,
                           atm_pressure = 1,
-                          temperature = NULL){
+                          temperature = NULL,
+                          device = "A"){
 
   # if(!is.numeric(nrowSkip)){
   #   stop("Must provide how many rows to skip from raw datafile;
@@ -114,27 +116,61 @@ textFileConvert<-function(txt_file,
   }else if(type_file == "Firesting_2023"){
 
     new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
+
     if(is.null(nrowSkip)){
-      nrowSkip <-70
-    }
-  	d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s,
+  	  d<-read.delim(txt_file, skip = 0,
+  	              check.names = TRUE, quote = "", comment.char = "")
+  	  first_row_use<-which(!substr(d[1:200, 1], start = 1, stop = 1) == "#")[1]
+      d<-d[-c(1:first_row_use-1),]
+      message("Dynamically search for first row within first 200 rows in the data")
+
+    }else{
+  	  d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s,
   	              check.names = TRUE, quote = "", comment.char = "") # 70
+    }
+
     colnames(d)<-d[1,]
     d<-d[-1,]
 
-  	names<-colnames(d)
-    names <- gsub(x = names, pattern = "\xb0",
+    names <- gsub(x = colnames(d), pattern = "\xb0",
                      replacement = " ", useBytes = TRUE)
 
-  	# print(names)
-    O2_ch1_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.1", x = names, ignore.case = T)))
-    O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.2", x = names, ignore.case = T)))
-    O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.3", x = names, ignore.case = T)))
-    O2_ch4_name<-which(c(grepl("Oxygen", x = names, ignore.case = T) & grepl("Ch.4", x = names, ignore.case = T)))
-    temp_ch1_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch.1", x = names, ignore.case = T)))
-    temp_ch2_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch.2", x = names, ignore.case = T)))
-    temp_ch3_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch.3", x = names, ignore.case = T)))
-    temp_ch4_name<-which(c(grepl("temp", x = names, ignore.case = T) & grepl("Ch.4", x = names, ignore.case = T)))    	# d<-d[,1:15]
+    # indicate how many devices are recorded on the file:
+    a<-any(c(grepl("[A Ch.", x = names, fixed = TRUE)))
+    b<-any(c(grepl("[B Ch.", x = names, fixed = TRUE)))
+    c<-any(c(grepl("[C Ch.", x = names, fixed = TRUE)))
+
+    if(a & !b & !c){
+      message("One device on the file")
+    }
+    if(a & b & !c){
+      message("Two devices on the file")
+    }
+    if(a & b & c){
+      message("Three devices on the file")
+    }
+
+    # select the correct device
+    d<-d[, which(c(grepl(paste("[", device, sep = ""), x = names, fixed = TRUE)))]
+    names<-colnames(d)
+
+    if(nrow(d) < 1){
+      print("no data")
+    }
+
+    # filer out the correct columns
+    O2_ch1_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.1", x = names, ignore.case = T, useBytes = TRUE)))
+    O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
+    O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.3", x = names, ignore.case = T, useBytes = TRUE)))
+    O2_ch4_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.4", x = names, ignore.case = T, useBytes = TRUE)))
+    temp_ch1_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.1", x = names, ignore.case = T, useBytes = TRUE)))
+    temp_ch2_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
+    temp_ch3_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.3", x = names, ignore.case = T, useBytes = TRUE)))
+    temp_ch4_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.4", x = names, ignore.case = T, useBytes = TRUE)))
+
+    # print(names)
+    # print(O2_ch1_name)
+    # print(temp_ch1_name)
 
     new_csv<-d[, c(1:3)]
 
@@ -177,6 +213,7 @@ textFileConvert<-function(txt_file,
       d<-d[-1,]
 
     	names<-colnames(d)
+
       O2_ch1_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 1", x = names, ignore.case = T, useBytes = TRUE)))
       O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 2", x = names, ignore.case = T, useBytes = TRUE)))
       O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 3", x = names, ignore.case = T, useBytes = TRUE)))
@@ -353,11 +390,13 @@ textFileConvert<-function(txt_file,
 
     }
 
-  if(type_file == "PreSense_microplate"){ # has four output files
+  if(type_file == "PreSense_microplate"){ # has six output files
     new_csv1[c(3:ncol(new_csv1))] <- sapply(new_csv1[3:ncol(new_csv1)],as.numeric)
     new_csv2[c(3:ncol(new_csv2))] <- sapply(new_csv2[3:ncol(new_csv2)],as.numeric)
     new_csv3[c(3:ncol(new_csv3))] <- sapply(new_csv3[3:ncol(new_csv3)],as.numeric)
     new_csv4[c(3:ncol(new_csv4))] <- sapply(new_csv4[3:ncol(new_csv4)],as.numeric)
+    new_csv5[c(3:ncol(new_csv5))] <- sapply(new_csv5[3:ncol(new_csv5)],as.numeric)
+    new_csv6[c(3:ncol(new_csv6))] <- sapply(new_csv6[3:ncol(new_csv6)],as.numeric)
 
   }else{ # has one output file
     new_csv[c(3:ncol(new_csv))] <- sapply(new_csv[3:ncol(new_csv)],as.numeric)
@@ -527,7 +566,7 @@ textFileConvert<-function(txt_file,
       write.csv(file=paste(gsub('.{4}$', '', txt_file), "5_converted.csv", sep=''), new_csv5, row.names=FALSE)
       write.csv(file=paste(gsub('.{4}$', '', txt_file), "6_converted.csv", sep=''), new_csv6, row.names=FALSE)
     }else{
-      write.csv(file=paste(gsub('.{4}$', '', txt_file), "_converted.csv", sep=''), new_csv, row.names=FALSE)
+      write.csv(file=paste(gsub('.{4}$', '', txt_file), "_", device, "_converted.csv", sep=''), new_csv, row.names=FALSE)
     }
   } else if (local_path == FALSE & dir.exists("csv_files")){
     if(type_file == "PreSense_microplate"){
@@ -538,7 +577,7 @@ textFileConvert<-function(txt_file,
       write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "5_converted.csv", sep=''), new_csv5, row.names=FALSE)
       write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "6_converted.csv", sep=''), new_csv6, row.names=FALSE)
     }else{
-      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "_converted.csv", sep=''), new_csv, row.names=FALSE)
+      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "_", device, "_converted.csv", sep=''), new_csv, row.names=FALSE)
     }
 	  message("Return csv files saved in \"./csv_files\" local directory")
 	}else{

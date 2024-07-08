@@ -2287,7 +2287,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	# no MMR file, only SMR file: ------------
   if(!is.null(data.SMR[1]) & is.null(data.MMR)){
 
-   message("No RMR/SMR: Aerobic scopes and recovery performances are not estimated.")
+   message("No MMR: Aerobic scopes and recovery performances are not estimated.")
 
 	 if(local_path | !dir.exists("MMR_SMR_AS_EPOC")){
 	    filename.smr<-paste(gsub('.{4}$', '', data.SMR[1]), "SMR_analyzed.csv", sep='')

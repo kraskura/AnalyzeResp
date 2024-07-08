@@ -478,7 +478,7 @@ SMR<-function(data,
   	}else{
       stop_function<-TRUE
       if(stop_function){
-        stop("Cannot locate the indicated data data file.")
+        stop("Cannot locate the indicated data file.")
       }
     }
 
@@ -574,16 +574,24 @@ SMR<-function(data,
 		 }
 	}
 
-	if(as.character(data1$Ch1_O2[1])=="--- " || as.character(data1$Ch1_O2[1])=="---" || is.na(data1$Ch1_O2[1])){
+	if(c(as.character(data1$Ch1_O2[1])=="--- " | as.character(data1$Ch1_O2[nrow(data1)])=="--- ")||
+	   c(as.character(data1$Ch1_O2[1])=="---" | as.character(data1$Ch1_O2[nrow(data1)])=="---")||
+	   c(is.na(data1$Ch1_O2[1]) | is.na(data1$Ch1_O2[nrow(data1)]))){
 		data1$Ch1_O2<-0
 	}
-	if(as.character(data1$Ch2_O2[1])=="--- " || as.character(data1$Ch2_O2[1])=="---" || is.na(data1$Ch2_O2[1])){
+	if(c(as.character(data1$Ch2_O2[1])=="--- " | as.character(data1$Ch2_O2[nrow(data1)])=="--- ")||
+	   c(as.character(data1$Ch2_O2[1])=="---" | as.character(data1$Ch2_O2[nrow(data1)])=="---")||
+	   c(is.na(data1$Ch2_O2[1]) | is.na(data1$Ch2_O2[nrow(data1)]))){
 		data1$Ch2_O2<-0
 	}
-	if(as.character(data1$Ch3_O2[1])=="--- " || as.character(data1$Ch3_O2[1])=="---" || is.na(data1$Ch3_O2[1])){
+	if(c(as.character(data1$Ch3_O2[1])=="--- " | as.character(data1$Ch3_O2[nrow(data1)])=="--- ")||
+	   c(as.character(data1$Ch3_O2[1])=="---" | as.character(data1$Ch3_O2[nrow(data1)])=="---")||
+	   c(is.na(data1$Ch3_O2[1]) | is.na(data1$Ch3_O2[nrow(data1)]))){
 		data1$Ch3_O2<-0
 	}
-	if(as.character(data1$Ch4_O2[1])=="--- " || as.character(data1$Ch4_O2[1])=="---" || is.na(data1$Ch4_O2[1])){
+	if(c(as.character(data1$Ch4_O2[1])=="--- " | as.character(data1$Ch4_O2[nrow(data1)])=="--- ")||
+	   c(as.character(data1$Ch4_O2[1])=="---" | as.character(data1$Ch4_O2[nrow(data1)])=="---")||
+	   c(is.na(data1$Ch4_O2[1]) | is.na(data1$Ch4_O2[nrow(data1)]))){
 		data1$Ch4_O2<-0
 	}
 
