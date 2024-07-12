@@ -26,6 +26,7 @@ MMR_SMR_AS_EPOC(
   calc_EPOC = TRUE,
   SMR_vals = c(NULL, NULL, NULL, NULL),
   epoc_threshold = 1,
+  epoc_smoothing_level = c(0.1, 0.3),
   recovMMR_threshold = 0.5,
   end_EPOC_Ch = c(NA, NA, NA, NA),
   background_prior = NULL,
@@ -81,6 +82,8 @@ MMR_SMR_AS_EPOC(
 \item{SMR_vals}{Channel specific SMR values for EPOC calculations (mgO2/kg/min)}
 
 \item{epoc_threshold}{Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to epoc_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as a recovery threshold, enter epoc_threshold = 1.2.}
+
+\item{epoc_smoothing_level}{specificy smoothing level for EPOC function. Argument is passed to 'spar' in smooth.spline function for calculation. epoc_smoothing_level = 0 uses trapezpoid method.}
 
 \item{recovMMR_threshold}{Short-term recovery threshold relevant to individual’s MMR. Indicates the (percent) level of MMR to calculate recovery indices. The default indicates 50 percent MMR, e.g., the time it takes to recover to 50 percent MMR (default). Enter 0.3 for 30 percent MMR, 0.8 for 80 percent MMR)}
 

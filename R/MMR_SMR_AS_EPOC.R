@@ -35,7 +35,7 @@
 #' @param calc_EPOC Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourcly recovery, etc.)
 #' @param date_format The date format used in the original data files. Argument is passed to strptime. default is c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT").
 #' @param SMR_vals Channel specific SMR values for EPOC calculations (mgO2/kg/min)
-#'
+#' @param epoc_smoothing_level specificy smoothing level for EPOC function. Argument is passed to 'spar' in smooth.spline function for calculation. epoc_smoothing_level = 0 uses trapezpoid method.
 #'
 #' @importFrom stats lm coef var integrate predict quantile sd smooth.spline IQR
 #' @import graphics
@@ -73,6 +73,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
                           calc_EPOC = TRUE,
                           SMR_vals = c(NULL, NULL, NULL, NULL),
                           epoc_threshold = 1,
+                          epoc_smoothing_level = c(0.1, 0.3),
                           recovMMR_threshold = 0.5,
                           end_EPOC_Ch = c(NA, NA, NA, NA),
                           background_prior = NULL,
@@ -184,6 +185,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     		# Calculate the area under the SMR for all types of SMR calculated in the MMR_SMR_analyze function
     		# 2-2 the EPOC cutoff in the smoothed function / this is used also for the SMR block
     		end_EPOC_perSMR <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]] # end epoc conditional to each smr level
+    		# ADD ERROR MESSAGE IF NONE AVAILABLE
 
     		if(is.na(end_EPOC_perSMR)){
     			end_EPOC_perSMR<-newVal$init[nrow(newVal)] # take last value if not present
@@ -2226,7 +2228,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		  end_EPOC<-end_EPOC_Ch[as.numeric(substr(d$Ch[1], start=3, stop=3))]
     		## The EPOC calculation
 
-  		  spars <- c(0.1, 0.2, 0.3, 0)
+  		  spars <- epoc_smoothing_level
 
 
         if (any(is.numeric(SMR_vals))){
