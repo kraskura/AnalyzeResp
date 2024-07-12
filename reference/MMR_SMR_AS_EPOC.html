@@ -59,6 +59,7 @@
 <span>  calc_EPOC <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  SMR_vals <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="cn">NULL</span>, <span class="cn">NULL</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
 <span>  epoc_threshold <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  epoc_smoothing_level <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.3</span><span class="op">)</span>,</span>
 <span>  recovMMR_threshold <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  end_EPOC_Ch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span>,</span>
 <span>  background_prior <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -159,6 +160,10 @@
 
 <dt id="arg-epoc-threshold">epoc_threshold<a class="anchor" aria-label="anchor" href="#arg-epoc-threshold"></a></dt>
 <dd><p>Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to epoc_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as a recovery threshold, enter epoc_threshold = 1.2.</p></dd>
+
+
+<dt id="arg-epoc-smoothing-level">epoc_smoothing_level<a class="anchor" aria-label="anchor" href="#arg-epoc-smoothing-level"></a></dt>
+<dd><p>specificy smoothing level for EPOC function. Argument is passed to 'spar' in smooth.spline function for calculation. epoc_smoothing_level = 0 uses trapezpoid method.</p></dd>
 
 
 <dt id="arg-recovmmr-threshold">recovMMR_threshold<a class="anchor" aria-label="anchor" href="#arg-recovmmr-threshold"></a></dt>
