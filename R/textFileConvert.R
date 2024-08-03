@@ -17,6 +17,7 @@
 #' @param atm_pressure = 1, passed down to rMR::DO.unit.convert arg. bar.press (must be in "atm")
 #' @param temperature user set consistent temperature for all channels (ºC)
 #' @param device only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".
+#' @param file_extension_id custom file extension for the saved csv file
 #'
 #' @return The output from \code{\link{print}}
 #' @export
@@ -38,7 +39,8 @@ textFileConvert<-function(txt_file,
                           salinity = 0,
                           atm_pressure = 1,
                           temperature = NULL,
-                          device = "A"){
+                          device = "A",
+                          file_extension_id = ""){
 
   # if(!is.numeric(nrowSkip)){
   #   stop("Must provide how many rows to skip from raw datafile;
@@ -559,25 +561,25 @@ textFileConvert<-function(txt_file,
   if(local_path){
     message("Return csv files saved in local working directory")
     if(type_file == "PreSense_microplate"){
-      write.csv(file=paste(gsub('.{4}$', '', txt_file), "1_converted.csv", sep=''), new_csv1, row.names=FALSE)
-      write.csv(file=paste(gsub('.{4}$', '', txt_file), "2_converted.csv", sep=''), new_csv2, row.names=FALSE)
-      write.csv(file=paste(gsub('.{4}$', '', txt_file), "3_converted.csv", sep=''), new_csv3, row.names=FALSE)
-      write.csv(file=paste(gsub('.{4}$', '', txt_file), "4_converted.csv", sep=''), new_csv4, row.names=FALSE)
-      write.csv(file=paste(gsub('.{4}$', '', txt_file), "5_converted.csv", sep=''), new_csv5, row.names=FALSE)
-      write.csv(file=paste(gsub('.{4}$', '', txt_file), "6_converted.csv", sep=''), new_csv6, row.names=FALSE)
+      write.csv(file=paste(gsub('.{4}$', '', txt_file),file_extension_id, "1_converted.csv", sep=''), new_csv1, row.names=FALSE)
+      write.csv(file=paste(gsub('.{4}$', '', txt_file),file_extension_id, "2_converted.csv", sep=''), new_csv2, row.names=FALSE)
+      write.csv(file=paste(gsub('.{4}$', '', txt_file),file_extension_id, "3_converted.csv", sep=''), new_csv3, row.names=FALSE)
+      write.csv(file=paste(gsub('.{4}$', '', txt_file),file_extension_id, "4_converted.csv", sep=''), new_csv4, row.names=FALSE)
+      write.csv(file=paste(gsub('.{4}$', '', txt_file),file_extension_id, "5_converted.csv", sep=''), new_csv5, row.names=FALSE)
+      write.csv(file=paste(gsub('.{4}$', '', txt_file),file_extension_id, "6_converted.csv", sep=''), new_csv6, row.names=FALSE)
     }else{
-      write.csv(file=paste(gsub('.{4}$', '', txt_file), "_", device, "_converted.csv", sep=''), new_csv, row.names=FALSE)
+      write.csv(file=paste(gsub('.{4}$', '', txt_file), "_", device, file_extension_id, "_converted.csv", sep=''), new_csv, row.names=FALSE)
     }
   } else if (local_path == FALSE & dir.exists("csv_files")){
     if(type_file == "PreSense_microplate"){
-      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "1_converted.csv", sep=''), new_csv1, row.names=FALSE)
-      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "2_converted.csv", sep=''), new_csv2, row.names=FALSE)
-      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "3_converted.csv", sep=''), new_csv3, row.names=FALSE)
-      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "4_converted.csv", sep=''), new_csv4, row.names=FALSE)
-      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "5_converted.csv", sep=''), new_csv5, row.names=FALSE)
-      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "6_converted.csv", sep=''), new_csv6, row.names=FALSE)
+      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file),file_extension_id,  "1_converted.csv", sep=''), new_csv1, row.names=FALSE)
+      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file),file_extension_id, "2_converted.csv", sep=''), new_csv2, row.names=FALSE)
+      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file),file_extension_id, "3_converted.csv", sep=''), new_csv3, row.names=FALSE)
+      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file),file_extension_id, "4_converted.csv", sep=''), new_csv4, row.names=FALSE)
+      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file),file_extension_id, "5_converted.csv", sep=''), new_csv5, row.names=FALSE)
+      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file),file_extension_id, "6_converted.csv", sep=''), new_csv6, row.names=FALSE)
     }else{
-      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "_", device, "_converted.csv", sep=''), new_csv, row.names=FALSE)
+      write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file), "_", device,file_extension_id, "_converted.csv", sep=''), new_csv, row.names=FALSE)
     }
 	  message("Return csv files saved in \"./csv_files\" local directory")
 	}else{

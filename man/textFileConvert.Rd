@@ -18,7 +18,8 @@ textFileConvert(
   salinity = 0,
   atm_pressure = 1,
   temperature = NULL,
-  device = "A"
+  device = "A",
+  file_extension_id = ""
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ textFileConvert(
 \item{temperature}{user set consistent temperature for all channels (ºC)}
 
 \item{device}{only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".}
+
+\item{file_extension_id}{custom file extension for the saved csv file}
 }
 \value{
 The output from \code{\link{print}}
