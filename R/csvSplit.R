@@ -54,18 +54,27 @@ csvSplit <- function (data,
   data_full$hr2<-round(data_full$time_sec/3600,0)
   data_full$time_min<-round(data_full$time_sec/60,2)
 
-	if(as.character(data_full$Ch1_O2[1])=="--- " || as.character(data_full$Ch1_O2[1])=="---" || is.na(data_full$Ch1_O2[1])){
+	if(c(as.character(data_full$Ch1_O2[1])=="--- " | as.character(data_full$Ch1_O2[nrow(data_full)])=="--- ")||
+	   c(as.character(data_full$Ch1_O2[1])=="---" | as.character(data_full$Ch1_O2[nrow(data_full)])=="---")||
+	   c(is.na(data_full$Ch1_O2[1]) | is.na(data_full$Ch1_O2[nrow(data_full)]))){
 		data_full$Ch1_O2<-0
 	}
-	if(as.character(data_full$Ch2_O2[1])=="--- " || as.character(data_full$Ch2_O2[1])=="---" || is.na(data_full$Ch1_O2[1])){
+	if(c(as.character(data_full$Ch2_O2[1])=="--- " | as.character(data_full$Ch2_O2[nrow(data_full)])=="--- ")||
+	   c(as.character(data_full$Ch2_O2[1])=="---" | as.character(data_full$Ch2_O2[nrow(data_full)])=="---")||
+	   c(is.na(data_full$Ch2_O2[1]) | is.na(data_full$Ch2_O2[nrow(data_full)]))){
 		data_full$Ch2_O2<-0
 	}
-	if(as.character(data_full$Ch3_O2[1])=="--- " || as.character(data_full$Ch3_O2[1])=="---" || is.na(data_full$Ch1_O2[1])){
+	if(c(as.character(data_full$Ch3_O2[1])=="--- " | as.character(data_full$Ch3_O2[nrow(data_full)])=="--- ")||
+	   c(as.character(data_full$Ch3_O2[1])=="---" | as.character(data_full$Ch3_O2[nrow(data_full)])=="---")||
+	   c(is.na(data_full$Ch3_O2[1]) | is.na(data_full$Ch3_O2[nrow(data_full)]))){
 		data_full$Ch3_O2<-0
 	}
-	if(as.character(data_full$Ch4_O2[1])=="--- " || as.character(data_full$Ch4_O2[1])=="---" || is.na(data_full$Ch1_O2[1])){
+	if(c(as.character(data_full$Ch4_O2[1])=="--- " | as.character(data_full$Ch4_O2[nrow(data_full)])=="--- ")||
+	   c(as.character(data_full$Ch4_O2[1])=="---" | as.character(data_full$Ch4_O2[nrow(data_full)])=="---")||
+	   c(is.na(data_full$Ch4_O2[1]) | is.na(data_full$Ch4_O2[nrow(data_full)]))){
 		data_full$Ch4_O2<-0
 	}
+
 
   # times in minutes
   time_split0 <- time_split-data_full$time_min[2]-data_full$time_min[1]
