@@ -11,7 +11,6 @@
 #' @return The output from \code{\link{print}}
 #' @export
 #'
-#'
 csvSplit <- function (data,
                       split_data_name,
                       time_split,
@@ -54,37 +53,37 @@ csvSplit <- function (data,
   data_full$hr2<-round(data_full$time_sec/3600,0)
   data_full$time_min<-round(data_full$time_sec/60,2)
 
-	if(c(as.character(data_full$Ch1_O2[1])=="--- " | as.character(data_full$Ch1_O2[nrow(data_full)])=="--- ")||
-	   c(as.character(data_full$Ch1_O2[1])=="---" | as.character(data_full$Ch1_O2[nrow(data_full)])=="---")||
-	   c(is.na(data_full$Ch1_O2[1]) | is.na(data_full$Ch1_O2[nrow(data_full)]))){
+	if(c(as.character(data_full$Ch1_O2[1])=="--- " )||
+	   c(as.character(data_full$Ch1_O2[1])=="---" )||
+	   c(is.na(data_full$Ch1_O2[1]) )){
 		data_full$Ch1_O2<-0
 	}
-	if(c(as.character(data_full$Ch2_O2[1])=="--- " | as.character(data_full$Ch2_O2[nrow(data_full)])=="--- ")||
-	   c(as.character(data_full$Ch2_O2[1])=="---" | as.character(data_full$Ch2_O2[nrow(data_full)])=="---")||
-	   c(is.na(data_full$Ch2_O2[1]) | is.na(data_full$Ch2_O2[nrow(data_full)]))){
+	if(c(as.character(data_full$Ch2_O2[1])=="--- ")||
+	   c(as.character(data_full$Ch2_O2[1])=="---" )||
+	   c(is.na(data_full$Ch2_O2[1]) )){
 		data_full$Ch2_O2<-0
 	}
-	if(c(as.character(data_full$Ch3_O2[1])=="--- " | as.character(data_full$Ch3_O2[nrow(data_full)])=="--- ")||
-	   c(as.character(data_full$Ch3_O2[1])=="---" | as.character(data_full$Ch3_O2[nrow(data_full)])=="---")||
-	   c(is.na(data_full$Ch3_O2[1]) | is.na(data_full$Ch3_O2[nrow(data_full)]))){
+	if(c(as.character(data_full$Ch3_O2[1])=="--- " )||
+	   c(as.character(data_full$Ch3_O2[1])=="---" )||
+	   c(is.na(data_full$Ch3_O2[1]) )){
 		data_full$Ch3_O2<-0
 	}
-	if(c(as.character(data_full$Ch4_O2[1])=="--- " | as.character(data_full$Ch4_O2[nrow(data_full)])=="--- ")||
-	   c(as.character(data_full$Ch4_O2[1])=="---" | as.character(data_full$Ch4_O2[nrow(data_full)])=="---")||
-	   c(is.na(data_full$Ch4_O2[1]) | is.na(data_full$Ch4_O2[nrow(data_full)]))){
+	if(c(as.character(data_full$Ch4_O2[1])=="--- " )||
+	   c(as.character(data_full$Ch4_O2[1])=="---" )||
+	   c(is.na(data_full$Ch4_O2[1]) )){
 		data_full$Ch4_O2<-0
 	}
-
 
   # times in minutes
   time_split0 <- time_split-data_full$time_min[2]-data_full$time_min[1]
 
   # rows with correct times
   # rows to split at; last row for file 1
-  t0_row <- which(abs(data_full$time_min - time_split0) == min(abs(data_full$time_min - time_split0)))[1]
+
+  t0_row <- which(abs(data_full$time_min - time_split0) == min(abs(data_full$time_min - time_split0), na.rm = TRUE))[1]
 
   # the next row for file 1
-  t1_row <- which(abs(data_full$time_min - time_split) == min(abs(data_full$time_min - time_split)))[1]
+  t1_row <- which(abs(data_full$time_min - time_split) == min(abs(data_full$time_min - time_split), na.rm = TRUE))[1]
 
   png(plotname1, width = 10, height = 20, units="in", res=200)
     par(mfrow=c(4,1))
