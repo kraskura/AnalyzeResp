@@ -8,7 +8,7 @@ csvSplit(
   data,
   split_data_name,
   time_split,
-  date_format = c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT"),
+  date_format = c("\%m-\%d-\%Y \%H:\%M:\%S", "GMT"),
   split = FALSE,
   N_Ch = 4
 )

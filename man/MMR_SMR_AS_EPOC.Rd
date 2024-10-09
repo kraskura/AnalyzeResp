@@ -55,7 +55,7 @@ MMR_SMR_AS_EPOC(
 
 \item{r2_threshold_mmr}{R2 threshold for MMR, measurements below the threshold are excluded}
 
-\item{min_length_mmr}{The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s)}
+\item{min_length_mmr}{The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s), to use full length of cycle add 1}
 
 \item{scaling_exponent_mmr}{Body mass scaling exponent to correct MMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])}
 
