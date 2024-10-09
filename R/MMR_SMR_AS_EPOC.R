@@ -10,7 +10,7 @@
 #' @param resp.V Indicates the volume (L) of respirometry chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
 #' @param r2_threshold_smr R2 threshold for SMR, measurements below the threshold are excluded
 #' @param r2_threshold_mmr R2 threshold for MMR, measurements below the threshold are excluded
-#' @param min_length_mmr The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s)
+#' @param min_length_mmr The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s), to use full length of cycle add 1
 #' @param scaling_exponent_mmr Body mass scaling exponent to correct MMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
 #' @param scaling_exponent_smr Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
 #' @param common_mass Metabolic performances are often calculated per unit mass. Use this argument to define what the standardized mass should be. (default is MO2 mgO2kg-1^ min-1^, a common mass of 1 kg). Units = kg
@@ -1379,7 +1379,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		if(nrow(d_SMR[d_SMR$r2>=r2_threshold_smr,])<1){
 		  stop_function<-TRUE
         if(stop_function){
-          stop(paste("SMR/RMR: ! NO DATA: The r2 = ", (r2_threshold_smr), " is too high. The highest r2 for SMR/RMR measurement is ", min(d_SMR$r2), sep=""))
+          stop(paste("SMR/RMR: ! NO DATA: The r2 = ", (r2_threshold_smr), " is too high. The highest r2 for SMR/RMR measurement is ", max(d_SMR$r2), sep=""))
         }
 	    }else{
 	    d_SMR<-d_SMR[d_SMR$r2>=r2_threshold_smr,]

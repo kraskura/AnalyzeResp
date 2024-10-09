@@ -17,8 +17,9 @@
 #' @param atm_pressure = 1, passed down to rMR::DO.unit.convert arg. bar.press (must be in "atm")
 #' @param temperature user set consistent temperature for all channels (ºC)
 #' @param device only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".
-#' @param file_extension_id custom file extension for the saved csv file
-#'
+#' @param file_extension_id custom file extension for the saved csv file, default is "2"
+#' @param temperature_Ch Numerical, select the channel to use for temperature recording. This is used only for 4-channel firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.
+
 #' @return The output from \code{\link{print}}
 #' @export
 #'
@@ -40,7 +41,8 @@ textFileConvert<-function(txt_file,
                           atm_pressure = 1,
                           temperature = NULL,
                           device = "A",
-                          file_extension_id = ""){
+                          file_extension_id = "2",
+                          temperature_Ch){
 
   # if(!is.numeric(nrowSkip)){
   #   stop("Must provide how many rows to skip from raw datafile;
@@ -70,7 +72,9 @@ textFileConvert<-function(txt_file,
     	new_csv$Ch1_O2<-d[,5]
 
     	if(is.null(temperature)){
-    	   new_csv$Ch1_temp<-d[,15]# temp Ch1 - but same for all
+    	   new_csv$Ch1_temp<-d[,15]# temp probe reading,
+    	   # old Firesting had seperate for probe only and channel specific.
+    	   # same temp for all
     	}else{
          new_csv$Ch1_temp<-temperature
     	}
@@ -143,13 +147,13 @@ textFileConvert<-function(txt_file,
     c<-any(c(grepl("[C Ch.", x = names, fixed = TRUE)))
 
     if(a & !b & !c){
-      message("One device on the file")
+      message("One device on file")
     }
     if(a & b & !c){
-      message("Two devices on the file")
+      message("Two devices on file")
     }
     if(a & b & c){
-      message("Three devices on the file")
+      message("Three devices on file")
     }
 
     # select the correct device
@@ -180,8 +184,20 @@ textFileConvert<-function(txt_file,
 
     	new_csv$Ch1_O2<-d[,O2_ch1_name]
     	if(is.null(temperature)){
-    	  new_csv$Ch1_temp<-d[,temp_ch1_name]# temp Ch1 - but same for all
+    	  if(temperature_Ch == 1){
+    	    new_csv$Ch1_temp<-d[,temp_ch1_name]# temp Ch1 - but same for all
+    	  }
+    	  if(temperature_Ch == 2){
+    	    new_csv$Ch1_temp<-d[,temp_ch2_name]# temp Ch1 - but same for all
+    	  }
+    	  if(temperature_Ch == 3){
+    	    new_csv$Ch1_temp<-d[,temp_ch3_name]# temp Ch1 - but same for all
+    	  }
+    	  if(temperature_Ch == 4){
+    	    new_csv$Ch1_temp<-d[,temp_ch4_name]# temp Ch1 - but same for all
+    	  }
     	}else{
+    	  message("Using provided temperature, not recorded")
     	  new_csv$Ch1_temp<-temperature
     	}
 
@@ -198,6 +214,7 @@ textFileConvert<-function(txt_file,
         new_csv$Ch3_temp<-d[,temp_ch3_name]
         new_csv$Ch4_temp<-d[,temp_ch4_name]
       }else{
+        message("Using provided temperature, not recorded")
       	new_csv$Ch2_temp<-temperature
         new_csv$Ch3_temp<-temperature
         new_csv$Ch4_temp<-temperature
@@ -236,8 +253,33 @@ textFileConvert<-function(txt_file,
       )
 
     	new_csv$Ch1_O2<-d[,O2_ch1_name]
-    	new_csv$Ch1_temp<-d[,temp_ch1_name]# temp Ch1 - but same for all
+    if(N_Ch == 4 | N_Ch==2){
 
+    	new_csv$Ch1_O2<-d[,O2_ch1_name]
+    	if(is.null(temperature)){
+    	  if(temperature_Ch == 1){
+    	    new_csv$Ch1_temp<-d[,temp_ch1_name]# temp Ch1 - but same for all
+    	  }
+    	  if(temperature_Ch == 2){
+    	    new_csv$Ch1_temp<-d[,temp_ch2_name]# temp Ch1 - but same for all
+    	  }
+    	  if(temperature_Ch == 3){
+    	    new_csv$Ch1_temp<-d[,temp_ch3_name]# temp Ch1 - but same for all
+    	  }
+    	  if(temperature_Ch == 4){
+    	    new_csv$Ch1_temp<-d[,temp_ch4_name]# temp Ch1 - but same for all
+    	  }
+    	}else{
+    	  message("Using provided temperature, not recorded")
+    	  new_csv$Ch1_temp<-temperature
+    	}
+
+    	new_csv$Ch2_O2<-d[,O2_ch2_name]
+    	new_csv$Ch3_O2<-d[,O2_ch3_name]
+    	new_csv$Ch4_O2<-d[,O2_ch4_name]
+
+    	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
+    }
     	new_csv$Ch2_O2<-d[,O2_ch2_name]
     	new_csv$Ch3_O2<-d[,O2_ch3_name]
     	new_csv$Ch4_O2<-d[,O2_ch4_name]
