@@ -52,7 +52,8 @@
 <span>  atm_pressure <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  temperature <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  device <span class="op">=</span> <span class="st">"A"</span>,</span>
-<span>  file_extension_id <span class="op">=</span> <span class="st">""</span></span>
+<span>  file_extension_id <span class="op">=</span> <span class="st">"2"</span>,</span>
+<span>  <span class="va">temperature_Ch</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -117,7 +118,11 @@
 
 
 <dt id="arg-file-extension-id">file_extension_id<a class="anchor" aria-label="anchor" href="#arg-file-extension-id"></a></dt>
-<dd><p>custom file extension for the saved csv file</p></dd>
+<dd><p>custom file extension for the saved csv file, default is "2"</p></dd>
+
+
+<dt id="arg-temperature-ch">temperature_Ch<a class="anchor" aria-label="anchor" href="#arg-temperature-ch"></a></dt>
+<dd><p>Numerical, select the channel to use for temperature recording. This is used only for 4-channel firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.</p></dd>
 
 </dl></div>
     <div class="section level2">
