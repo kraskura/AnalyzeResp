@@ -327,7 +327,7 @@ textFileConvert<-function(txt_file,
       O2_ch3_name6<-which(c(grepl("6", x = names) & grepl("C", x = names)))
       O2_ch4_name6<-which(c(grepl("6", x = names) & grepl("D", x = names)))
 
-      temp_ch_name<-which(c(grepl("Tm", x = names, ignore.case = T)))
+      temp_ch_name<-which(c(grepl("T_internal", x = names, ignore.case = T)))
 
       # set 1
       new_csv1<-as.data.frame(d[, c(1)])

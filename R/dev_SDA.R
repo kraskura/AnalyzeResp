@@ -334,17 +334,24 @@ SDA<-function(AnimalID,
         }
       }
 
-    if(!is.na(strptime(back_prior$DateTime_start[1], format = date_format[1], tz = ""))){
-      back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[1], tz = "")
-  	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[1], tz = "")
+  #     back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[1], tz = date_format[2])
+  # 	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[1], tz = date_format[2])
+  #
+  # 	  back_all<- rbind(back_prior, back_post)
+  # 	  back_all$DateTime_start<- as.POSIXct(back_all$DateTime_start)
+
+    if(!is.na(strptime(back_prior$DateTime_start[1], format = date_format[1], tz = date_format[2]))){
+      back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[1], tz = date_format[2])
+  	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[1], tz = date_format[2])
     }
-    if(!is.na(strptime(back_prior$DateTime_start[1], format = date_format[2], tz = ""))){
-      back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[2], tz = "")
-  	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[2], tz = "")
+    if(!is.na(strptime(back_prior$DateTime_start[1], format = date_format[2], tz = date_format[2]))){
+      back_prior$DateTime_start<- strptime(back_prior$DateTime_start, format = date_format[2], tz = date_format[2])
+  	  back_post$DateTime_start<- strptime(back_post$DateTime_start, format = date_format[2], tz = date_format[2])
     }
 
       back_all<- rbind(back_prior, back_post)
       back_all$DateTime_start<- as.POSIXct(back_all$DateTime_start)
+      print(class(back_all$DateTime_start))
 
       # back_regression_plot<-ggplot(data=back_all, aes(x=DateTime_start, y=m, colour=Ch, group=Ch))+
       #   geom_point()+
@@ -368,6 +375,7 @@ SDA<-function(AnimalID,
           back_regression_name<- paste("back_regression", Ch, sep="") # channel names with a channel # at the end
 
           if(background_gr == "linear"){
+            class(back_ch_d$DateTime_start)
             regression<- lm(m~DateTime_start, data = back_ch_d)
             if(i==1){
               message("Background: linear change of bacterial respiration. Regressions are specific to the channel (respirometer)")

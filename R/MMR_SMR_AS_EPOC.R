@@ -9,7 +9,7 @@
 #' @param BW.animal Indicates individual mass; must be a vector of 4 characters. When missing, enter "0"
 #' @param resp.V Indicates the volume (L) of respirometry chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
 #' @param r2_threshold_smr R2 threshold for SMR, measurements below the threshold are excluded
-#' @param r2_threshold_mmr R2 threshold for MMR, measurements below the threshold are excluded
+#' @param r2_threshold_mmr R2 threshold for MMR, meaxsurements below the threshold are excluded
 #' @param min_length_mmr The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s), to use full length of cycle add 1
 #' @param scaling_exponent_mmr Body mass scaling exponent to correct MMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
 #' @param scaling_exponent_smr Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])

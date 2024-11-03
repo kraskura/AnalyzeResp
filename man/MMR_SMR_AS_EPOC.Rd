@@ -53,7 +53,7 @@ MMR_SMR_AS_EPOC(
 
 \item{r2_threshold_smr}{R2 threshold for SMR, measurements below the threshold are excluded}
 
-\item{r2_threshold_mmr}{R2 threshold for MMR, measurements below the threshold are excluded}
+\item{r2_threshold_mmr}{R2 threshold for MMR, meaxsurements below the threshold are excluded}
 
 \item{min_length_mmr}{The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s), to use full length of cycle add 1}
 
