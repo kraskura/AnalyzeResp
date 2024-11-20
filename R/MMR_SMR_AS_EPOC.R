@@ -9,7 +9,7 @@
 #' @param BW.animal Indicates individual mass; must be a vector of 4 characters. When missing, enter "0"
 #' @param resp.V Indicates the volume (L) of respirometry chambers; must be a vector of 4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
 #' @param r2_threshold_smr R2 threshold for SMR, measurements below the threshold are excluded
-#' @param r2_threshold_mmr R2 threshold for MMR, meaxsurements below the threshold are excluded
+#' @param r2_threshold_mmr R2 threshold for MMR, measurements below the threshold are excluded
 #' @param min_length_mmr The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s), to use full length of cycle add 1
 #' @param scaling_exponent_mmr Body mass scaling exponent to correct MMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
 #' @param scaling_exponent_smr Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
@@ -32,10 +32,10 @@
 #' @param mmr_background Specifies what background value should be used to correct MMR value. Options: i) "back_prior" takes background respiration rate value estimated from the background_prior file only, ii)"trial_mean" takes background respiration rate value that is applied to the entire trial (MMR and SMR, indistinguishable), iii) "back_gr", and iv) a defined respiration rate value mgO2 L-1 h-1.
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param verbose.MLND From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).
-#' @param calc_EPOC Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourcly recovery, etc.)
-#' @param date_format The date format used in the original data files. Argument is passed to strptime. default is c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT").
+#' @param calc_EPOC Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourly recovery, etc.)
+#' @param date_format The date format used in the original data files. Argument is passed to strptime. default is c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT").
 #' @param SMR_vals Channel specific SMR values for EPOC calculations (mgO2/kg/min)
-#' @param epoc_smoothing_level specificy smoothing level for EPOC function. Argument is passed to 'spar' in smooth.spline function for calculation. epoc_smoothing_level = 0 uses trapezpoid method.
+#' @param epoc_smoothing_level specifically smoothing level for EPOC function. Argument is passed to 'spar' in smooth.spline function for calculation. epoc_smoothing_level = 0 uses trapezpoid method.
 #'
 #' @importFrom stats lm coef var integrate predict quantile sd smooth.spline IQR
 #' @import graphics
@@ -1106,7 +1106,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 	              background_slopes<-data.frame(matrix(ncol=1, nrow=nrow(d_MMR)))
 	              colnames(background_slopes)<-c("back_m")
 
-        		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "1"){
+        		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "1"){ # channel 1/ back regression 1
           	      if(background_gr == "linear"){
         		        background_slopes$back_m[i]<-predict(back_regression1, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
                     back_m1<-predict(back_regression1, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
@@ -1118,7 +1118,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
           		      d_MMR$mo2[i]<-(( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m1 * d_MMR$resp.V[i])) /(d_MMR$bw[i])#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         		    }
 
-        		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "2"){
+        		    if(substr(as.character(d_MMR$Ch[i]), start=3, stop=3) == "2"){# channel 2/ back regression 2
           	      if(background_gr == "linear"){
         		        background_slopes$back_m[i]<-predict(back_regression2, data.frame(DateTime_start = d_MMR$DateTime_start[i]))
                     back_m2<-predict(back_regression2, data.frame(DateTime_start = d_MMR$DateTime_start[i]))

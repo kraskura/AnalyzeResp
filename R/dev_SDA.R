@@ -9,7 +9,7 @@
 #' @param r2_threshold_smr R2 threshold for SMR, measurements below the threshold are excluded
 #' @param sda_threshold_level Indicates the threshold relevant to an individuals SMR to calculate the end time of recovery (the time at which metabolic rate has returned to sda_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as threshold for full digestion, enter sda_threshold = 1.2.
 #' @param scaling_exponent_smr Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
-#' @param date_format The date format used in the original FireSting data files. Must specify one of the following: "m/d/y", "d/m/y", "y-m-d"
+#' @param date_format The date format used in the original data files. Argument is passed to strptime. default is c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT").
 #' @param data.SDA The name of the SDA data file (“…analyzed.csv”; a character string); an output file from the SMR function.
 #' @param analyzed_MR The name of the data file with estimated SMR values
 #' @param SMR_calc Logical, indicates whether to calculate SMR from the present data trend
@@ -51,7 +51,7 @@ SDA<-function(AnimalID,
               r2_threshold_smr,
               sda_threshold_level,
               scaling_exponent_smr = 1,
-              date_format = c("%m/%d/%Y %H:%M:%S", "GMT"),
+              date_format = c("%Y-%m-%d %H:%M:%S", "GMT"),
               data.SDA = NULL,
               analyzed_MR = NULL,
               SMR_calc = TRUE,
@@ -183,7 +183,6 @@ SDA<-function(AnimalID,
   points(x=time_peak_SDA, y=peak_SDA, pch=23, col="red",cex=2)
   points(x=time_peak_SDA_mean, y=peak_SDA_mean, pch=23, col="blue",cex=2)
   # text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2)+2)-(scale[i]*(max(d$mo2)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
-
 
   SDAdata<-rbind(SDAdata,SDAdata.temp)
 
@@ -351,7 +350,7 @@ SDA<-function(AnimalID,
 
       back_all<- rbind(back_prior, back_post)
       back_all$DateTime_start<- as.POSIXct(back_all$DateTime_start)
-      print(class(back_all$DateTime_start))
+
 
       # back_regression_plot<-ggplot(data=back_all, aes(x=DateTime_start, y=m, colour=Ch, group=Ch))+
       #   geom_point()+
@@ -370,19 +369,18 @@ SDA<-function(AnimalID,
 
         for(i in 1:back_ch){
           back_ch_d<- back_all[back_all$Ch==(unique(back_all$Ch))[i],]
-          Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3)
+          Ch<-substr(as.character(back_ch_d$Ch[1]), start=3, stop=3) # set the channel1 1-4
 
           back_regression_name<- paste("back_regression", Ch, sep="") # channel names with a channel # at the end
 
           if(background_gr == "linear"){
             class(back_ch_d$DateTime_start)
-            regression<- lm(m~DateTime_start, data = back_ch_d)
+            regression<- lm(m~DateTime_start, data = back_ch_d) # background regression
             if(i==1){
               message("Background: linear change of bacterial respiration. Regressions are specific to the channel (respirometer)")
             }
           }
           if(background_gr == "exp"){
-            # print(head(back_ch_d))
             regression<- lm(log(m)~DateTime_start, data = back_ch_d)
             if(i==1){
               message("Background: exponential change of bacterial respiration. Regressions are specific to the channel (respirometer)")
@@ -398,7 +396,7 @@ SDA<-function(AnimalID,
         # save background regressions
 
       }else{# end for ch specific regressions
-        # get one background slope based on all datapoints collected
+        # get one background slope based on all datapoints collected (all channels)
         if(background_gr == "linear"){
           back_regression<- lm(m~DateTime_start, data = back_all)
           message("Background: linear change of bacterial respiration rates. One regression for all channels")
@@ -525,7 +523,7 @@ SDA<-function(AnimalID,
 
         } # closes the loop -  here have
 
-      }else{ #match_background_Ch=TRUE switch to FALSE
+      }else{ # match_background_Ch=TRUE switch to FALSE
 
         # 1. prior file only
         # 2. post file only
@@ -650,12 +648,7 @@ SDA<-function(AnimalID,
   # 1.2 if match_background_Ch=TRUE then use back_m[Ch] to correct each mo2 value for each channel
   #  2. if background files are NOT provided we DONT acount for any background respiration
 
-  if(!is.na(strptime(d_SMR$DateTime_start[1], format = date_format[1], tz = ""))){
-    d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format, tz = "")
-  }
-  if(!is.na(strptime(d_SMR$DateTime_start[1], format = date_format[2], tz = ""))){
-    d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format[2], tz = "")
-  }
+  d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format[1], tz = date_format[2])
 
   # 000 Jan 4 addition - account for background using linear regression
   # making predictions
@@ -706,14 +699,13 @@ SDA<-function(AnimalID,
 
     message("SMR corrected for background: using Ch specific average background")
     background_slopes<-data.frame(DateTime_start = d_SMR$DateTime_start)
-
     for (i in 1:nrow(d_SMR)){
 
-      # print(c(d_SMR$bw[1],d_SMR$Ch[i]))
       if(substr(d_SMR$Ch[i], start=3, stop=3) == "1"){
   	      if(background_gr == "linear"){
     	      background_slopes$back_m[i]<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
             back_m1<-predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i]))
+            # print(back_regression1)
   	      }
   	      if(background_gr == "exp"){
     	      background_slopes$back_m[i]<-exp(predict(back_regression1, data.frame(DateTime_start = d_SMR$DateTime_start[i])))
@@ -806,7 +798,6 @@ SDA<-function(AnimalID,
 
     for (i in 1:nrow(d_SMR)){
 
-      # print(c(d_SMR$bw[1],d_SMR$Ch[i]))
       if(substr(d_SMR$Ch[i], start=3, stop=3) == "1"){
         d_SMR$mo2[i]<-(( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m1 * d_SMR$resp.V[i])) /(d_SMR$bw[i])#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
         # message("Channel: 1,  bacterial respiration slope: ", back_m1)
@@ -1212,8 +1203,6 @@ SDA<-function(AnimalID,
   write.csv(file=filename.MR, newdata.smr, row.names=FALSE)
 
   # message("Save SMR, and MR files")
-  # print(head(newdata.smr))
-  # print(head(d_SMR))
   # return(newdata.smr)
 
   # --- >>> end of SMR_clac == TRUE
@@ -1274,7 +1263,7 @@ SDA<-function(AnimalID,
 
   for(h in 1:length(Ch.data.sda.full)){
     # as.data.frame(Ch.data.sda.full[[h]])
-    h.Ch.data<-data.frame(Ch.data.sda.full[h])
+    h.Ch.data<-data.frame(Ch.data.sda.full)
     names(h.Ch.data)<-names(d_SMR)
     h.Ch<-as.character(h.Ch.data$Ch[1])
     h.Ch.data<-h.Ch.data[c(h.Ch.data$min_start/60) >= handling_delay[as.numeric(substr(h.Ch, start=3, stop=3))] , ]
@@ -1356,7 +1345,6 @@ SDA<-function(AnimalID,
 
     # Find the smr value to use for SDA calculations
     if (sda_threshold_level[1]=="SMR_vals" & SMR_calc==FALSE){
-      # print(Y.Ch)
       b<-SMR_vals[as.numeric(substr(Y.Ch, start=3, stop=3))]
       b<-b*as.numeric(sda_threshold_level[2])
 
@@ -1369,7 +1357,6 @@ SDA<-function(AnimalID,
 
       ID<-smr.row["ID"]
 
-      # print(smr.row)
       if(sda_threshold_level[1]=="SMR_mean10minVal"){
         b<-as.numeric(round(smr.row["smr_mean10minVal"],2))
       }
@@ -1406,7 +1393,6 @@ SDA<-function(AnimalID,
 
     spars <- c(0.1,0.2,0.3)
     zero.row<-d[1,] # the first row of the data (experimentally typical)
-    # print(Y.Ch)
 
     # d$hour<-d$hour+0.5 # make a half hour because the first measurement and the first hour mean are both 0, fitting smooth spline one will be dropped
 
@@ -1448,9 +1434,7 @@ SDA<-function(AnimalID,
     if(is.na(end_SDA_Ch[i])){
       end_SDA_absolute<-d$hour[which(d$mo2_min[1:nrow(d)] <= b)[2]] # excludes the first hour since that is manually added to be SMR level
       end_row<-which(d$mo2_min[1:nrow(d)] <= b)[2]
-      # 	   print(c(end_SDA_absolute, b, end_row))
-      #      print(d[which(d$mo2_min[1:nrow(d)] <= b),])
-      #
+
       if(is.na(end_row)){
         end_row<-nrow(d)
       }

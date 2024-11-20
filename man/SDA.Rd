@@ -11,7 +11,7 @@ SDA(
   r2_threshold_smr,
   sda_threshold_level,
   scaling_exponent_smr = 1,
-  date_format = c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT"),
+  date_format = c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT"),
   data.SDA = NULL,
   analyzed_MR = NULL,
   SMR_calc = TRUE,
@@ -45,7 +45,7 @@ SDA(
 
 \item{scaling_exponent_smr}{Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])}
 
-\item{date_format}{The date format used in the original FireSting data files. Must specify one of the following: "m/d/y", "d/m/y", "y-m-d"}
+\item{date_format}{The date format used in the original data files. Argument is passed to strptime. default is c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT").}
 
 \item{data.SDA}{The name of the SDA data file (“…analyzed.csv”; a character string); an output file from the SMR function.}
 

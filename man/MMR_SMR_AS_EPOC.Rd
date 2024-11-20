@@ -53,7 +53,7 @@ MMR_SMR_AS_EPOC(
 
 \item{r2_threshold_smr}{R2 threshold for SMR, measurements below the threshold are excluded}
 
-\item{r2_threshold_mmr}{R2 threshold for MMR, meaxsurements below the threshold are excluded}
+\item{r2_threshold_mmr}{R2 threshold for MMR, measurements below the threshold are excluded}
 
 \item{min_length_mmr}{The duration of MMR steepest slope measurement; 180, 120, 90, 60 seconds (s), to use full length of cycle add 1}
 
@@ -67,7 +67,7 @@ MMR_SMR_AS_EPOC(
 
 \item{plot_smr_quantile}{Indicating what percentile lower MO2 values to plot; must be either 10, 15, or 20}
 
-\item{date_format}{The date format used in the original data files. Argument is passed to strptime. default is c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT").}
+\item{date_format}{The date format used in the original data files. Argument is passed to strptime. default is c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT").}
 
 \item{N_Ch}{The number of channels of the oxygen meter. It must be either 4 or 8 (8 channel meter has 4 oxygen probes and 4 temperature probes)}
 
@@ -77,13 +77,13 @@ MMR_SMR_AS_EPOC(
 
 \item{verbose.MLND}{From MLND: A logical controlling if a text progress bar from MLND is displayed during the fitting procedure. (see 'verbose' in mclust package functions).}
 
-\item{calc_EPOC}{Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourcly recovery, etc.)}
+\item{calc_EPOC}{Logical. If both SMR and MMR files are provided, indicate whether or not to evaluate recovery (i.e. EPOC, hourly recovery, etc.)}
 
 \item{SMR_vals}{Channel specific SMR values for EPOC calculations (mgO2/kg/min)}
 
 \item{epoc_threshold}{Indicates the threshold relevant to an individual’s SMR to calculate the end time of recovery (the time at which metabolic rate has returned to epoc_threshold). The default is the SMR level (1; At 100 percent SMR). To use 120 percent SMR as a recovery threshold, enter epoc_threshold = 1.2.}
 
-\item{epoc_smoothing_level}{specificy smoothing level for EPOC function. Argument is passed to 'spar' in smooth.spline function for calculation. epoc_smoothing_level = 0 uses trapezpoid method.}
+\item{epoc_smoothing_level}{specifically smoothing level for EPOC function. Argument is passed to 'spar' in smooth.spline function for calculation. epoc_smoothing_level = 0 uses trapezpoid method.}
 
 \item{recovMMR_threshold}{Short-term recovery threshold relevant to individual’s MMR. Indicates the (percent) level of MMR to calculate recovery indices. The default indicates 50 percent MMR, e.g., the time it takes to recover to 50 percent MMR (default). Enter 0.3 for 30 percent MMR, 0.8 for 80 percent MMR)}
 

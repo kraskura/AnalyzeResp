@@ -23,3 +23,12 @@ library(AnalyzeResp)
 ```
 *The older version of this code was shared with users as one R script*
 
+## To do:
+
+- Error messages when data missing 
+- Error messages when all data are below r2 thresholds 
+- Update the size of the figures (dpi option)
+- Update the date time issue on SDA
+- Figure out why MMR is not plotting on PC computers? 
+- Revamp all templates and example vignettes
+
