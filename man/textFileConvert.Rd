@@ -10,6 +10,7 @@ textFileConvert(
   nrowSkip = NULL,
   N_Ch = 4,
   local_path = TRUE,
+  exclude_rows = NULL,
   exclude_first_measurement_s = 0,
   convert_units = FALSE,
   units_from = NULL,
@@ -34,7 +35,9 @@ textFileConvert(
 
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
-\item{exclude_first_measurement_s}{The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)}
+\item{exclude_rows}{Rows to be excluded; used when there are unvanted NAs, or no sensor data. etc.}
+
+\item{exclude_first_measurement_s}{DEPRECATED nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)}
 
 \item{convert_units}{Logical (FALSE = default). If true, the function is passed to rMR function DO.unit.convert to convert O2 content units.}
 

@@ -58,7 +58,7 @@ SDA<-function(AnimalID,
               SMR_vals = c(NULL, NULL, NULL, NULL),
               drop_ch = NULL,
               N_Ch = 4,
-              end_SDA_Ch = NA,
+              end_SDA_Ch = c(NA, NA, NA, NA),
               MLND = TRUE,
               verbose.MLND = FALSE,
               background_prior = NULL,
@@ -124,7 +124,7 @@ SDA<-function(AnimalID,
 
 
   # Calculate the area under the SMR for all types of SMR calculated in the MMr_SMR_analyze function
-  #2-2 the EPOC cuttoff in the smoothed function / this is used also for the SMR block
+  # 2-2 the EPOC cuttoff in the smoothed function / this is used also for the SMR block
   # providing end_SDA value manually (in minutes)
   if(is.na(end_SDA)){
     if (begin_smr_hr_zero==TRUE){
@@ -1311,7 +1311,7 @@ SDA<-function(AnimalID,
   SDAdata_stepIntegral<-matrix(ncol=15, nrow=0)
   colnames(SDAdata_stepIntegral)<-c("ID","SMR","spar", "SDA_integrated", "end_SDA_estim_hr", "SMR_intergrated", "peak_SDA", "time_peak_SDA", "percentSMR_peak_SDA", "MO2_SDA_full", "peak_SDA_max", "time_peak_SDA_max", "peak_SDA_mean", "time_peak_SDA_mean", "smr_type" )
 
-  # start of for loop applying the SDA function
+  # start of for loop applying the SDA function to each channel
   for(i in 1:length(unique(d_SMRsum$Ch))){
 
     if (length(unique(d_SMRsum$Ch))==1){
@@ -1420,7 +1420,10 @@ SDA<-function(AnimalID,
 					par(mfrow=c(length(spars),1), mar=c(4,4,3,1)+0.5)
         }
         # spar,d, SDAdata, b, sda_threshold, end_SDA, begin_smr_hr_zero
-        SDAdata <- SDA.spar(spar = spars[n], d, SDAdata = SDAdata, b, sda_threshold = sda_threshold_level[2], end_SDA = end_SDA, begin_smr_hr_zero = begin_smr_hr_zero)
+        SDAdata <- SDA.spar(spar = spars[n], d, SDAdata = SDAdata, b,
+                            sda_threshold = sda_threshold_level[2],
+                            end_SDA = end_SDA,
+                            begin_smr_hr_zero = begin_smr_hr_zero)
         # ncol(SDAdata)
         if (n == length(spars)){
           dev.off()

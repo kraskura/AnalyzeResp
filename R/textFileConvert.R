@@ -8,7 +8,8 @@
 #' @param type_file Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox", "PreSense_microplate"
 #' @param N_Ch The number of oxygen meter channels. Options include 2, 4, 8, 24. (microplate). If a 2-channel oxygen meter was used, this argument could be ignored, or enter 4
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
-#' @param exclude_first_measurement_s The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)
+#' @param exclude_first_measurement_s DEPRECATED nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)
+#' @param exclude_rows Rows to be excluded; used when there are unvanted NAs, or no sensor data. etc.
 #' @param convert_units Logical (FALSE = default). If true, the function is passed to rMR function DO.unit.convert to convert O2 content units.
 #' @param units_from default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.in
 #' @param units_to = default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.out
@@ -32,6 +33,7 @@ textFileConvert<-function(txt_file,
                           nrowSkip = NULL,
                           N_Ch = 4,
                           local_path = TRUE,
+                          exclude_rows = NULL,
                           exclude_first_measurement_s = 0,
                           convert_units = FALSE,
                           units_from = NULL,
@@ -48,6 +50,9 @@ textFileConvert<-function(txt_file,
   #   stop("Must provide how many rows to skip from raw datafile;
   #        e.g. 4-Ch and 2-Ch fireSting commonly need 19, 8-Ch Firesting needs 26")
   # }
+  if(!exclude_first_measurement_s == 0){
+    message("Depracated argument = 'exclude_first_measuremnet_s'; use 'exclude_measurement_s'")
+  }
 
   if(type_file == "Firesting_pre2023"){
 
@@ -57,7 +62,7 @@ textFileConvert<-function(txt_file,
       if(is.null(nrowSkip)){
         nrowSkip <- 19
       }
-    	d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s)
+    	d<-read.delim(txt_file, skip = nrowSkip) # depracated nov 27 2024 + exclude_first_measurement_s
 
     	d<-d[,1:15]
 
@@ -68,6 +73,7 @@ textFileConvert<-function(txt_file,
     	new_csv$date<-d[,1]
     	new_csv$time<-d[,2]
     	new_csv$time_sec<-d[,3]
+
     	# oxyegen below
     	new_csv$Ch1_O2<-d[,5]
 
@@ -88,7 +94,7 @@ textFileConvert<-function(txt_file,
       new_csv<-as.data.frame(matrix(nrow=0, ncol=11))
     	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2", "Ch2_temp", "Ch3_temp", "Ch4_temp")
 
-    	d<-read.delim(txt_file, skip= nrowSkip + exclude_first_measurement_s)
+    	d<-read.delim(txt_file, skip= nrowSkip) # depracted nov 27 2024 + exclude_first_measurement_s)
     	# exclude rows with wrong data, no data, no time formats for the two columns
     	d<-d[c(which(grepl( "/", d[,1]) & grepl( ":", d[,2]))),]
     	d<-d[,1:12]
@@ -99,6 +105,7 @@ textFileConvert<-function(txt_file,
     	new_csv$date<-d[,1]
     	new_csv$time<-d[,2]
     	new_csv$time_sec<-d[,3]
+
     	# oxyegen below
     	new_csv$Ch1_O2<-d[,5]
 
@@ -131,8 +138,9 @@ textFileConvert<-function(txt_file,
       message("Dynamically search for first row within first 200 rows in the data")
 
     }else{
-  	  d<-read.delim(txt_file, skip = nrowSkip + exclude_first_measurement_s,
+  	  d<-read.delim(txt_file, skip = nrowSkip,
   	              check.names = TRUE, quote = "", comment.char = "") # 70
+  	              # ) # depracted nov 27 2024 + exclude_first_measurement_s)
     }
 
     colnames(d)<-d[1,]
@@ -221,12 +229,13 @@ textFileConvert<-function(txt_file,
       }
     	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2", "Ch2_temp", "Ch3_temp", "Ch4_temp")
     }
+
   }else if(type_file == "Witrox_2023"){
       new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
       if(is.null(nrowSkip)){
         nrowSkip <-41
       }
-      d<-read.table(txt_file, skip = nrowSkip + exclude_first_measurement_s,
+      d<-read.table(txt_file, skip = nrowSkip, # depracted nov 27 2024 + exclude_first_measurement_s)
                     sep = "\t", skipNul = TRUE, blank.lines.skip = TRUE, header = FALSE)
       colnames(d)<-d[1,]
       d<-d[-1,]
@@ -244,12 +253,11 @@ textFileConvert<-function(txt_file,
 
       new_csv<-d[, c(1:2)]
 
-      new_csv$time_sec<-
-      sapply(strsplit(d$`Relative time [HH:MM:SS]`,":"),
+      new_csv$time_sec<- sapply(strsplit(d$`Relative time [HH:MM:SS]`,":"),
         function(x) {
           x <- as.numeric(x)
           x[3]+x[2]*60+x[1]*60*60
-          }
+        }
       )
 
     	new_csv$Ch1_O2<-d[,O2_ch1_name]
@@ -378,7 +386,7 @@ textFileConvert<-function(txt_file,
 
       # set 1
       new_csv1$time_sec<-d$`Time/Min.`*60
-    	new_csv1$Ch1_O2<-d[,O2_ch1_name1]
+     	new_csv1$Ch1_O2<-d[,O2_ch1_name1]
     	new_csv1$Ch1_temp<-d[,temp_ch_name]# temp Ch1 - but same for all
     	new_csv1$Ch2_O2<-d[,O2_ch2_name1]
     	new_csv1$Ch3_O2<-d[,O2_ch3_name1]
@@ -441,9 +449,23 @@ textFileConvert<-function(txt_file,
     new_csv4[c(3:ncol(new_csv4))] <- sapply(new_csv4[3:ncol(new_csv4)],as.numeric)
     new_csv5[c(3:ncol(new_csv5))] <- sapply(new_csv5[3:ncol(new_csv5)],as.numeric)
     new_csv6[c(3:ncol(new_csv6))] <- sapply(new_csv6[3:ncol(new_csv6)],as.numeric)
+    if(!is.null(exclude_rows)){
+      message("excluding rows as defined")
+      new_csv1<-new_csv1[-c(exclude_rows), ] # exclude unwanted times
+      new_csv2<-new_csv2[-c(exclude_rows), ] # exclude unwanted times
+      new_csv3<-new_csv3[-c(exclude_rows), ] # exclude unwanted times
+      new_csv4<-new_csv4[-c(exclude_rows), ] # exclude unwanted times
+      new_csv5<-new_csv5[-c(exclude_rows), ] # exclude unwanted times
+      new_csv6<-new_csv6[-c(exclude_rows), ] # exclude unwanted times
+    }
 
   }else{ # has one output file
     new_csv[c(3:ncol(new_csv))] <- sapply(new_csv[3:ncol(new_csv)],as.numeric)
+    if(!is.null(exclude_rows)){
+      print("here")
+      message("excluding rows as defined")
+      new_csv<-new_csv[-c(exclude_rows), ] # exclude unwanted times
+    }
   }
 
   if(convert_units){

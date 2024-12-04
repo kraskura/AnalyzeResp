@@ -18,7 +18,7 @@ SDA(
   SMR_vals = c(NULL, NULL, NULL, NULL),
   drop_ch = NULL,
   N_Ch = 4,
-  end_SDA_Ch = NA,
+  end_SDA_Ch = c(NA, NA, NA, NA),
   MLND = TRUE,
   verbose.MLND = FALSE,
   background_prior = NULL,
