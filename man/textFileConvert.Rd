@@ -21,7 +21,7 @@ textFileConvert(
   temperature = NULL,
   device = "A",
   file_extension_id = "2",
-  temperature_Ch
+  temperature_Ch = 1
 )
 }
 \arguments{

@@ -182,12 +182,15 @@ MMR<-function(data.MMR,
 
 
 			# all MMR file trace
-			p %<a-%{
+			# redo in ggplot
+
+			mmr_p %<a-%{
 				plot(dataMMR[,r]~time_min, data=dataMMR, ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)", main="The entire MMR file");
 				rect(xleft=mmr_start[1],ybottom=min(dataMMR[,r]),xright=mmr_end[1],ytop=max(dataMMR[,r]) ,col= '#FF003322', border=NA)
 			}
 
 			# MMR plots
+			# if MMR happened in the first cycle
 			if (Ch_list[j]==1 & cycles>=1){
 
 				DateTime_start<-as.character(d$DateTime[1])
@@ -208,7 +211,7 @@ MMR<-function(data.MMR,
 				newdata_mmr90<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 90),]
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
 
-				p1 %<a-% {
+				mmr_p1 %<a-% {
 				  plot(d[,r]~time_min, data=d, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))), xlab="Time (min)",main="MMR");
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 				  if(nrow(newdata_mmr60)>0){
@@ -263,7 +266,7 @@ MMR<-function(data.MMR,
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
 
 
-				p2 %<a-% {
+				mmr_p2 %<a-% {
 				  plot(d[,r]~time_min, data=d,  col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="MMR");
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 
@@ -316,7 +319,7 @@ MMR<-function(data.MMR,
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
 
 
-				p3 %<a-% {
+				mmr_p3 %<a-% {
 				  plot(d[,r]~time_min, data=d, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="MMR");
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 
@@ -369,7 +372,7 @@ MMR<-function(data.MMR,
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
 
 
-				p4 %<a-% {
+				mmr_p4 %<a-% {
 				  plot(d[,r]~time_min, data=d, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="MMR");
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 				  if(nrow(newdata_mmr60)>0){
@@ -403,12 +406,13 @@ MMR<-function(data.MMR,
 			}
 
 
-			#
 			## non MMR plots
-			if ((Ch_list[j]==1 & cycles==2) | (Ch_list[j]==1 & cycles==3) | (Ch_list[j]==1 & cycles>=4)){
+			if ((Ch_list[j]==1 & cycles==2) |
+			    (Ch_list[j]==1 & cycles==3) |
+			    (Ch_list[j]==1 & cycles>=4)){
 			# if ((Ch_list[j]==1 & cycles>=2)){
 
-				p2 %<a-% {
+				cycle_p2 %<a-% {
 					plot(d2[,r]~time_min, data=d2, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="cycle2");
 					abline(lm(d2[,r]~d2$time_min), col="red",lwd=2);
 					mtext(bquote(y == .(lm_coef.2[2])*x + .(lm_coef[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
@@ -450,8 +454,11 @@ MMR<-function(data.MMR,
 			}
 
 			# if ((Ch_list[j]==1 | Ch_list[j]==2 | Ch_list[j]==4) & cycles>=3){
-			if ((Ch_list[j]==1 & cycles==3) | (Ch_list[j]== 1 & cycles==4) | (Ch_list[j]==2 & cycles==3) | (Ch_list[j]== 2 & cycles==4)){
-				p3 %<a-% {
+			if ((Ch_list[j]==1 & cycles==3) |
+			    (Ch_list[j]== 1 & cycles==4) |
+			    (Ch_list[j]==2 & cycles==3) |
+			    (Ch_list[j]== 2 & cycles==4)){
+				cycle_p3 %<a-% {
 					plot(d3[,r]~time_min, data=d3, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="cycle3");
 					abline(lm(d3[,r]~d3$time_min), col="red",lwd=2);
 					mtext(bquote(y == .(lm_coef.3[2])*x + .(lm_coef.3[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
@@ -493,9 +500,11 @@ MMR<-function(data.MMR,
 			}
 
 			# if ((Ch_list[j]==1 | Ch_list[j]==2 | Ch_list[j]==3) & cycles>=4){
-			if ((Ch_list[j]==1 & cycles==4) | (Ch_list[j]== 2 & cycles==4) | (Ch_list[j]==3 & cycles==4)){
+			if ((Ch_list[j]==1 & cycles==4) |
+			    (Ch_list[j]== 2 & cycles==4) |
+			    (Ch_list[j]==3 & cycles==4)){
 
-				p4 %<a-% {
+				cycle_p4 %<a-% {
 					plot(d4[,r]~time_min, data=d4, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="cycle4");
 					abline(lm(d4[,r]~d4$time_min), col="red",lwd=2);
 					mtext(bquote(y == .(lm_coef.4[2])*x + .(lm_coef.4[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
@@ -523,7 +532,7 @@ MMR<-function(data.MMR,
 				  newdata_mmr<-rbind(newdata_mmr, values_mmr)
 				}else{
 				  if(start_c4==0 & end_c4 ==0){
-				    message(paste("Clean: exclude cycle 2 Channel: ", j))
+				    message(paste("Clean: exclude cycle 4 Channel: ", j))
 				  }else{
 				    values_mmr<-as.data.frame(t(c(cycle_type, start_c4, end_c4,  cycle_mmr, r2.4, m.4, b.4,
 				                                  round(min(d4[,r_temp]),4),
@@ -543,11 +552,12 @@ MMR<-function(data.MMR,
 				text(1, 1, "MO2 NOT MEASURED",cex = .8)
 			}
 
-			png(plotname, width=20, height=5, units="in",  res=200)
+			graphics.off()
+			png(plotname, width=14, height=3, units="in",  res=200)
 			par(mfrow=c(1,5))
 				if (cycles==1){
-					p
-					p1
+					mmr_p
+					mmr_p1
 					p_null
 					p_null
 					p_null
@@ -555,16 +565,16 @@ MMR<-function(data.MMR,
 
 				if (cycles==2){
 					if (Ch_list[j]==1){
-						p
-						p1
-						p2
+						mmr_p
+						mmr_p1
+						cycle_p2
 						p_null
 						p_null
 					}
 					if (Ch_list[j]==2){
-						p
+						mmr_p
 						p_null
-						p2
+						mmr_p2
 						p_null
 						p_null
 					}
@@ -572,60 +582,62 @@ MMR<-function(data.MMR,
 
 				if (cycles==3){
 					if (Ch_list[j]==1){
-						p
-						p1 # MMR
-						p2
-						p3
+						mmr_p
+						mmr_p1 # MMR
+						cycle_p2
+						cycle_p3
 						p_null
 					}
 					if (Ch_list[j]==2){
-						p
+						mmr_p
 						p_null
-						p2 # MMR
-						p3
+						mmr_p2 # MMR
+						cycle_p3
 						p_null
 					}
 					if (Ch_list[j]==3){
 						p
 						p_null
 						p_null
-						p3 # MMR
+						mmr_p3 # MMR
 						p_null
 					}
 				}
 
 				if (cycles>=4){
 					if (Ch_list[j]==1){
-						p
-						p1 # MMR
-						p2
-						p3
-						p4
+						mmr_p
+						mmr_p1 # MMR
+						cycle_p2
+						cycle_p3
+						cycle_p4
 					}
 					if (Ch_list[j]==2){
-						p
+						mmr_p
 						p_null
-						p2 # MMR
-						p3
-						p4
+						mmr_p2 # MMR
+						cycle_p3
+						cycle_p4
 					}
 					if (Ch_list[j]==3){
-						p
+						mmr_p
 						p_null
 						p_null
-						p3 # MMR
-						p4
+						mmr_p3 # MMR
+						cycle_p4
 					}
 					if (Ch_list[j]==4){
-						p
+						mmr_p
 						p_null
 						p_null
 						p_null
-						p4 # MMR
+						mmr_p4 # MMR
 					}
 				}
 
-			dev.off()
+			graphics.off()
+			par(mfrow = c(1, 1))
+
 
 		}else{
 				message(paste("Exclude channel - ",j, sep=""))

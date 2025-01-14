@@ -44,7 +44,7 @@ textFileConvert<-function(txt_file,
                           temperature = NULL,
                           device = "A",
                           file_extension_id = "2",
-                          temperature_Ch){
+                          temperature_Ch = 1){
 
   # if(!is.numeric(nrowSkip)){
   #   stop("Must provide how many rows to skip from raw datafile;

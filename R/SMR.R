@@ -640,7 +640,7 @@ SMR<-function(data,
 
 	DateTime<-strptime(paste(data1$date, data1$time), format = date_format[1], tz = date_format[2])
 
-  if(is.na(DateTime[1])){
+	  if(is.na(DateTime[1])){
     message(paste("DateTime is NA, likely wrong format provided: is it", date_format[1], "?"))
   }
 
@@ -649,7 +649,7 @@ SMR<-function(data,
 	data1$hr2<-round(data1$time_sec/3600,0)
 	data1$time_min<-round(data1$time_sec/60,2)
 
-	png(plotname1, width=25, height=18,units="in",  res=200)
+	png(plotname1, width=25, height=19,units="in",  res=200)
 	par(mfrow=c(5,1))
 	# cannel 1
 	plot(data1$time_min, data1$Ch1_O2, main=paste(data1$DateTime[1], "Channel1"))
@@ -766,7 +766,7 @@ SMR<-function(data,
 		}
 
 	newdata$min_start<-as.numeric(as.character(newdata$min_start))
-	newdata$m<-abs(as.numeric(as.character(newdata$m)))
+	# newdata$m<-abs(as.numeric(as.character(newdata$m))) # change Dec 13, 2024
 	newdata$ID_code<-substr(data,start=6, stop=14) # modify this to your needs
 
 	graphics.off()
