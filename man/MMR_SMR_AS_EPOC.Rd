@@ -31,9 +31,11 @@ MMR_SMR_AS_EPOC(
   end_EPOC_Ch = c(NA, NA, NA, NA),
   background_prior = NULL,
   background_post = NULL,
+  background_during = NULL,
+  background_during_Ch = NULL,
   background_slope = NULL,
   background_slope_mmr = NULL,
-  background.V = NULL,
+  background_V = NULL,
   background_gr = NULL,
   match_background_Ch = FALSE,
   mmr_background = "trial_mean",
@@ -91,13 +93,17 @@ MMR_SMR_AS_EPOC(
 
 \item{background_prior}{The name of the analyzed background “…analyzed.csv” file, an output file from the SMR function (respiration in an empty respirometer measured before the respirometry trial).}
 
-\item{background_post}{The same as background_prior, only post respirometry trial}
+\item{background_post}{The same as 'background_prior', only post the respirometry trial}
+
+\item{background_during}{The same as 'background_prior', only during the respirometry trial (i.e., side empty channel)}
+
+\item{background_during_Ch}{The channel(s) in the file that indicate the background respiration.The times must match the data recorded with the animal}
 
 \item{background_slope}{Manually assigned background slope used to correct metabolic rate in all individuals. Provide numeric value in mgO2 L-1 h-1}
 
 \item{background_slope_mmr}{Manually assigned background slope used to correct MMR in all individuals. Provide numeric value in mgO2 L-1 h-1}
 
-\item{background.V}{Manually assigned respirometer volumes (L). A vector with 4 numeric variables, one for each channel.}
+\item{background_V}{Manually assigned respirometer volumes (L). A vector with 4 numeric variables, one for each channel.}
 
 \item{background_gr}{Specify whether to assume that bacterial growth (thus respiration rates) changed linearly or in exponentially across the duration of the respirometry trial. Must specify either "linear" or "exp": metabolic rate values across the given trial are corrected using the estimated background values from the indicated growth curve. Both background_prior and background_post must be provided to enable this.}
 

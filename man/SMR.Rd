@@ -17,7 +17,9 @@ SMR(
   local_path = TRUE,
   plot_temp = FALSE,
   background_data = FALSE,
-  sda_data = FALSE
+  sda_data = FALSE,
+  name_extensionID = "",
+  drop_ch = NULL
 )
 }
 \arguments{
@@ -46,6 +48,10 @@ SMR(
 \item{background_data}{logical. If this datafile is a background (background respiration file), indicate TRUE}
 
 \item{sda_data}{logical. If this datafile belong to SDA analysis, is a SDA data file, indicate TRUE}
+
+\item{name_extensionID}{add identifier to the original name of the file}
+
+\item{drop_ch}{exclude channel from analysis}
 }
 \value{
 The output from \code{\link{print}}
