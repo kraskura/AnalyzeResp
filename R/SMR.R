@@ -16,7 +16,9 @@
 #' @param plot_temp Logical argument. Indicates whether or not temperature trends for each cycle will be plotted and saved	TRUE
 #' @param background_data logical. If this datafile is a background (background respiration file), indicate TRUE
 #' @param sda_data logical. If this datafile belong to SDA analysis, is a SDA data file, indicate TRUE
-#'
+#' @param name_extensionID add identifier to the original name of the file
+#' @param drop_ch exclude channel from analysis
+
 #' @return The output from \code{\link{print}}
 #' @export
 #'
@@ -41,7 +43,9 @@ SMR<-function(data,
               local_path = TRUE,
               plot_temp = FALSE,
               background_data = FALSE,
-              sda_data = FALSE){
+              sda_data = FALSE,
+              name_extensionID = "",
+              drop_ch = NULL){
 
   if(!length(as.vector(date_format))==2){
     stop_function<-TRUE
@@ -484,56 +488,56 @@ SMR<-function(data,
 
 	# current directory if no specific folders are used
 	if(local_path){
-	  plotname1<-paste(gsub('.{4}$', '', data), "_all_ChO2.png", sep='')
+	  plotname1<-paste(gsub('.{4}$', '', data), name_extensionID, "_all_ChO2.png", sep='')
 
-	  plotname2<-paste( gsub('.{4}$', '', data), "_full.png", sep='')
-  	plotname2.1<-paste( gsub('.{4}$', '', data), "_Ch1.png", sep='')
-  	plotname2.2<-paste( gsub('.{4}$', '', data), "_Ch2.png", sep='')
-  	plotname2.3<-paste( gsub('.{4}$', '', data), "_Ch3.png", sep='')
-  	plotname2.4<-paste( gsub('.{4}$', '', data), "_Ch4.png", sep='')
+	  plotname2<-paste( gsub('.{4}$', '', data), name_extensionID, "_full.png", sep='')
+  	plotname2.1<-paste( gsub('.{4}$', '', data), name_extensionID, "_Ch1.png", sep='')
+  	plotname2.2<-paste( gsub('.{4}$', '', data), name_extensionID,  "_Ch2.png", sep='')
+  	plotname2.3<-paste( gsub('.{4}$', '', data), name_extensionID, "_Ch3.png", sep='')
+  	plotname2.4<-paste( gsub('.{4}$', '', data), name_extensionID, "_Ch4.png", sep='')
 
-  	plotname_full<-paste(gsub('.{4}$', '', data), "ALL_TOGETHER.png", sep='')
+  	plotname_full<-paste(gsub('.{4}$', '', data), name_extensionID, "ALL_TOGETHER.png", sep='')
 
-  	filename<-paste(gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save file in the current SMR wd
-	  filename2<-paste(gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and fiull EPOC analysis
+  	filename<-paste(gsub('.{4}$', '', data), name_extensionID, "_analyzed.csv", sep='') # save file in the current SMR wd
+	  filename2<-paste(gsub('.{4}$', '', data), name_extensionID, "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and fiull EPOC analysis
 
 	}
 
 	if(!local_path | background_data | sda_data){
 
 	  if(background_data){
-      plotname1<-paste("./BACK_RESP/plots_summary_respo/", gsub('.{4}$', '', data), "_all_ChO2.png", sep='')
-  	  plotname2<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_full.png", sep='')
+      plotname1<-paste("./BACK_RESP/plots_summary_respo/", gsub('.{4}$', '', data), name_extensionID, "_all_ChO2.png", sep='')
+  	  plotname2<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_full.png", sep='')
 
-  	  plotname2.1<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_Ch1.png", sep='')
-    	plotname2.2<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_Ch2.png", sep='')
-    	plotname2.3<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_Ch3.png", sep='')
-    	plotname2.4<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), "_Ch4.png", sep='')
+  	  plotname2.1<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_Ch1.png", sep='')
+    	plotname2.2<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_Ch2.png", sep='')
+    	plotname2.3<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_Ch3.png", sep='')
+    	plotname2.4<-paste("./BACK_RESP/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_Ch4.png", sep='')
 
-    	plotname_full<-paste("./BACK_RESP/plots_all_together/",gsub('.{4}$', '', data), "ALL_TOGETHER.png", sep='')
-    	filename<-paste("./BACK_RESP/csv_analyzed/", gsub('.{4}$', '', data), "_analyzed.csv", sep='')
+    	plotname_full<-paste("./BACK_RESP/plots_all_together/",gsub('.{4}$', '', data), name_extensionID, "ALL_TOGETHER.png", sep='')
+    	filename<-paste("./BACK_RESP/csv_analyzed/", gsub('.{4}$', '', data), name_extensionID, "_analyzed.csv", sep='')
         if(!sda_data){
-      	  filename2<-paste("./MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis
+      	  filename2<-paste("./MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data), name_extensionID, "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis
         }else{
-      	  filename2<-paste("./SDA/csv_input_files/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis
+      	  filename2<-paste("./SDA/csv_input_files/", gsub('.{4}$', '', data), name_extensionID, "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis
         }
 
 	  }else{
 
-      plotname1<-paste("./SMR/plots_summary_respo/", gsub('.{4}$', '', data), "_all_ChO2.png", sep='')
-  	  plotname2<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_full.png", sep='')
+      plotname1<-paste("./SMR/plots_summary_respo/", gsub('.{4}$', '', data), name_extensionID, "_all_ChO2.png", sep='')
+  	  plotname2<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_full.png", sep='')
 
-  	  plotname2.1<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_Ch1.png", sep='')
-    	plotname2.2<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_Ch2.png", sep='')
-    	plotname2.3<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_Ch3.png", sep='')
-    	plotname2.4<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), "_Ch4.png", sep='')
+  	  plotname2.1<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_Ch1.png", sep='')
+    	plotname2.2<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_Ch2.png", sep='')
+    	plotname2.3<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_Ch3.png", sep='')
+    	plotname2.4<-paste("./SMR/plots_channel/", gsub('.{4}$', '', data), name_extensionID, "_Ch4.png", sep='')
 
-    	plotname_full<-paste("./SMR/plots_all_together/",gsub('.{4}$', '', data), "ALL_TOGETHER.png", sep='')
-    	filename<-paste("./SMR/csv_analyzed/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save file in the current SMR wd
+    	plotname_full<-paste("./SMR/plots_all_together/",gsub('.{4}$', '', data), name_extensionID, "ALL_TOGETHER.png", sep='')
+    	filename<-paste("./SMR/csv_analyzed/", gsub('.{4}$', '', data), name_extensionID, "_analyzed.csv", sep='') # save file in the current SMR wd
         if(!sda_data){
-      	  filename2<-paste("./MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis      }
+      	  filename2<-paste("./MMR_SMR_AS_EPOC/csv_input_files/", gsub('.{4}$', '', data), name_extensionID, "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis      }
           }else{
-      	  filename2<-paste("./SDA/csv_input_files/", gsub('.{4}$', '', data), "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis      }
+      	  filename2<-paste("./SDA/csv_input_files/", gsub('.{4}$', '', data), name_extensionID, "_analyzed.csv", sep='') # save in the EPOC_AS etc folder for final SMR and full EPOC analysis      }
         }
 	  }
 
@@ -555,12 +559,12 @@ SMR<-function(data,
 		data2<-as.data.frame(matrix(nrow=0, ncol=0))
 	}else{
 
-	   if(file.exists(inventory_data) | file.exists(paste("./SMR/csv_files/", inventory_data, sep=""))){ # after running through RMRrepeat - this will be saved in csv input files
-  	  if(file.exists(paste("./SMR/csv_files/", inventory_data, sep=""))){
-        data2<-read.csv(paste("./SMR/csv_files/", inventory_data, sep=""))
+	   if(file.exists(inventory_data) | file.exists(paste("./SMR/csv_files/", inventory_data))){ # after running through RMRrepeat - this will be saved in csv input files
+  	  if(file.exists(paste("./SMR/csv_files/", inventory_data))){
+        data2<-suppressWarnings(read.csv(paste("./SMR/csv_files/", inventory_data, sep=",", header = TRUE)))
       }
       if(file.exists(inventory_data)){
-        data2<-read.csv(inventory_data)
+        data2<-suppressWarnings(read.csv(inventory_data, sep=",", header = TRUE))
       }
   	}else{
       stop_function<-TRUE
@@ -572,26 +576,31 @@ SMR<-function(data,
 		 if (plot_temp ==TRUE){
         message("Temperature plots are not saved when using inventory files / cleaning data")
 		 }
+	  # print(data2)
 	}
+
+  if(!is.null(drop_ch)){
+    message("Channels [", drop_ch, "] are not analyzed", sep = "")
+  }
 
 	if(c(as.character(data1$Ch1_O2[1])=="--- " | as.character(data1$Ch1_O2[nrow(data1)])=="--- ")||
 	   c(as.character(data1$Ch1_O2[1])=="---" | as.character(data1$Ch1_O2[nrow(data1)])=="---")||
-	   c(is.na(data1$Ch1_O2[1]) | is.na(data1$Ch1_O2[nrow(data1)]))){
+	   c(is.na(data1$Ch1_O2[1]) | is.na(data1$Ch1_O2[nrow(data1)])) || any(grepl(x = drop_ch, pattern = 1))){
 		data1$Ch1_O2<-0
 	}
 	if(c(as.character(data1$Ch2_O2[1])=="--- " | as.character(data1$Ch2_O2[nrow(data1)])=="--- ")||
 	   c(as.character(data1$Ch2_O2[1])=="---" | as.character(data1$Ch2_O2[nrow(data1)])=="---")||
-	   c(is.na(data1$Ch2_O2[1]) | is.na(data1$Ch2_O2[nrow(data1)]))){
+	   c(is.na(data1$Ch2_O2[1]) | is.na(data1$Ch2_O2[nrow(data1)])) || any(grepl(x = drop_ch, pattern = 2))){
 		data1$Ch2_O2<-0
 	}
 	if(c(as.character(data1$Ch3_O2[1])=="--- " | as.character(data1$Ch3_O2[nrow(data1)])=="--- ")||
 	   c(as.character(data1$Ch3_O2[1])=="---" | as.character(data1$Ch3_O2[nrow(data1)])=="---")||
-	   c(is.na(data1$Ch3_O2[1]) | is.na(data1$Ch3_O2[nrow(data1)]))){
+	   c(is.na(data1$Ch3_O2[1]) | is.na(data1$Ch3_O2[nrow(data1)])) || any(grepl(x = drop_ch, pattern = 3))){
 		data1$Ch3_O2<-0
 	}
 	if(c(as.character(data1$Ch4_O2[1])=="--- " | as.character(data1$Ch4_O2[nrow(data1)])=="--- ")||
 	   c(as.character(data1$Ch4_O2[1])=="---" | as.character(data1$Ch4_O2[nrow(data1)])=="---")||
-	   c(is.na(data1$Ch4_O2[1]) | is.na(data1$Ch4_O2[nrow(data1)]))){
+	   c(is.na(data1$Ch4_O2[1]) | is.na(data1$Ch4_O2[nrow(data1)])) || any(grepl(x = drop_ch, pattern = 4))){
 		data1$Ch4_O2<-0
 	}
 
@@ -605,7 +614,6 @@ SMR<-function(data,
   	data1$Ch2_temp<-as.numeric(as.character(data1$Ch2_temp))
   	data1$Ch3_temp<-as.numeric(as.character(data1$Ch3_temp))
   	data1$Ch4_temp<-as.numeric(as.character(data1$Ch4_temp))
-  		#
   }
 
 	#oxygen
@@ -637,7 +645,6 @@ SMR<-function(data,
 	}
 
 	data1$time<-as.character(data1$time) # this
-
 	DateTime<-strptime(paste(data1$date, data1$time), format = date_format[1], tz = date_format[2])
 
 	  if(is.na(DateTime[1])){
@@ -649,7 +656,7 @@ SMR<-function(data,
 	data1$hr2<-round(data1$time_sec/3600,0)
 	data1$time_min<-round(data1$time_sec/60,2)
 
-	png(plotname1, width=25, height=19,units="in",  res=200)
+	png(plotname1, width=25, height=19, units="in",  res=200)
 	par(mfrow=c(5,1))
 	# cannel 1
 	plot(data1$time_min, data1$Ch1_O2, main=paste(data1$DateTime[1], "Channel1"))

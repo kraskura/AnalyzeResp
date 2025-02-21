@@ -621,6 +621,23 @@ textFileConvert<-function(txt_file,
     }
   }
 
+  # get rid of NA lines for all channels
+  if(type_file == "PreSense_microplate"){
+    which(is.na(new_csv1$Ch1_O2) &
+            is.na(new_csv1$Ch2_O2) &
+            is.na(new_csv1$Ch3_O2) &
+            is.na(new_csv1$Ch4_O2)) # all channel o2 is NA
+
+  }else{
+    print(nrow(new_csv))
+   new_csv<-new_csv[!(is.na(new_csv$Ch1_O2) &
+            is.na(new_csv$Ch2_O2) &
+            is.na(new_csv$Ch3_O2) &
+            is.na(new_csv$Ch4_O2)),] # all channel o2 is NA
+    print(nrow(new_csv))
+
+  }
+
 	# save in the current directory (default)
   if(local_path){
     message("Return csv files saved in local working directory")

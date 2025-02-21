@@ -181,16 +181,21 @@ MMR<-function(data.MMR,
     	}
 
 
-			# all MMR file trace
-			# redo in ggplot
+			# all MMR file traces, save individual plots
+			# full mmr trace ------
+			png(gsub('.{4}$', '_full_trend.png', plotname),
+			      width=4, height=4, units="in",  res=200)
+				plot(dataMMR[,r]~time_min, data=dataMMR,
+				     ylab=expression(paste(O2~(mg~L^{-1}))),
+				     xlab="Time (min)", main="The entire MMR file");
+				rect(xleft=mmr_start[1],ybottom=min(dataMMR[,r]),
+				     xright=mmr_end[1],ytop=max(dataMMR[,r]),
+				     col= '#FF003322',
+				     border=NA)
+      dev.off()
 
-			mmr_p %<a-%{
-				plot(dataMMR[,r]~time_min, data=dataMMR, ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)", main="The entire MMR file");
-				rect(xleft=mmr_start[1],ybottom=min(dataMMR[,r]),xright=mmr_end[1],ytop=max(dataMMR[,r]) ,col= '#FF003322', border=NA)
-			}
 
-			# MMR plots
-			# if MMR happened in the first cycle
+			# if MMR in the first cycle ----
 			if (Ch_list[j]==1 & cycles>=1){
 
 				DateTime_start<-as.character(d$DateTime[1])
@@ -211,7 +216,10 @@ MMR<-function(data.MMR,
 				newdata_mmr90<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 90),]
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
 
-				mmr_p1 %<a-% {
+        #
+			  png(gsub('.{4}$', '_cycle_MMR.png', plotname),
+			      width=4, height=4, units="in",  res=200)
+
 				  plot(d[,r]~time_min, data=d, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))), xlab="Time (min)",main="MMR");
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 				  if(nrow(newdata_mmr60)>0){
@@ -243,9 +251,10 @@ MMR<-function(data.MMR,
 				  # points(d[,r]~d$time_min, col="grey");
 				  mtext(bquote(y == .(lm_coef[2])*x + .(lm_coef[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
 				  mtext(bquote(italic(R)^2 == .(format(r2, digits = 3))),adj=1, padj=0, cex=0.8, line=1)
-				}
+				dev.off()
 			}
 
+			# if MMR in 2nd cycle ---
 			if (Ch_list[j]==2 & cycles>=2){
 
 				DateTime_start<-as.character(d$DateTime[1])
@@ -266,7 +275,9 @@ MMR<-function(data.MMR,
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
 
 
-				mmr_p2 %<a-% {
+			  png(gsub('.{4}$', 'cycle_MMR.png', plotname),
+			      width=4, height=4, units="in",  res=200)
+
 				  plot(d[,r]~time_min, data=d,  col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="MMR");
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 
@@ -297,9 +308,10 @@ MMR<-function(data.MMR,
 				  # points(d[,r]~d$time_min, col="grey");
 				  mtext(bquote(y == .(lm_coef[2])*x + .(lm_coef[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
 				  mtext(bquote(italic(R)^2 == .(format(r2, digits = 3))),adj=1, padj=0, cex=0.8, line=1);
-				}
+				dev.off()
 			}
 
+      # if MMR in 3rd cycle-------
 			if (Ch_list[j]==3 & cycles>=3){
 
 				DateTime_start<-as.character(d$DateTime[1])
@@ -319,7 +331,8 @@ MMR<-function(data.MMR,
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
 
 
-				mmr_p3 %<a-% {
+			  png(gsub('.{4}$', 'cycle_MMR.png', plotname),
+			      width=4, height=4, units="in",  res=200)
 				  plot(d[,r]~time_min, data=d, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="MMR");
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 
@@ -350,9 +363,10 @@ MMR<-function(data.MMR,
 				  # points(d[,r]~d$time_min, col="grey");
 				  mtext(bquote(y == .(lm_coef[2])*x + .(lm_coef[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
 				  mtext(bquote(italic(R)^2 == .(format(r2, digits = 3))),adj=1, padj=0, cex=0.8, line=1)
-				}
+				dev.off()
 			}
 
+			# if MMR in 4th cycle -----
 			if (Ch_list[j]==4 & cycles>=4){
 
 				DateTime_start<-as.character(d$DateTime[1])
@@ -371,8 +385,9 @@ MMR<-function(data.MMR,
 				newdata_mmr90<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 90),]
 				newdata_mmr120<-newdata_mmr[which(newdata_mmr$Ch == Ch & newdata_mmr$cycle_mmr == 120),]
 
-
-				mmr_p4 %<a-% {
+			  png(gsub('.{4}$', 'cycle_MMR.png', plotname),
+			      width=4, height=4, units="in",  res=200)
+				# mmr_p4 %<a-% {
 				  plot(d[,r]~time_min, data=d, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="MMR");
 				  abline(lm(d[,r]~d$time_min), col="black",lwd=2);
 				  if(nrow(newdata_mmr60)>0){
@@ -401,18 +416,22 @@ MMR<-function(data.MMR,
 				  # points(d[,r]~d$time_min, col="grey");
 				  mtext(bquote(y == .(lm_coef[2])*x + .(lm_coef[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
 				  mtext(bquote(italic(R)^2 == .(format(r2, digits = 3))),adj=1, padj=0, cex=0.8, line=1)
-				}
-
+				# }
+				  dev.off()
 			}
 
 
 			## non MMR plots
+			# 2nd cycle ------
 			if ((Ch_list[j]==1 & cycles==2) |
 			    (Ch_list[j]==1 & cycles==3) |
 			    (Ch_list[j]==1 & cycles>=4)){
 			# if ((Ch_list[j]==1 & cycles>=2)){
 
-				cycle_p2 %<a-% {
+				# cycle_p2 %<a-% {
+			  	png(gsub('.{4}$', '_cycle2.png', plotname),
+			      width=4, height=4, units="in",  res=200)
+
 					plot(d2[,r]~time_min, data=d2, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="cycle2");
 					abline(lm(d2[,r]~d2$time_min), col="red",lwd=2);
 					mtext(bquote(y == .(lm_coef.2[2])*x + .(lm_coef[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
@@ -424,7 +443,8 @@ MMR<-function(data.MMR,
 				      legend("topright", c("Time-adjusted"), col=c("red"), pch=" ", cex=1)
 				    }
 				  }
-				}
+					dev.off()
+				# }
 
 				DateTime_start<-as.character(d2$DateTime[1])
 				cycle_type<-"cycle2"
@@ -453,12 +473,15 @@ MMR<-function(data.MMR,
 				}
 			}
 
-			# if ((Ch_list[j]==1 | Ch_list[j]==2 | Ch_list[j]==4) & cycles>=3){
+			# 3rd cycle ------
 			if ((Ch_list[j]==1 & cycles==3) |
 			    (Ch_list[j]== 1 & cycles==4) |
 			    (Ch_list[j]==2 & cycles==3) |
 			    (Ch_list[j]== 2 & cycles==4)){
-				cycle_p3 %<a-% {
+
+			  	png(gsub('.{4}$', '_cycle3.png', plotname),
+			      width=4, height=4, units="in",  res=200)
+
 					plot(d3[,r]~time_min, data=d3, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="cycle3");
 					abline(lm(d3[,r]~d3$time_min), col="red",lwd=2);
 					mtext(bquote(y == .(lm_coef.3[2])*x + .(lm_coef.3[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
@@ -471,7 +494,7 @@ MMR<-function(data.MMR,
 				      legend("topright", c("Time-adjusted"), col=c("red"), pch=" ", cex=1)
             }
 				  }
-				}
+				dev.off()
 
 				DateTime_start<-as.character(d3$DateTime[1])
 				cycle_type<-"cycle3"
@@ -499,12 +522,14 @@ MMR<-function(data.MMR,
 				}
 			}
 
-			# if ((Ch_list[j]==1 | Ch_list[j]==2 | Ch_list[j]==3) & cycles>=4){
+			# 4th cycle ------
 			if ((Ch_list[j]==1 & cycles==4) |
 			    (Ch_list[j]== 2 & cycles==4) |
 			    (Ch_list[j]==3 & cycles==4)){
 
-				cycle_p4 %<a-% {
+			  png(gsub('.{4}$', '_cycle4.png', plotname),
+			      width=4, height=4, units="in",  res=200)
+				# cycle_p4 %<a-% {
 					plot(d4[,r]~time_min, data=d4, col="grey", ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)",main="cycle4");
 					abline(lm(d4[,r]~d4$time_min), col="red",lwd=2);
 					mtext(bquote(y == .(lm_coef.4[2])*x + .(lm_coef.4[1])), adj=1, padj=0, cex=0.8, line=0); # display equation
@@ -516,7 +541,8 @@ MMR<-function(data.MMR,
 				      legend("topright", c("Time-adjusted"), col=c("red"), pch=" ", cex=1)
 				    }
 				  }
-				}
+				dev.off()
+			# }
 
 				DateTime_start<-as.character(d4$DateTime[1])
 				cycle_type<-"cycle4"
@@ -546,97 +572,97 @@ MMR<-function(data.MMR,
 			}
 
 
-			# null plot
-			p_null %<a-% {
-				plot(1, type="n", axes=T, xlab="", ylab="");
-				text(1, 1, "MO2 NOT MEASURED",cex = .8)
-			}
+			# # null plot
+			# p_null %<a-% {
+			# 	plot(1, type="n", axes=T, xlab="", ylab="");
+			# 	text(1, 1, "MO2 NOT MEASURED",cex = .8)
+			# }
 
-			graphics.off()
-			png(plotname, width=14, height=3, units="in",  res=200)
-			par(mfrow=c(1,5))
-				if (cycles==1){
-					mmr_p
-					mmr_p1
-					p_null
-					p_null
-					p_null
-				}
-
-				if (cycles==2){
-					if (Ch_list[j]==1){
-						mmr_p
-						mmr_p1
-						cycle_p2
-						p_null
-						p_null
-					}
-					if (Ch_list[j]==2){
-						mmr_p
-						p_null
-						mmr_p2
-						p_null
-						p_null
-					}
-				}
-
-				if (cycles==3){
-					if (Ch_list[j]==1){
-						mmr_p
-						mmr_p1 # MMR
-						cycle_p2
-						cycle_p3
-						p_null
-					}
-					if (Ch_list[j]==2){
-						mmr_p
-						p_null
-						mmr_p2 # MMR
-						cycle_p3
-						p_null
-					}
-					if (Ch_list[j]==3){
-						p
-						p_null
-						p_null
-						mmr_p3 # MMR
-						p_null
-					}
-				}
-
-				if (cycles>=4){
-					if (Ch_list[j]==1){
-						mmr_p
-						mmr_p1 # MMR
-						cycle_p2
-						cycle_p3
-						cycle_p4
-					}
-					if (Ch_list[j]==2){
-						mmr_p
-						p_null
-						mmr_p2 # MMR
-						cycle_p3
-						cycle_p4
-					}
-					if (Ch_list[j]==3){
-						mmr_p
-						p_null
-						p_null
-						mmr_p3 # MMR
-						cycle_p4
-					}
-					if (Ch_list[j]==4){
-						mmr_p
-						p_null
-						p_null
-						p_null
-						mmr_p4 # MMR
-					}
-				}
-
-			graphics.off()
-			par(mfrow = c(1, 1))
+			# graphics.off()
+			# png(plotname, width=14, height=3, units="in",  res=200)
+			# par(mfrow=c(1,5))
+			# 	if (cycles==1){
+			# 		mmr_p
+			# 		mmr_p1
+			# 		p_null
+			# 		p_null
+			# 		p_null
+			# 	}
+			#
+			# 	if (cycles==2){
+			# 		if (Ch_list[j]==1){
+			# 			mmr_p
+			# 			mmr_p1
+			# 			cycle_p2
+			# 			p_null
+			# 			p_null
+			# 		}
+			# 		if (Ch_list[j]==2){
+			# 			mmr_p
+			# 			p_null
+			# 			mmr_p2
+			# 			p_null
+			# 			p_null
+			# 		}
+			# 	}
+			#
+			# 	if (cycles==3){
+			# 		if (Ch_list[j]==1){
+			# 			mmr_p
+			# 			mmr_p1 # MMR
+			# 			cycle_p2
+			# 			cycle_p3
+			# 			p_null
+			# 		}
+			# 		if (Ch_list[j]==2){
+			# 			mmr_p
+			# 			p_null
+			# 			mmr_p2 # MMR
+			# 			cycle_p3
+			# 			p_null
+			# 		}
+			# 		if (Ch_list[j]==3){
+			# 			p
+			# 			p_null
+			# 			p_null
+			# 			mmr_p3 # MMR
+			# 			p_null
+			# 		}
+			# 	}
+			#
+			# 	if (cycles>=4){
+			# 		if (Ch_list[j]==1){
+			# 			mmr_p
+			# 			mmr_p1 # MMR
+			# 			cycle_p2
+			# 			cycle_p3
+			# 			cycle_p4
+			# 		}
+			# 		if (Ch_list[j]==2){
+			# 			mmr_p
+			# 			p_null
+			# 			mmr_p2 # MMR
+			# 			cycle_p3
+			# 			cycle_p4
+			# 		}
+			# 		if (Ch_list[j]==3){
+			# 			mmr_p
+			# 			p_null
+			# 			p_null
+			# 			mmr_p3 # MMR
+			# 			cycle_p4
+			# 		}
+			# 		if (Ch_list[j]==4){
+			# 			mmr_p
+			# 			p_null
+			# 			p_null
+			# 			p_null
+			# 			mmr_p4 # MMR
+			# 		}
+			# 	}
+			#
+			# graphics.off()
+			# par(mfrow = c(1, 1))
 
 
 		}else{
@@ -744,18 +770,18 @@ MMR<-function(data.MMR,
 
     		yScaleAdjustVal<-1+abs(mean((newdata_set$m)))
 
-    		png(filename = plotnameMean, height=5, width=6, res=200, units="in")
-          print(ggplot(data=newdata_set, aes(x=cycle_mmr, y=m))+
-          theme_light()+
-          # geom_hline(yintercept = -1*(abs(mean((newdata_set$m)))), color = "darkred", alpha=0.6, lty=2)+
-          xlab("Time of sliding windows (sec)")+
-          scale_y_continuous(name = "Oxygen decrease slope - proxy MMR", sec.axis = sec_axis(trans = ~.+yScaleAdjustVal, breaks = c(1, 0.99, 0.95, 0.8, 0.5), name = expression(R^2)))+
-    		  geom_boxplot(width = 0.5, mapping = aes(x=cycle_mmr, y=r2-yScaleAdjustVal), fill="white", color = "darkred", position = position_nudge(x = +0.5))+
-    		  geom_point( mapping = aes(x=cycle_mmr, y=r2-yScaleAdjustVal), fill="white", color = "darkred", alpha=0.5, position = position_nudge(x = +0.5), pch=1, size=1)+
-          geom_boxplot(width = 0.5, fill="white", color = "grey")+
-          geom_point(pch=1, size=1)+
-          ggtitle(paste(Ch, " - MMR metrics", sep="")))
-        dev.off()
+    # 		png(filename = plotnameMean, height=5, width=6, res=200, units="in")
+    #       print(ggplot(data=newdata_set, aes(x=cycle_mmr, y=m))+
+    #       theme_light()+
+    #       # geom_hline(yintercept = -1*(abs(mean((newdata_set$m)))), color = "darkred", alpha=0.6, lty=2)+
+    #       xlab("Time of sliding windows (sec)")+
+    #       scale_y_continuous(name = "Oxygen decrease slope - proxy MMR", transform = sec_axis(trans = ~.+yScaleAdjustVal, breaks = c(1, 0.99, 0.95, 0.8, 0.5), name = expression(R^2)))+
+    # 		  geom_boxplot(width = 0.5, mapping = aes(x=cycle_mmr, y=r2-yScaleAdjustVal), fill="white", color = "darkred", position = position_nudge(x = +0.5))+
+    # 		  geom_point( mapping = aes(x=cycle_mmr, y=r2-yScaleAdjustVal), fill="white", color = "darkred", alpha=0.5, position = position_nudge(x = +0.5), pch=1, size=1)+
+    #       geom_boxplot(width = 0.5, fill="white", color = "grey")+
+    #       geom_point(pch=1, size=1)+
+    #       ggtitle(paste(Ch, " - MMR metrics", sep="")))
+    #     dev.off()
 
     		for (i in 1:length(list)){
 

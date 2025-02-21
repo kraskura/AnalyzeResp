@@ -332,9 +332,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		                          MO2_3hr, EPOC_4hr, MO2_4hr, EPOC_5hr, MO2_5hr)))
   		}
 
-  		# print(
-  		#   str(values)
-  		# )
 
   		colnames(values)<-c("ID", "smr_type", "smr","spar", "EPOC_full",
   		                    "end_EPOC_min", "SMR_intergral_full", "SMR_threshold",
@@ -513,6 +510,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
           if(file.exists(background_during)){
             back_during<-read.csv(background_during)
           }
+        # message("backread in")# herehere
       	}else{
           stop_function<-TRUE
           if(stop_function){
@@ -521,12 +519,14 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       }
       back_ch<-length(unique(back_during$Ch))
 
-      # select only the channels as specified
+      # select only the channels as specified, keep all if background_during_Ch == NULL (default)
       back_during$Ch_n<- substr(back_during$Ch, start = 3, stop = 4)
-      back_during<-back_during[(grepl(paste(background_during_Ch, collapse = "|"), back_during$Ch_n)), ]
+      if(!is.null(background_during_Ch)){
+        back_during<-back_during[(grepl(paste(background_during_Ch, collapse = "|"), back_during$Ch_n)), ]
+      }
+
       # format date time the same as all files
   	  back_during$DateTime_start<- strptime(back_during$DateTime_start, format = date_format[1], tz = date_format[2])
-
     }
 
   }# end of background during extractions.
@@ -1204,7 +1204,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       		    d_MMR$mo2[i]<-abs( (( d_MMR$m[i]*(d_MMR$resp.V[i]-d_MMR$bw[i])) - (back_m * d_MMR$resp.V[i])) /(d_MMR$bw[i]) )#^scaling_exponent_mmr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
       		  }
       		  # message("Correcting for average background from file - MMR corrected (same slope value as for SMR) ")
-      		  message("MMR corrected for background: using a mean (prior and/or post) background measurements | mean bacterial respiration slope: ", back_m)
+      		  message("MMR corrected for background: using a mean (prior and/or post) background measurements | mean bacterial respiration slope: ", round(back_m,2))
             message("Equation: |(MMR_slope*(background_V - Animal_mass)) - (background_slope * background_V)) / (Animal_mass)|")
 
       		}
@@ -1349,6 +1349,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     }
 
   	d_SMR<-data_glued
+
 			# drop any unwanted channels
 	  if(!is.null(drop_ch[1])){
 	    n_ch_drop<-length(drop_ch)
@@ -1411,7 +1412,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     # START -- >>> background corrections SMR
 		# Jan 5 2020 change - account for background using linear regression
     # making predictions
-
 	  d_SMR$DateTime_start<- strptime(d_SMR$DateTime_start, format = date_format[1], tz = date_format[2])
 
     # if background files are provided
@@ -1429,14 +1429,13 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
                                                back_during$DateTime_start > d_SMR$DateTime_start[i] - 60 & # within 60 seconds
                                                back_during$DateTime_start < d_SMR$DateTime_start[i] + 60
                                                ),]
-
+ # print(back_during_matches)
           # means across all indicated background channels
           back_m<-mean(back_during_matches$m)
 
           # respo volume - can be seperately provided
           if(is.null(background_V)){
-            if(i == 1){message(paste("SMR/RMR: using background respiration recorded in an empty chamber during the trail,
-                               volume assumed same as animal"))}
+            if(i == 1){message(paste("SMR/RMR: using background respiration recorded in an empty chamber during the trail,volume assumed same as animal"))}
             # corrections for each measurement time
   		      d_SMR$mo2[i]<-abs( (( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m * d_SMR$resp.V[i])) /(d_SMR$bw[i]) )#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
 
@@ -1491,7 +1490,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
           facet_grid(Ch~.)
 
   		  png(plotname.backgr, width=4, height=8, res=200, units="in")
-  		    print(background_slope_plot)
+  		    print(suppressWarnings(background_slope_plot))
   		  graphics.off()
 
   		  d_SMR$background_slope<- background_slopes$back_m
@@ -1580,7 +1579,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     		    facet_grid(Ch~.)
 
   		  png(plotname.backgr, width=4, height=8, res=200, units="in")
-  		    print(background_slope_plot)
+  		    print(suppressWarnings(background_slope_plot))
   		  graphics.off()
 
   		  d_SMR$background_slope<- background_slopes$back_m
@@ -1590,7 +1589,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       # not matching channels; its one overall mean value (back_m)
   		if ((( !is.null(background_post) | !is.null(background_prior)) & match_background_Ch==FALSE) &
   		    is.null(background_slope) & is.null(background_gr)){
-  		  message("SMR/RMR corrected for background: used a mean (prior and/or post) background measurements | mean bacterial respiration slope: ", back_m, " ~" , round((back_m*100)/(mean(d_SMR[d_SMR$m <= quantile(d_SMR$m, 0.5, na.rm=TRUE), "m"], na.rm=TRUE)), 2), " %")
+  		  message("SMR/RMR corrected for background: used a mean (prior and/or post) background measurements | mean bacterial respiration slope: ", round(back_m, 2), " ~" , round((back_m*100)/(mean(d_SMR[d_SMR$m <= quantile(d_SMR$m, 0.5, na.rm=TRUE), "m"], na.rm=TRUE)), 2), " %")
 
   		  for (i in 1:nrow(d_SMR)){
   		    d_SMR$mo2[i]<-abs( (( d_SMR$m[i]*(d_SMR$resp.V[i]-d_SMR$bw[i])) - (back_m * d_SMR$resp.V[i])) /(d_SMR$bw[i]) )#^scaling_exponent_smr) # units mgO2 kg-1 min-1 -CORRECTED for back resp
@@ -1657,9 +1656,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		## end of SMR corrections for body size and background
     # END -- >>> background corrections SMR
 		# **********************************************
-print(d_SMR$mo2)
+  	if(any(is.na(d_SMR$mo2))){
+      stop("MR values are NA, check input files, volumes, body masses")
+    }
   	if(any(d_SMR$mo2 < 0)){
-      message("!! negative metabolic rate estimate values likely due to background resp > animal resp")
+      message("! negative metabolic rate estimate values likely due to background resp > animal resp")
   	}
 
   	# size correct each value for SMR calculations, lead with this into EPOC calculations
@@ -1809,7 +1810,7 @@ print(d_SMR$mo2)
 			facet_grid(Ch~.)
 
 		png(plotname.freq, width = 10, height = 10, units="in", res=200)
-			grid.arrange( min10_plot, min_percPlot, ncol=1, nrow=2)
+			grid.arrange( suppressWarnings(min10_plot), suppressWarnings(min_percPlot), ncol=1, nrow=2)
 		graphics.off()
 
 
@@ -1984,8 +1985,7 @@ print(d_SMR$mo2)
     		Nmlnd<- length(distr)
 
   	 }else{ # end of if(MLND=TRUE){
-      if(i == 1){message("SMR/RMR: MLND method (mean MO2 of the lowest normal distribution)
-                         to estimate RMR/SMR measurement is not applied")}
+      if(i == 1){message("SMR/RMR: MLND method (mean MO2 of the lowest normal distribution) to estimate RMR/SMR measurement is not applied")}
   	    distr <- NA
     		mlnd <- 0
     		CVmlnd <- 0
@@ -2058,17 +2058,17 @@ print(d_SMR$mo2)
 				xlab("SMR calc type")+
 				theme(axis.text.y=element_text(size=20, colour= 'black'),
 					axis.text.x=element_text(size=15, colour= 'black', angle=90, hjust=1),
-					axis.line.y=element_line(colour = 'black',size=0.5),
-					axis.line.x=element_line(colour = 'black',size=0.5),
-					axis.ticks.y=element_line(size=0.5),
-					axis.ticks.x=element_line(size=0),
+					axis.line.y=element_line(colour = 'black',linewidth=0.5),
+					axis.line.x=element_line(colour = 'black',linewidth=0.5),
+					axis.ticks.y=element_line(linewidth=0.5),
+					axis.ticks.x=element_line(linewidth=0),
 					legend.title = element_blank())+
 				theme(axis.title.y=element_text(size=15),
 					axis.title.x=element_text(size=15),
-					panel.border = element_rect(size=0.9,linetype = "solid",fill=NA, colour = "black"))
+					panel.border = element_rect(linewidth=0.9,linetype = "solid",fill=NA, colour = "black"))
 
 		png(plotname.smr.meth, width=6, height=5, units="in", res=200)
-			print(smr_meth_p)
+			print(suppressWarnings(smr_meth_p))
 		graphics.off()
 
 	}
