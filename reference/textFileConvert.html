@@ -52,9 +52,9 @@
 <span>  salinity <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  atm_pressure <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  temperature <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  temperature_Ch <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  device <span class="op">=</span> <span class="st">"A"</span>,</span>
-<span>  file_extension_id <span class="op">=</span> <span class="st">"2"</span>,</span>
-<span>  temperature_Ch <span class="op">=</span> <span class="fl">1</span></span>
+<span>  file_extension_id <span class="op">=</span> <span class="st">""</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,11 +83,11 @@
 
 
 <dt id="arg-exclude-rows">exclude_rows<a class="anchor" aria-label="anchor" href="#arg-exclude-rows"></a></dt>
-<dd><p>Rows to be excluded; used when there are unvanted NAs, or no sensor data. etc.</p></dd>
+<dd><p>Rows to be excluded; used when there are unwanted NAs, or no sensor data. etc.</p></dd>
 
 
 <dt id="arg-exclude-first-measurement-s">exclude_first_measurement_s<a class="anchor" aria-label="anchor" href="#arg-exclude-first-measurement-s"></a></dt>
-<dd><p>DEPRECATED nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)</p></dd>
+<dd><p>DEPRECATED Nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)</p></dd>
 
 
 <dt id="arg-convert-units">convert_units<a class="anchor" aria-label="anchor" href="#arg-convert-units"></a></dt>
@@ -103,7 +103,7 @@
 
 
 <dt id="arg-channels">channels<a class="anchor" aria-label="anchor" href="#arg-channels"></a></dt>
-<dd><p>= c(1,2,3,4), indicate which channels to apply the conversion to</p></dd>
+<dd><p>= c(1,2,3,4), indicate which channels the unit conversion will be applied to</p></dd>
 
 
 <dt id="arg-salinity">salinity<a class="anchor" aria-label="anchor" href="#arg-salinity"></a></dt>
@@ -118,16 +118,16 @@
 <dd><p>user set consistent temperature for all channels (ºC)</p></dd>
 
 
+<dt id="arg-temperature-ch">temperature_Ch<a class="anchor" aria-label="anchor" href="#arg-temperature-ch"></a></dt>
+<dd><p>Numerical, select the channel to use for temperature recording. This is used only for 4-channel Firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.</p></dd>
+
+
 <dt id="arg-device">device<a class="anchor" aria-label="anchor" href="#arg-device"></a></dt>
 <dd><p>only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".</p></dd>
 
 
 <dt id="arg-file-extension-id">file_extension_id<a class="anchor" aria-label="anchor" href="#arg-file-extension-id"></a></dt>
-<dd><p>custom file extension for the saved csv file, default is "2"</p></dd>
-
-
-<dt id="arg-temperature-ch">temperature_Ch<a class="anchor" aria-label="anchor" href="#arg-temperature-ch"></a></dt>
-<dd><p>Numerical, select the channel to use for temperature recording. This is used only for 4-channel firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.</p></dd>
+<dd><p>custom file extension for the saved csv file, default is 'blank'</p></dd>
 
 </dl></div>
     <div class="section level2">
