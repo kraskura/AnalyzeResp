@@ -19,9 +19,9 @@ textFileConvert(
   salinity = 0,
   atm_pressure = 1,
   temperature = NULL,
+  temperature_Ch = 1,
   device = "A",
-  file_extension_id = "2",
-  temperature_Ch = 1
+  file_extension_id = ""
 )
 }
 \arguments{
@@ -35,9 +35,9 @@ textFileConvert(
 
 \item{local_path}{Logical. If TRUE (default) all returned files will be saved in the local working directory.}
 
-\item{exclude_rows}{Rows to be excluded; used when there are unvanted NAs, or no sensor data. etc.}
+\item{exclude_rows}{Rows to be excluded; used when there are unwanted NAs, or no sensor data. etc.}
 
-\item{exclude_first_measurement_s}{DEPRECATED nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)}
+\item{exclude_first_measurement_s}{DEPRECATED Nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)}
 
 \item{convert_units}{Logical (FALSE = default). If true, the function is passed to rMR function DO.unit.convert to convert O2 content units.}
 
@@ -45,7 +45,7 @@ textFileConvert(
 
 \item{units_to}{= default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.out}
 
-\item{channels}{= c(1,2,3,4), indicate which channels to apply the conversion to}
+\item{channels}{= c(1,2,3,4), indicate which channels the unit conversion will be applied to}
 
 \item{salinity}{= 0, passed down to rMR::DO.unit.convert arg. salinity (must be in "pp.thou")}
 
@@ -53,11 +53,11 @@ textFileConvert(
 
 \item{temperature}{user set consistent temperature for all channels (ºC)}
 
+\item{temperature_Ch}{Numerical, select the channel to use for temperature recording. This is used only for 4-channel Firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.}
+
 \item{device}{only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".}
 
-\item{file_extension_id}{custom file extension for the saved csv file, default is "2"}
-
-\item{temperature_Ch}{Numerical, select the channel to use for temperature recording. This is used only for 4-channel firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.}
+\item{file_extension_id}{custom file extension for the saved csv file, default is 'blank'}
 }
 \value{
 The output from \code{\link{print}}

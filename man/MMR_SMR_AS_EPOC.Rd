@@ -17,7 +17,6 @@ MMR_SMR_AS_EPOC(
   scaling_exponent_smr = 1,
   common_mass = 1,
   mo2_val_for_calc = "mo2_1kg",
-  plot_smr_quantile = 15,
   date_format = c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT"),
   N_Ch = 4,
   drop_ch = NULL,
@@ -66,8 +65,6 @@ MMR_SMR_AS_EPOC(
 \item{common_mass}{Metabolic performances are often calculated per unit mass. Use this argument to define what the standardized mass should be. (default is MO2 mgO2kg-1^ min-1^, a common mass of 1 kg). Units = kg}
 
 \item{mo2_val_for_calc}{Units of metabolic rates represented on export figures. mo2_common_mass_kg (standardized MO2 to 1 kg fish using scaling exponents provided; mg O2 min-1 kg-1), mo2_individual_kg (MO2 of the whole individual, mgO2 min-1)}
-
-\item{plot_smr_quantile}{Indicating what percentile lower MO2 values to plot; must be either 10, 15, or 20}
 
 \item{date_format}{The date format used in the original data files. Argument is passed to strptime. default is c("\%Y-\%m-\%d \%H:\%M:\%S", "GMT").}
 

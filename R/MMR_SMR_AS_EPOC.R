@@ -15,7 +15,6 @@
 #' @param scaling_exponent_smr Body mass scaling exponent to correct SMR values for body size. MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient [the intercept], and b = scaling exponent [the power term])
 #' @param common_mass Metabolic performances are often calculated per unit mass. Use this argument to define what the standardized mass should be. (default is MO2 mgO2kg-1^ min-1^, a common mass of 1 kg). Units = kg
 #' @param mo2_val_for_calc Units of metabolic rates represented on export figures. mo2_common_mass_kg (standardized MO2 to 1 kg fish using scaling exponents provided; mg O2 min-1 kg-1), mo2_individual_kg (MO2 of the whole individual, mgO2 min-1)
-#' @param plot_smr_quantile Indicating what percentile lower MO2 values to plot; must be either 10, 15, or 20
 #' @param N_Ch The number of channels of the oxygen meter. It must be either 4 or 8 (8 channel meter has 4 oxygen probes and 4 temperature probes)
 #' @param drop_ch Indicates which channel is dropped or entirely excluded from the analysis. Must be a numerical vector, e.g., c(1,3)
 #' @param MLND Logical argument. If TRUE, SMR is estimated also using Mean Lowest Normal Distribution analysis. More details in Chabot et al 2016
@@ -66,7 +65,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
                           scaling_exponent_smr = 1,
                           common_mass = 1,
                           mo2_val_for_calc = "mo2_1kg",
-                          plot_smr_quantile=15,
                           date_format = c("%Y-%m-%d %H:%M:%S", "GMT"),
                           N_Ch = 4,
                           drop_ch = NULL,
@@ -139,11 +137,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	smr.row<-newdata.smr[which(as.character(newdata.smr$Ch)==as.character(d$Ch[1])),]
   	ID<-smr.row["ID"]
 
-  	# smr_mean10minVal SMR_low10quant SMR_low15quant SMR_low20quant  smr_mlnd
+  	# smr_mean10minVal SMR_low10quant SMR_low15quant SMR_meanAll  smr_mlnd
   	b1.1<-as.numeric(round(smr.row["smr_mean10minVal"],2))
   	b1.2<-as.numeric(round(smr.row["SMR_low10quant"],2))
   	b1.3<-as.numeric(round(smr.row["SMR_low15quant"],2))
-  	b1.4<-as.numeric(round(smr.row["SMR_low20quant"],2))
+  	b1.4<-as.numeric(round(smr.row["SMR_meanAll"],2))
 
   	b1.man<-as.numeric(b_manual)
 
@@ -153,7 +151,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   	  b1.5<-0
   	}
 
-  	smr_type_list<-c("smr_mean10minVal", "SMR_low10quant", "SMR_low15quant", "SMR_low20quant", "smr_mlnd", "manual/default= 0")
+  	smr_type_list<-c("smr_mean10minVal", "SMR_low10quant", "SMR_low15quant", "SMR_meanAll", "smr_mlnd", "manual/default= 0")
   	b_list<-c(b1.1, b1.2, b1.3, b1.4, b1.5, b1.man)
 
   	for (i in 1:6){
@@ -767,9 +765,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
             #next # continue the loop to the nect channel
 
           }
-
         } # closes 'prior and post available' condition statement
-
       } # closes the loop
 
     }else{ #match_background_Ch = FALSE
@@ -817,11 +813,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 	newdata.smr<-as.data.frame(matrix(ncol=33, nrow=0))
 	names(newdata.smr)<-c("filename", "ID", "Ch", "BW","t_min","t_max", "t_mean", "N_mo2", #8
-	"smr_mean10minVal","smr_SD10minVal", "smr_CV10minVal", "SMR_low10quant","SMR_low15quant","SMR_low20quant", #6
+	"smr_mean10minVal","smr_SD10minVal", "smr_CV10minVal", "SMR_low10quant","SMR_low15quant","SMR_meanAll", #6
 	"smr_mlnd", "smr_CVmlnd", "smr_Nmlnd", #3
 	"mmr", "mmr_overall", #2
-	"AS_smr_mean10minVal", "AS_SMR_low10quant", "AS_SMR_low15quant", "AS_SMR_low20quant", "AS_smr_mlnd", #5
-	"AS_smr_mean10minVal_overall", "AS_SMR_low10quant_overall", "AS_SMR_low15quant_overall", "AS_SMR_low20quant_overall", "AS_smr_mlnd_overall", #5
+	"AS_smr_mean10minVal", "AS_SMR_low10quant", "AS_SMR_low15quant", "AS_SMR_meanAll", "AS_smr_mlnd", #5
+	"AS_smr_mean10minVal_overall", "AS_SMR_low10quant_overall", "AS_SMR_low15quant_overall", "AS_SMR_meanAll_overall", "AS_smr_mlnd_overall", #5
 	"mmr_length_cycle", "scaling_exponent_mmr", "scaling_exponent_smr", "common_mass")#1
 
 	cols = c(4:33)
@@ -1711,29 +1707,33 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		# ggtitle(bquote(Datafile: ~ .(data.SMR)))+
 		# xlab(mo2_lab)
 
+
 		# the lowest 10 values after removal of 5 lowest
 		a0<-d_SMR[,2:ncol(d_SMR)] %>%
-			group_by(Ch)%>%
-			top_n(-15, mo2)%>%
+			dplyr::group_by(Ch)%>%
+			dplyr::slice_min(mo2, n = 15)%>%
 			arrange(Ch,mo2)
+		# If n is greater than the number of rows in the group (or prop > 1), the result will be silently truncated to the group size.
 
 		# the 5 lowest/ excluded
 		a00<-a0 %>%
-			group_by(Ch)%>%
-			top_n(-5, mo2)%>%
+			dplyr::group_by(Ch)%>%
+			dplyr::slice_min(mo2, n = 5)%>%
 			arrange(Ch,mo2)
 
 		# the 10 lowest/ excluding the 5 lowest in the df
 		a<-a0 %>%
-			group_by(Ch)%>%
-			top_n(10, mo2)%>%
+			dplyr::group_by(Ch)%>%
+			dplyr::slice_min(mo2, n=10)%>%
 			arrange(Ch,mo2)
+
+		print(c(nrow(a0), nrow(a00), nrow(a)))
 
 		min10_MO2<-as.data.frame(a)
 
 		# detach(package:plyr)
 		min10_mean<-min10_MO2%>%
-		  group_by(Ch)%>%
+		  dplyr::group_by(Ch)%>%
 			summarize(mean_temp=mean(t_mean), sd_temp=sd(t_mean), mean_mo2=mean(mo2), sd_mo2=sd(mo2),
 			cv_mo2 = sd(mo2)/(sqrt(10)), n=length(mo2))
 
@@ -1749,7 +1749,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		  ylab(mo2_lab)+
 		  xlab("Time in trial (min)")
 
-
 		a2<-as.data.frame(matrix(ncol=3, nrow=0))
 
 		for (i in unique(d_SMR$Ch)){
@@ -1758,18 +1757,19 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
       quant10<-quantile(split_temp$mo2, 0.1, na.rm=FALSE)
       quant15<-quantile(split_temp$mo2, 0.15, na.rm=FALSE)
-      quant20<-quantile(split_temp$mo2, 0.2, na.rm=FALSE)
+      meanAll<-mean(split_temp$mo2, na.rm=FALSE)
 
       a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "10%", as.numeric(quant10)))))
       a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "15%", as.numeric(quant15)))))
-      a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "20%", as.numeric(quant20)))))
+      a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "meanAll", as.numeric(meanAll)))))
     }
 
-		# UPDATE
+
+
     colnames(a2)<-c("Ch","quantiles", "mo2_perc")
     a2$mo2_perc<-as.numeric(as.character(a2$mo2_perc))
 
-		quantile_smr<-spread(a2, key=quantiles, value=mo2_perc) # fix
+		quantile_smr<-spread(a2, key=quantiles, value=mo2_perc)
 		a2$quantiles<-as.factor(a2$quantiles)
 
 		row_ch1_10perc<-which(a2$Ch=="Ch1" & a2$quantiles=="10%")
@@ -1782,28 +1782,31 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		row_ch3_15perc<-which(a2$Ch=="Ch3" & a2$quantiles=="15%")
 		row_ch4_15perc<-which(a2$Ch=="Ch4" & a2$quantiles=="15%")
 
-		row_ch1_20perc<-which(a2$Ch=="Ch1" & a2$quantiles=="20%")
-		row_ch2_20perc<-which(a2$Ch=="Ch2" & a2$quantiles=="20%")
-		row_ch3_20perc<-which(a2$Ch=="Ch3" & a2$quantiles=="20%")
-		row_ch4_20perc<-which(a2$Ch=="Ch4" & a2$quantiles=="20%")
+		row_ch1_meanAll<-which(a2$Ch=="Ch1" & a2$quantiles=="meanAll")
+		row_ch2_meanAll<-which(a2$Ch=="Ch2" & a2$quantiles=="meanAll")
+		row_ch3_meanAll<-which(a2$Ch=="Ch3" & a2$quantiles=="meanAll")
+		row_ch4_meanAll<-which(a2$Ch=="Ch4" & a2$quantiles=="meanAll")
 
+		# print(d_SMR$Ch)
+		print(a2[a2$quantiles == "meanAll",])
 		min_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
 			geom_point(size=1)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+		  geom_hline(data = a2[a2$quantiles == "meanAll",], aes(yintercept = mo2_perc), linetype = "dashed")+
+		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_meanAll]),], aes(x=min_start, y=mo2), pch=1, colour="purple",size=3)+
+		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_meanAll]),], aes(x=min_start, y=mo2), pch=1,  colour="purple",size=3)+
+		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_meanAll]),], aes(x=min_start, y=mo2), pch=1,  colour="purple",size=3)+
+		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_meanAll]),], aes(x=min_start, y=mo2), pch=1,  colour="purple",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_15perc]),], aes(x=min_start, y=mo2), pch=2,  colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_15perc]),], aes(x=min_start, y=mo2), pch=2,  colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_15perc]),], aes(x=min_start, y=mo2), pch=2,  colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_15perc]),], aes(x=min_start, y=mo2), pch=2,  colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_10perc]),], aes(x=min_start, y=mo2), pch=3,  colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_10perc]),], aes(x=min_start, y=mo2), pch=3,  colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_10perc]),], aes(x=min_start, y=mo2), pch=3,  colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_10perc]),], aes(x=min_start, y=mo2), pch=3,  colour="darkturquoise",size=3)+
 		  # geom_p# geom_line(size=0.5, alpha=0.5)+
 			theme_light()+
-			ggtitle("20th percentile = purple, 15th = blue, 10th = light blue")+
+			ggtitle("mean all points = dashed line, 15th = blue, 10th = light blue")+
 			theme(legend.position="top")+
 		  ylab(mo2_lab)+
 		  xlab("Time in trial (min)")+
@@ -1812,8 +1815,6 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		png(plotname.freq, width = 10, height = 10, units="in", res=200)
 			grid.arrange( suppressWarnings(min10_plot), suppressWarnings(min_percPlot), ncol=1, nrow=2)
 		graphics.off()
-
-
 
 		# MLND algorithm from suppl JFB issue 88 Chabot, Steffensen, and Farrell 2016
 		# SMR and MMR data frames split based on the channel
@@ -1829,7 +1830,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		  	}
 		}
 
-		# MLND calculation loop
+    # loop to get/add values for each channel
 		for(i in 1:length(unique(d_SMR$Ch))){
 
   		if (length(unique(d_SMR$Ch))==1){
@@ -1878,17 +1879,17 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
     				}
     			png(plotname.mlnd, width = 12, height = 9, units="in", res=200)
     				par(mfrow=c(3,4))
-    #~ 					plot(m1, what= "BIC")
+    # 					plot(m1, what= "BIC")
     				plot(mlnd.m1, what="classification")
     				plot(m1, what = "density", data = mo2, breaks = 30)
     				plot(m1, what = "diagnostic", type = "cdf")
     				plot(m1, what = "diagnostic", type = "qq")
     				plot(Y0$mo2~Y0$min_start, cex=0.5)
     				points(Y0$mo2[which(clas.m1==1)]~Y0$min_start[which(clas.m1==1)], col="red", cex=1)
-    #~ 				plot(boot1, what = "mean", show.confint=TRUE)
+    # 				plot(boot1, what = "mean", show.confint=TRUE)
     				plot(1, type="n", axes=F, xlab="", ylab="");
     				text(1, 1, Y.Ch ,cex = 3)
-    #~ 				plot(boot1, what = "pro")
+    # 				plot(boot1, what = "pro")
     			graphics.off()
 
     		}else{
@@ -1996,16 +1997,12 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		# https://cran.r-project.org/web/packages/mclust/vignettes/mclust.html#classification
 		# mclust: R package for model-based clustering, classification, and density estimation based on finite normal mixture modelling. It provides functions for parameter estimation via the EM algorithm for normal mixture models with a variety of covariance structures, and functions for simulation from these models.
 
-
-
-
-
 		# read about EM http://www.statisticshowto.com/em-algorithm-expectation-maximization/
   		mmr_overall<-max(mo2)
   		AS_smr_mean10minVal_overall <- mmr_overall - min10_mean$mean_mo2[i]
   		AS_SMR_low10quant_overall <- mmr_overall - quantile_smr[i,2]
   		AS_SMR_low15quant_overall <- mmr_overall - quantile_smr[i,3]
-  		AS_SMR_low20quant_overall <- mmr_overall - quantile_smr[i,4]
+  		AS_SMR_meanAll_overall <- mmr_overall - quantile_smr[i,4]
   		AS_smr_mlnd_overall <- mmr_overall - mlnd
 
     	values_smr<-as.data.frame(t(c(filename.SMR, ID, Y.Ch, BW, t_min, t_max, t_mean, N_mo2,
@@ -2013,16 +2010,16 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		mlnd, CVmlnd, Nmlnd,
   		NA, mmr_overall,
   		NA, NA, NA, NA, NA,
-  		AS_smr_mean10minVal_overall, AS_SMR_low10quant_overall, AS_SMR_low15quant_overall, AS_SMR_low20quant_overall, AS_smr_mlnd_overall, #5
+  		AS_smr_mean10minVal_overall, AS_SMR_low10quant_overall, AS_SMR_low15quant_overall, AS_SMR_meanAll_overall, AS_smr_mlnd_overall, #5
   		NA, scaling_exponent_mmr, scaling_exponent_smr, common_mass)))#4
 
     	if(length(values_smr) == 33){
   	    colnames(values_smr)<-c("filename", "ID", "Ch", "BW","t_min","t_max", "t_mean", "N_mo2", #8
-        	"smr_mean10minVal","smr_SD10minVal", "smr_CV10minVal", "SMR_low10quant","SMR_low15quant","SMR_low20quant", #6
+        	"smr_mean10minVal","smr_SD10minVal", "smr_CV10minVal", "SMR_low10quant","SMR_low15quant","SMR_meanAll", #6
         	"smr_mlnd", "smr_CVmlnd", "smr_Nmlnd", #3
         	"mmr", "mmr_overall", #2
-        	"AS_smr_mean10minVal", "AS_SMR_low10quant", "AS_SMR_low15quant", "AS_SMR_low20quant", "AS_smr_mlnd", #5
-        	"AS_smr_mean10minVal_overall", "AS_SMR_low10quant_overall", "AS_SMR_low15quant_overall", "AS_SMR_low20quant_overall", "AS_smr_mlnd_overall", #5
+        	"AS_smr_mean10minVal", "AS_SMR_low10quant", "AS_SMR_low15quant", "AS_SMR_meanAll", "AS_smr_mlnd", #5
+        	"AS_smr_mean10minVal_overall", "AS_SMR_low10quant_overall", "AS_SMR_low15quant_overall", "AS_SMR_meanAll_overall", "AS_smr_mlnd_overall", #5
         	"mmr_length_cycle", "scaling_exponent_mmr", "scaling_exponent_smr", "common_mass")#4
     		newdata.smr<-rbind(newdata.smr, values_smr)
     	}else{
@@ -2036,11 +2033,10 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
   	pd<-as.data.frame(newdata.smr[,c(3,9, 12,13,14,15, 8, 17)])
 
-
 		df.1 <- data.frame(Ch=unlist(pd[,1], use.names=FALSE), smr_val=unlist(pd[,2], use.names=FALSE), smr_method="smr_mean10minVal", N_mo2=unlist(pd[,7], use.names=FALSE))
 		df.2 <- data.frame(Ch=unlist(pd[,1], use.names=FALSE), smr_val=unlist(pd[,3], use.names=FALSE), smr_method="SMR_low10quant", N_mo2=unlist(pd[,7], use.names=FALSE))
 		df.3 <- data.frame(Ch=unlist(pd[,1], use.names=FALSE), smr_val=unlist(pd[,4], use.names=FALSE), smr_method="SMR_low15quant", N_mo2=unlist(pd[,7], use.names=FALSE))
-		df.4 <- data.frame(Ch=unlist(pd[,1], use.names=FALSE), smr_val=unlist(pd[,5], use.names=FALSE), smr_method="SMR_low20quant", N_mo2=unlist(pd[,7], use.names=FALSE))
+		df.4 <- data.frame(Ch=unlist(pd[,1], use.names=FALSE), smr_val=unlist(pd[,5], use.names=FALSE), smr_method="SMR_meanAll", N_mo2=unlist(pd[,7], use.names=FALSE))
 		df.5 <- data.frame(Ch=unlist(pd[,1], use.names=FALSE), smr_val=unlist(pd[,6], use.names=FALSE), smr_method="smr_mlnd", N_mo2=unlist(pd[,8], use.names=FALSE))
 		plot_d<-rbind(df.1, df.2, df.3, df.4, df.5 )
 
@@ -2131,13 +2127,13 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		newdata.smr$AS_smr_mean10minVal<-as.numeric(as.character(newdata.smr$mmr))-as.numeric(as.character(newdata.smr$smr_mean10minVal))
 		newdata.smr$AS_SMR_low10quant<-as.numeric(as.character(newdata.smr$mmr))-as.numeric(as.character(newdata.smr$SMR_low10quant))
 		newdata.smr$AS_SMR_low15quant<-as.numeric(as.character(newdata.smr$mmr))-as.numeric(as.character(newdata.smr$SMR_low15quant))
-		newdata.smr$AS_SMR_low20quant<-as.numeric(as.character(newdata.smr$mmr))-as.numeric(as.character(newdata.smr$SMR_low20quant))
+		newdata.smr$AS_SMR_meanAll<-as.numeric(as.character(newdata.smr$mmr))-as.numeric(as.character(newdata.smr$SMR_meanAll))
 
 		# these are lists, so fill in the entire row
 		newdata.smr$AS_smr_mean10minVal_overall<-as.numeric(as.character(newdata.smr$mmr_overall)) -as.numeric(as.character(newdata.smr$smr_mean10minVal))
 		newdata.smr$AS_SMR_low10quant_overall<-as.numeric(as.character(newdata.smr$mmr_overall)) -as.numeric(as.character(newdata.smr$SMR_low10quant))
 		newdata.smr$AS_SMR_low15quant_overall<-as.numeric(as.character(newdata.smr$mmr_overall)) -as.numeric(as.character(newdata.smr$SMR_low15quant))
-		newdata.smr$AS_SMR_low20quant_overall<-as.numeric(as.character(newdata.smr$mmr_overall)) -as.numeric(as.character(newdata.smr$SMR_low20quant))
+		newdata.smr$AS_SMR_meanAll_overall<-as.numeric(as.character(newdata.smr$mmr_overall)) -as.numeric(as.character(newdata.smr$SMR_meanAll))
 
 
     if (MLND==TRUE){
@@ -2369,12 +2365,12 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 			colnames(values)<-c("filename", "ID", "Ch",
 			                    "BW","t_min","t_max", "t_mean", "N_mo2",
 			"smr_mean10minVal","smr_SD10minVal", "smr_CV10minVal",
-			"SMR_low10quant","SMR_low15quant",  "SMR_low20quant",
+			"SMR_low10quant","SMR_low15quant",  "SMR_meanAll",
 			"smr_mlnd", "smr_CVmlnd", "smr_Nmlnd",
 			"mmr" ,"mmr_overall" , "AS_smr_mean10minVal", "AS_SMR_low10quant",
-			"AS_SMR_low15quant" , "AS_SMR_low20quant", "AS_smr_mlnd",
+			"AS_SMR_low15quant" , "AS_SMR_meanAll", "AS_smr_mlnd",
 			"AS_smr_mean10minVal_overall","AS_SMR_low10quant_overall", "AS_SMR_low15quant_overall",
-			"AS_SMR_low20quant_overall","AS_smr_mlnd_overall", "mmr_length_cycle",
+			"AS_SMR_meanAll_overall","AS_smr_mlnd_overall", "mmr_length_cycle",
 			"scaling_exponent_mmr", "scaling_exponent_smr", "common_mass")
 
 			newdata.smr<-rbind(newdata.smr, values)

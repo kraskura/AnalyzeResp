@@ -8,18 +8,18 @@
 #' @param type_file Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox", "PreSense_microplate"
 #' @param N_Ch The number of oxygen meter channels. Options include 2, 4, 8, 24. (microplate). If a 2-channel oxygen meter was used, this argument could be ignored, or enter 4
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
-#' @param exclude_first_measurement_s DEPRECATED nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)
-#' @param exclude_rows Rows to be excluded; used when there are unvanted NAs, or no sensor data. etc.
+#' @param exclude_first_measurement_s DEPRECATED Nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)
+#' @param exclude_rows Rows to be excluded; used when there are unwanted NAs, or no sensor data. etc.
 #' @param convert_units Logical (FALSE = default). If true, the function is passed to rMR function DO.unit.convert to convert O2 content units.
 #' @param units_from default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.in
 #' @param units_to = default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.out
-#' @param channels = c(1,2,3,4), indicate which channels to apply the conversion to
+#' @param channels = c(1,2,3,4), indicate which channels the unit conversion will be applied to
 #' @param salinity = 0, passed down to rMR::DO.unit.convert arg. salinity (must be in "pp.thou")
 #' @param atm_pressure = 1, passed down to rMR::DO.unit.convert arg. bar.press (must be in "atm")
 #' @param temperature user set consistent temperature for all channels (ºC)
 #' @param device only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".
-#' @param file_extension_id custom file extension for the saved csv file, default is "2"
-#' @param temperature_Ch Numerical, select the channel to use for temperature recording. This is used only for 4-channel firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.
+#' @param file_extension_id custom file extension for the saved csv file, default is 'blank'
+#' @param temperature_Ch Numerical, select the channel to use for temperature recording. This is used only for 4-channel Firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.
 
 #' @return The output from \code{\link{print}}
 #' @export
@@ -42,9 +42,9 @@ textFileConvert<-function(txt_file,
                           salinity = 0,
                           atm_pressure = 1,
                           temperature = NULL,
+                          temperature_Ch = 1,
                           device = "A",
-                          file_extension_id = "2",
-                          temperature_Ch = 1){
+                          file_extension_id = ""){
 
   # if(!is.numeric(nrowSkip)){
   #   stop("Must provide how many rows to skip from raw datafile;
@@ -142,12 +142,18 @@ textFileConvert<-function(txt_file,
   	              check.names = TRUE, quote = "", comment.char = "") # 70
   	              # ) # depracted nov 27 2024 + exclude_first_measurement_s)
     }
+    names <- gsub(x = d[1,], pattern = "\xb0",
+                     replacement = " ", useBytes = TRUE)
+    names <- gsub(x = d[1,], pattern = "\xe9",
+                     replacement = " ", useBytes = TRUE)
+
+    # names <- gsub(x = colnames(d), pattern = "\xb0",
+    #                  replacement = " ", useBytes = TRUE)
+    # names <- gsub(x = colnames(d), pattern = "\xe9",
+    #                  replacement = " ", useBytes = TRUE)
 
     colnames(d)<-d[1,]
     d<-d[-1,]
-
-    names <- gsub(x = colnames(d), pattern = "\xb0",
-                     replacement = " ", useBytes = TRUE)
 
     # indicate how many devices are recorded on the file:
     a<-any(c(grepl("[A Ch.", x = names, fixed = TRUE)))
@@ -177,37 +183,59 @@ textFileConvert<-function(txt_file,
     O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
     O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.3", x = names, ignore.case = T, useBytes = TRUE)))
     O2_ch4_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.4", x = names, ignore.case = T, useBytes = TRUE)))
-    temp_ch1_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.1", x = names, ignore.case = T, useBytes = TRUE)))
-    temp_ch2_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
-    temp_ch3_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.3", x = names, ignore.case = T, useBytes = TRUE)))
-    temp_ch4_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.4", x = names, ignore.case = T, useBytes = TRUE)))
 
-    # print(names)
-    # print(O2_ch1_name)
-    # print(temp_ch1_name)
+    if(N_Ch == 8){
+      temp_ch1_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.1", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch2_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch3_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.3", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch4_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.4", x = names, ignore.case = T, useBytes = TRUE)))
+    }else{
+      temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("T1]", x = names, ignore.case = T, useBytes = TRUE)))
+    }
 
-    new_csv<-d[, c(1:3)]
+    # date and time
+    date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) & grepl("T1]", x = names, ignore.case = T, useBytes = TRUE)))
+    time_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("T1]", x = names, ignore.case = T, useBytes = TRUE)))
+    dt_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) & grepl("T1]", x = names, ignore.case = T, useBytes = TRUE)))
+
+    # date_ch1_name<-which(c(grepl("Date", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.1", x = names, ignore.case = T, useBytes = TRUE)))
+    # date_ch2_name<-which(c(grepl("Date", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
+    # date_ch3_name<-which(c(grepl("Date", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.3", x = names, ignore.case = T, useBytes = TRUE)))
+    # date_ch4_name<-which(c(grepl("Date", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.4", x = names, ignore.case = T, useBytes = TRUE)))
+    # time_ch1_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.1", x = names, ignore.case = T, useBytes = TRUE)))
+    # time_ch2_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
+    # time_ch3_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.3", x = names, ignore.case = T, useBytes = TRUE)))
+    # time_ch4_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.4", x = names, ignore.case = T, useBytes = TRUE)))
+    # dt_ch1_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.1", x = names, ignore.case = T, useBytes = TRUE)))
+    # dt_ch2_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
+    # dt_ch3_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.3", x = names, ignore.case = T, useBytes = TRUE)))
+    # dt_ch4_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) & grepl("Ch.4", x = names, ignore.case = T, useBytes = TRUE)))
+
+
+    # if(date_Ch == 1){
+    #   new_csv<- d[, c(date_ch1_name[1], time_ch1_name[1], dt_ch1_name[1])]
+    # }else if(date_Ch == 2){
+    #   new_csv<- d[, c(date_ch2_name[1], time_ch2_name[1], dt_ch2_name[1])]
+    # }else if(date_Ch == 3){
+    #   new_csv<- d[, c(date_ch3_name[1], time_ch3_name[1], dt_ch3_name[1])]
+    # }else{
+    #   new_csv<- d[, c(date_ch4_name[1], time_ch4_name[1], dt_ch4_name[1])]
+    # }
+    # new_csv<-d[, c(1:3)]
+
+    new_csv<- d[, c(date_name[1], time_name[1], dt_name[1])]
 
     if(N_Ch == 4 | N_Ch==2){
-
     	new_csv$Ch1_O2<-d[,O2_ch1_name]
     	if(is.null(temperature)){
-    	  if(temperature_Ch == 1){
-    	    new_csv$Ch1_temp<-d[,temp_ch1_name]# temp Ch1 - but same for all
-    	  }
-    	  if(temperature_Ch == 2){
-    	    new_csv$Ch1_temp<-d[,temp_ch2_name]# temp Ch1 - but same for all
-    	  }
-    	  if(temperature_Ch == 3){
-    	    new_csv$Ch1_temp<-d[,temp_ch3_name]# temp Ch1 - but same for all
-    	  }
-    	  if(temperature_Ch == 4){
-    	    new_csv$Ch1_temp<-d[,temp_ch4_name]# temp Ch1 - but same for all
-    	  }
+    	    new_csv$Ch1_temp<-d[,temp_name]# temp same for all in 4 channel Firesting
     	}else{
     	  message("Using provided temperature, not recorded")
     	  new_csv$Ch1_temp<-temperature
     	}
+
+
+
 
     	new_csv$Ch2_O2<-d[,O2_ch2_name]
     	new_csv$Ch3_O2<-d[,O2_ch3_name]
@@ -462,7 +490,7 @@ textFileConvert<-function(txt_file,
   }else{ # has one output file
     new_csv[c(3:ncol(new_csv))] <- sapply(new_csv[3:ncol(new_csv)],as.numeric)
     if(!is.null(exclude_rows)){
-      print("here")
+      # print("here")
       message("excluding rows as defined")
       new_csv<-new_csv[-c(exclude_rows), ] # exclude unwanted times
     }
@@ -629,12 +657,12 @@ textFileConvert<-function(txt_file,
             is.na(new_csv1$Ch4_O2)) # all channel o2 is NA
 
   }else{
-    print(nrow(new_csv))
+    # print(nrow(new_csv))
    new_csv<-new_csv[!(is.na(new_csv$Ch1_O2) &
             is.na(new_csv$Ch2_O2) &
             is.na(new_csv$Ch3_O2) &
             is.na(new_csv$Ch4_O2)),] # all channel o2 is NA
-    print(nrow(new_csv))
+    # print(nrow(new_csv))
 
   }
 
