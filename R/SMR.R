@@ -773,7 +773,7 @@ SMR<-function(data,
 		}
 
 	newdata$min_start<-as.numeric(as.character(newdata$min_start))
-	# newdata$m<-abs(as.numeric(as.character(newdata$m))) # change Dec 13, 2024
+	newdata$m<-abs(as.numeric(as.character(newdata$m))) # change Dec 13, 2024
 	newdata$ID_code<-substr(data,start=6, stop=14) # modify this to your needs
 
 	graphics.off()

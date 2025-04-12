@@ -1727,7 +1727,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 			dplyr::slice_min(mo2, n=10)%>%
 			arrange(Ch,mo2)
 
-		print(c(nrow(a0), nrow(a00), nrow(a)))
+		# print(c(nrow(a0), nrow(a00), nrow(a)))
 
 		min10_MO2<-as.data.frame(a)
 
@@ -1788,7 +1788,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		row_ch4_meanAll<-which(a2$Ch=="Ch4" & a2$quantiles=="meanAll")
 
 		# print(d_SMR$Ch)
-		print(a2[a2$quantiles == "meanAll",])
+		# print(a2[a2$quantiles == "meanAll",])
 		min_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
 			geom_point(size=1)+
 		  geom_hline(data = a2[a2$quantiles == "meanAll",], aes(yintercept = mo2_perc), linetype = "dashed")+

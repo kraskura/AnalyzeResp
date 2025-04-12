@@ -33,6 +33,15 @@ csvSplit <- function (data,
 
   # read in file adn
   data_full<-read.csv(data)
+
+  # print(nrow(new_csv))
+  data_full<-data_full[!(is.na(data_full$Ch1_O2) &
+          is.na(data_full$Ch2_O2) &
+          is.na(data_full$Ch3_O2) &
+          is.na(data_full$Ch4_O2)),] # all channel o2 is NA
+  print(nrow(data_full))
+  print(tail(data_full))
+
   data_full$date<-as.character(data_full$date)
   data_full$time<-as.character(data_full$time)
 
@@ -52,6 +61,7 @@ csvSplit <- function (data,
   data_full$hr<-round(data_full$time_sec/3600,2)
   data_full$hr2<-round(data_full$time_sec/3600,0)
   data_full$time_min<-round(data_full$time_sec/60,2)
+
 
 	if(c(as.character(data_full$Ch1_O2[1])=="--- " )||
 	   c(as.character(data_full$Ch1_O2[1])=="---" )||

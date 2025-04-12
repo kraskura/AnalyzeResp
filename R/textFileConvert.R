@@ -131,29 +131,39 @@ textFileConvert<-function(txt_file,
     new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
 
     if(is.null(nrowSkip)){
-  	  d<-read.delim(txt_file, skip = 0,
-  	              check.names = TRUE, quote = "", comment.char = "")
+
+  	  d<-read.delim(txt_file, skip = 0, check.names = FALSE, quote = "", comment.char = "")
   	  first_row_use<-which(!substr(d[1:200, 1], start = 1, stop = 1) == "#")[1]
-      d<-d[-c(1:first_row_use-1),]
+      nrowSkip=first_row_use-1
+  	  d<-d[-c(1:first_row_use-1),]
       message("Dynamically search for first row within first 200 rows in the data")
 
     }else{
-  	  d<-read.delim(txt_file, skip = nrowSkip,
-  	              check.names = TRUE, quote = "", comment.char = "") # 70
+  	  d<-read.delim(txt_file, skip = nrowSkip, check.names = FALSE, quote = "", comment.char = "") # 70
   	              # ) # depracted nov 27 2024 + exclude_first_measurement_s)
     }
-    names <- gsub(x = d[1,], pattern = "\xb0",
-                     replacement = " ", useBytes = TRUE)
-    names <- gsub(x = d[1,], pattern = "\xe9",
-                     replacement = " ", useBytes = TRUE)
+    # print(ncol(d))
 
+    names<-iconv(x = d[1,], from = "", to = "UTF-8", sub = "byte")
+    # print(c("nrowSkip",nrowSkip))
+    # print(c("names",names))
+    # names <- gsub(x = (names0, pattern = "\\xb0",
+    #                  replacement = " ", useBytes = FALSE)
+    names <- gsub(x = names, pattern = "<[0-9a-f]{2}>", replacement = "", perl = TRUE)
+
+    # print(d[1,])
+    # print(charToRaw(names))
+    # print(names)
+    # print(ncol(d))
     # names <- gsub(x = colnames(d), pattern = "\xb0",
     #                  replacement = " ", useBytes = TRUE)
     # names <- gsub(x = colnames(d), pattern = "\xe9",
     #                  replacement = " ", useBytes = TRUE)
-
-    colnames(d)<-d[1,]
-    d<-d[-1,]
+    colnames(d) <- names
+    # colnames(d)<-d[1,]
+    # d<-d[-1,]
+    #
+    # print(ncol(d))
 
     # indicate how many devices are recorded on the file:
     a<-any(c(grepl("[A Ch.", x = names, fixed = TRUE)))
@@ -178,6 +188,9 @@ textFileConvert<-function(txt_file,
       print("no data")
     }
 
+    # print(head(d))
+    # print(length(names)== ncol(d))
+
     # filer out the correct columns
     O2_ch1_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.1", x = names, ignore.case = T, useBytes = TRUE)))
     O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
@@ -194,10 +207,19 @@ textFileConvert<-function(txt_file,
     }
 
     # date and time
-    date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) & grepl("T1]", x = names, ignore.case = T, useBytes = TRUE)))
-    time_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("T1]", x = names, ignore.case = T, useBytes = TRUE)))
-    dt_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) & grepl("T1]", x = names, ignore.case = T, useBytes = TRUE)))
+    date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
+                         grepl("T1]", x = names, ignore.case = T)))
+    temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) &
+                         grepl("T1]", x = names, ignore.case = T)))
+    dt_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) &
+                       grepl("T1]", x = names, ignore.case = T)))
+    time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
+                         grepl("T1]", x = names, ignore.case = T)))
 
+
+    # print(c("***TEMP", temp_name))
+    # print(time_name)
+    # print(dt_name)
     # date_ch1_name<-which(c(grepl("Date", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.1", x = names, ignore.case = T, useBytes = TRUE)))
     # date_ch2_name<-which(c(grepl("Date", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.2", x = names, ignore.case = T, useBytes = TRUE)))
     # date_ch3_name<-which(c(grepl("Date", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch.3", x = names, ignore.case = T, useBytes = TRUE)))
@@ -233,9 +255,6 @@ textFileConvert<-function(txt_file,
     	  message("Using provided temperature, not recorded")
     	  new_csv$Ch1_temp<-temperature
     	}
-
-
-
 
     	new_csv$Ch2_O2<-d[,O2_ch2_name]
     	new_csv$Ch3_O2<-d[,O2_ch3_name]
