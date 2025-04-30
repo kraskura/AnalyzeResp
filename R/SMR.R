@@ -139,8 +139,8 @@ SMR<-function(data,
   			}
 
   			DateTime_start<-as.character(d$DateTime[1])
-  			lm_coef<-coef(lm(d[,Ch]~d$time_min)) # get linear regression fit
-  			r2<-round(summary(lm(d[,Ch]~d$time_min))$r.squared,3) # get r2
+  			lm_coef<-coef(lm(d[,Ch]~d$time_min), na.action=na.omit) # get linear regression fit; exclude NA
+  			r2<-round(summary(lm(d[,Ch]~d$time_min), na.action=na.omit)$r.squared,3) # get r2
 
   			m<-round(lm_coef[2],5) # get slope
   			b<-round(lm_coef[1],2) # get intercept
@@ -162,7 +162,7 @@ SMR<-function(data,
         points(d_NoChop[,Ch]~time_min, data=d_NoChop, col = "blue", cex = 0.5, pch = 1)
   			points(d[,Ch]~time_min, data=d, col = "black", cex = 0.5, pch = 1)
         abline(v=start_NoChop, col="grey", lty = "dashed")
-        abline(lm(d[,Ch]~d$time_min), col="red",lwd = 2)
+        abline(lm(d[,Ch]~d$time_min, na.action=na.omit), col="red",lwd = 2)
   			mtext(bquote(y == .(lm_coef[2])*x + .(lm_coef[1])), adj=1, padj=0, cex=0.8, line=0) # display equation
   			mtext(bquote(italic(R)^2 == .(format(r2, digits = 3))), adj=1, padj=0, cex=0.8, line=1)
   			# the bwlow code for the frames
@@ -292,7 +292,7 @@ SMR<-function(data,
   						# cleaned section only
   						DateTime_start_clean<-as.character(d_clean$DateTime[1])
   						lm_coef_clean<-coef(lm(d_clean[,Ch]~d_clean$time_min)) # get linear regression fit
-  						r2_clean<-round(summary(lm(d_clean[,Ch]~d_clean$time_min))$r.squared,3) # get r2
+  						r2_clean<-round(summary(lm(d_clean[,Ch]~d_clean$time_min, na.action=na.omit))$r.squared,3) # get r2
   						m_clean<-round(lm_coef_clean[2],5) # get slope
   						b_clean<-round(lm_coef_clean[1],2) # get intercept
   						n_min_clean<-d_clean$time_min[nrow(d_clean)]-d_clean$time_min[1]
@@ -318,8 +318,8 @@ SMR<-function(data,
   					}else{
   						# full data / not cleaned
   						DateTime_start0<-as.character(d0$DateTime[1])
-  						lm_coef0<-coef(lm(d0[,Ch]~d0$time_min)) # get linear regression fit
-  						r20<-round(summary(lm(d0[,Ch]~d0$time_min))$r.squared,3) # get r2
+  						lm_coef0<-coef(lm(d0[,Ch]~d0$time_min, na.action=na.omit)) # get linear regression fit
+  						r20<-round(summary(lm(d0[,Ch]~d0$time_min, na.action=na.omit))$r.squared,3) # get r2
   						m0<-round(lm_coef0[2],5) # get slope
   						b0<-round(lm_coef0[1],2) # get intercept
   						n_min0<-d0$time_min[nrow(d0)]-d0$time_min[1]
@@ -347,7 +347,7 @@ SMR<-function(data,
   					if(cycle_use=="use cleaned cycle"){
   						rect(xleft=inv.data.clean[n2,5], ybottom=min(d0[,Ch]),xright=inv.data.clean[n2,6],ytop=max(d0[,Ch]) ,col= alpha("grey", 0.3), border=NA)
   						points(d_clean[,Ch]~time_min, d=d_clean, ylab=expression(paste(O2~(mg~L^{-1}))),xlab="Time (min)")
-  						abline(lm(d_clean[,Ch]~d_clean$time_min), col="red",lwd=2)
+  						abline(lm(d_clean[,Ch]~d_clean$time_min, na.action=na.omit), col="red",lwd=2)
   						mtext(bquote(y == .(lm_coef_clean[2])*x + .(lm_coef_clean[1])), adj=1, padj=0, cex=0.8, line=0) # display equation
   						mtext(bquote(italic(R)^2 == .(format(r2_clean, digits = 3))),adj=1, padj=0, cex=0.8, line=1)
 
@@ -362,7 +362,7 @@ SMR<-function(data,
   						}
 
   					}else{
-  						abline(lm(d0[,Ch]~d0$time_min), col="red",lwd=2)
+  						abline(lm(d0[,Ch]~d0$time_min, na.action=na.omit), col="red",lwd=2)
   						mtext(bquote(y == .(lm_coef0[2])*x + .(lm_coef0[1])), adj=1, padj=0, cex=0.8, line=0) # display equation
   						mtext(bquote(italic(R)^2 == .(format(r20, digits = 3))),adj=1, padj=0, cex=0.8, line=1)
 

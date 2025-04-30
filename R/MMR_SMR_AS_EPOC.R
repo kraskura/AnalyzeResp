@@ -486,12 +486,14 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   # START-- >>> background ------
   if((is.null(background_V) & !is.null(background_slope)) |(!is.null(background_V) & is.null(background_slope))) {
     stop_function <- TRUE
-    if(stop_function) stop("Must provide background unique slope and volume together, or provide a background file with same volumes as animal respirometers")
+    if(stop_function) stop("Must provide background unique slope and volume together,
+                           or provide a background file with same volumes as animal respirometers")
   }
 
 	if(c(is.null(background_prior) & is.null(background_post)) & match_background_Ch){
     stop_function <- TRUE
-	  if(stop_function) stop("If match_background_Ch = TRUE, must provide at least one datafiles, either background measured before or after the respirometry trial")
+	  if(stop_function) stop("If match_background_Ch = TRUE, must provide at least one datafiles,
+	                         either background measured before or after the respirometry trial")
   }
 
   # background file during the respirometry,
@@ -674,6 +676,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
         back_ch_prior[[i]] <- assign(back_m_name, mean_m)
         back_ch_prior_names[[i]] <- back_m_name
       }
+      print("background before the file")
     }
     # estimate one background slope mean of all recorded slopes
     # used in MR corrections
@@ -718,9 +721,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       # prior and post for a specific channel
 
       if (!is.null(background_prior)){
+        print("background_prior")
         ch_available<-as.numeric(substr(as.character(unique(back_prior$Ch)),start=3, stop=3))
       }
       if (!is.null(background_post)){
+        print("background_post")
         ch_available<-as.numeric(substr(as.character(unique(back_post$Ch)),start=3, stop=3))
       }
 
@@ -728,7 +733,8 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       for (i in 1:back_ch){
 
         # prior only condition
-       if(exists(paste("back_m_prior", ch_available[i], sep="")) & !exists(paste("back_m_post", ch_available[i], sep=""))){
+       if(is.null(background_post) &
+          !is.null(background_prior)){
 
          if(back_ch_prior_names[[i]]==paste("back_m_prior", ch_available[i], sep="")){
             # message("matching background Channels")
@@ -742,7 +748,8 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
        }
 
         # post only condition
-        if(!exists(paste("back_m_prior", ch_available[i], sep="")) & exists(paste("back_m_post",ch_available[i], sep=""))){
+        if(!is.null(background_post) &
+          is.null(background_prior)){
 
           if(back_ch_post_names[[i]]==paste("back_m_post", ch_available[i], sep="")){
             # message("matching background Channels")
@@ -754,7 +761,13 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
           }
 
         }
-        if(exists(paste("back_m_prior", ch_available[i], sep="")) & exists(paste("back_m_post",ch_available[i], sep=""))){
+
+        if(!is.null(background_post) &
+          !is.null(background_prior)){
+
+          print(paste("back_m_prior", ch_available[i], sep=""))
+              print("here")
+              print(back_m_prior1)
 
           if(back_ch_post_names[[i]]==paste("back_m_post", ch_available[i], sep="")){
            # message("matching background Channels")
@@ -796,6 +809,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 
   }# the end of getting the background slopes
+
 
   # if match_background_Ch=FALSE then correct all SMR values using back_m (the total avrg)
   # if match_background_Ch=TRUE then correct all SMR values using Chanel specific back_mCh,
