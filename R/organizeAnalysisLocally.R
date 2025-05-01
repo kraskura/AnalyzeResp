@@ -17,6 +17,7 @@ organizeAnalysisLocally <- function (SMR.folder = TRUE,
                                      MMR_SMR_AS_EPOC.folder = TRUE,
                                      BACK_RESP.folder = TRUE){
 
+     message("Package was last updated: ",  Sys.time())
       # userInputFolders<-readline(prompt="Indicate all folders to create e.g. type: 1, 2, 3: (1) SMR (2) MMR (3) SDA (4) MMR_SMR_AS_EPOC (5) BACK_RESP")
       # userInputFolders<-(c(as.numeric(unlist(strsplit(userInputFolders,split=',')))))
 
