@@ -19,7 +19,7 @@ textFileConvert(
   salinity = 0,
   atm_pressure = 1,
   temperature = NULL,
-  temperature_Ch = 1,
+  temperature_Ch = 0,
   device = "A",
   file_extension_id = ""
 )
@@ -53,7 +53,7 @@ textFileConvert(
 
 \item{temperature}{user set consistent temperature for all channels (ºC)}
 
-\item{temperature_Ch}{Numerical, select the channel to use for temperature recording. This is used only for 4-channel Firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.}
+\item{temperature_Ch}{Numerical, select the channel to use for temperature recording. This is used only for 4-channel Firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is 'NULL'0' which then chooses data from the first available channel}
 
 \item{device}{only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".}
 

@@ -24,12 +24,12 @@
 #'
 #' @importFrom stats lm
 #' @importFrom stats coef
+#' @importFrom stats na.omit
 #' @import graphics
 #' @import grDevices
 #' @import scales
 #' @import ggplot2
 #' @import utils
-#'
 #'
 SMR<-function(data,
               cycle_start,
@@ -583,24 +583,47 @@ SMR<-function(data,
     message("Channels [", drop_ch, "] are not analyzed", sep = "")
   }
 
+  if(any(is.na(data1$Ch1_O2)) & !drop_ch == 1){
+    message("Channel 1 has NAs - they are replaced with '0'")
+  }
+  if(any(is.na(data1$Ch2_O2)) & !drop_ch == 2){
+    message("Channel 2 has NAs - they are replaced with '0'")
+  }
+  if(any(is.na(data1$Ch3_O2)) & !drop_ch == 3){
+    message("Channel 3 has NAs - they are replaced with '0'")
+  }
+  if(any(is.na(data1$Ch4_O2)) & !drop_ch == 4){
+    message("Channel 4 has NAs - they are replaced with '0'")
+  }
+
+  # replace NA with zeros
+  data1<-data1 %>%
+    dplyr::mutate_at(c("Ch1_O2", "Ch2_O2", "Ch3_O2", "Ch4_O2"), ~replace(., is.na(.), 0))
+  print(tail(data1))
+
+
 	if(c(as.character(data1$Ch1_O2[1])=="--- " | as.character(data1$Ch1_O2[nrow(data1)])=="--- ")||
 	   c(as.character(data1$Ch1_O2[1])=="---" | as.character(data1$Ch1_O2[nrow(data1)])=="---")||
-	   c(is.na(data1$Ch1_O2[1]) | is.na(data1$Ch1_O2[nrow(data1)])) || any(grepl(x = drop_ch, pattern = 1))){
+	   # c(is.na(data1$Ch1_O2[1]) | is.na(data1$Ch1_O2[nrow(data1)])) ||
+	   any(grepl(x = drop_ch, pattern = 1))){
 		data1$Ch1_O2<-0
 	}
 	if(c(as.character(data1$Ch2_O2[1])=="--- " | as.character(data1$Ch2_O2[nrow(data1)])=="--- ")||
 	   c(as.character(data1$Ch2_O2[1])=="---" | as.character(data1$Ch2_O2[nrow(data1)])=="---")||
-	   c(is.na(data1$Ch2_O2[1]) | is.na(data1$Ch2_O2[nrow(data1)])) || any(grepl(x = drop_ch, pattern = 2))){
+	   # c(is.na(data1$Ch2_O2[1]) | is.na(data1$Ch2_O2[nrow(data1)])) ||
+	   any(grepl(x = drop_ch, pattern = 2))){
 		data1$Ch2_O2<-0
 	}
 	if(c(as.character(data1$Ch3_O2[1])=="--- " | as.character(data1$Ch3_O2[nrow(data1)])=="--- ")||
 	   c(as.character(data1$Ch3_O2[1])=="---" | as.character(data1$Ch3_O2[nrow(data1)])=="---")||
-	   c(is.na(data1$Ch3_O2[1]) | is.na(data1$Ch3_O2[nrow(data1)])) || any(grepl(x = drop_ch, pattern = 3))){
+	   # c(is.na(data1$Ch3_O2[1]) | is.na(data1$Ch3_O2[nrow(data1)])) ||
+	   any(grepl(x = drop_ch, pattern = 3))){
 		data1$Ch3_O2<-0
 	}
 	if(c(as.character(data1$Ch4_O2[1])=="--- " | as.character(data1$Ch4_O2[nrow(data1)])=="--- ")||
 	   c(as.character(data1$Ch4_O2[1])=="---" | as.character(data1$Ch4_O2[nrow(data1)])=="---")||
-	   c(is.na(data1$Ch4_O2[1]) | is.na(data1$Ch4_O2[nrow(data1)])) || any(grepl(x = drop_ch, pattern = 4))){
+	   # c(is.na(data1$Ch4_O2[1]) | is.na(data1$Ch4_O2[nrow(data1)])) ||
+	   any(grepl(x = drop_ch, pattern = 4))){
 		data1$Ch4_O2<-0
 	}
 

@@ -19,7 +19,8 @@
 #' @param temperature user set consistent temperature for all channels (ºC)
 #' @param device only for for "Firesting_2023" output files. Results from multiple devices can be recorded on one file. These are differentiated by uppper case letters "A", "B", etc. use this argument to specify which device is used, default is "A".
 #' @param file_extension_id custom file extension for the saved csv file, default is 'blank'
-#' @param temperature_Ch Numerical, select the channel to use for temperature recording. This is used only for 4-channel Firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.
+#' @param temperature_Ch Numerical, select the channel to use for temperature recording. This is used only for 4-channel Firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is 'NULL'0' which then chooses data from the first available channel
+
 
 #' @return The output from \code{\link{print}}
 #' @export
@@ -42,7 +43,7 @@ textFileConvert<-function(txt_file,
                           salinity = 0,
                           atm_pressure = 1,
                           temperature = NULL,
-                          temperature_Ch = 1,
+                          temperature_Ch = 0,
                           device = "A",
                           file_extension_id = ""){
 
@@ -185,7 +186,7 @@ textFileConvert<-function(txt_file,
     names<-colnames(d)
 
     if(nrow(d) < 1){
-      print("no data")
+      message("No data")
     }
 
     # print(head(d))
@@ -206,15 +207,62 @@ textFileConvert<-function(txt_file,
       temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) & grepl("T1]", x = names, ignore.case = T, useBytes = TRUE)))
     }
 
-    # date and time
-    date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
-                         grepl("T1]", x = names, ignore.case = T)))
-    temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) &
-                         grepl("T1]", x = names, ignore.case = T)))
-    dt_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) &
-                       grepl("T1]", x = names, ignore.case = T)))
-    time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
-                         grepl("T1]", x = names, ignore.case = T)))
+    # date and time, and temperature from the first channel that has data
+    if(any(grepl("Ch.1", x = names, ignore.case = T)) | temperature_Ch == 1){
+      message("Date, temperature and time from Channel 1")
+
+      date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.1", x = names, ignore.case = T)))
+      temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.1", x = names, ignore.case = T)))
+      dt_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) &
+                         grepl("Ch.1", x = names, ignore.case = T)))
+      time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.1", x = names, ignore.case = T)))
+
+    }else if(c(any(grepl("Ch.2", x = names, ignore.case = T)) |
+             temperature_Ch == 2) &&
+             !exists("date_name")){
+      message("Date, temperature and time from Channel 2")
+      date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.2", x = names, ignore.case = T)))
+      temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.2", x = names, ignore.case = T)))
+      dt_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) &
+                         grepl("Ch.2", x = names, ignore.case = T)))
+      time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.2", x = names, ignore.case = T)))
+
+    }else if(c(any(grepl("Ch.3", x = names, ignore.case = T)) |
+             temperature_Ch == 3) &&
+             !exists("date_name")){
+      message("Date, temperature and time from Channel 3")
+      date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.3", x = names, ignore.case = T)))
+      temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.3", x = names, ignore.case = T)))
+      dt_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) &
+                         grepl("Ch.3", x = names, ignore.case = T)))
+      time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.3", x = names, ignore.case = T)))
+
+    }else if(c(any(grepl("Ch.4", x = names, ignore.case = T)) |
+             temperature_Ch == 3) &&
+             !exists("date_name")){
+      message("Date, temperature and time from Channel 4")
+      date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.4", x = names, ignore.case = T)))
+      temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.4", x = names, ignore.case = T)))
+      dt_name<-which(c(grepl("dt", x = names, fixed = T, useBytes = TRUE) &
+                         grepl("Ch.4", x = names, ignore.case = T)))
+      time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
+                           grepl("Ch.4", x = names, ignore.case = T)))
+
+    }
+
+    # print(names)
+    # print(d[, dt_name])
 
 
     # print(c("***TEMP", temp_name))
@@ -522,11 +570,11 @@ textFileConvert<-function(txt_file,
         stop("If converting units, must provide 'units_from' and 'units_to'")
       }
     }
-    message(paste("Unit conversion parameters:","\n",
-            " units_from: ", units_from, "\n",
-            " units_to: ", units_to, "\n",
-            " salinity: ", salinity, "\n",
-            " atm_pressure: ", atm_pressure, sep =""))
+    # message(paste("Unit conversion parameters:","\n",
+    #         " units_from: ", units_from, "\n",
+    #         " units_to: ", units_to, "\n",
+    #         " salinity: ", salinity, "\n",
+    #         " atm_pressure: ", atm_pressure, sep =""))
 
     if(any(channels == 1)){
       # new_csv$Ch1_O2 <- conv_o2 (o2 = new_csv$Ch1_O2, from = "percent_a.s.", to = "mg_per_l", temp = temp_ch1, sal = salinity, atm_pres = atm_pressure)
