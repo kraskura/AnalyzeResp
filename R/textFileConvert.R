@@ -208,7 +208,7 @@ textFileConvert<-function(txt_file,
     }
 
     # date and time, and temperature from the first channel that has data
-    if(any(grepl("Ch.1", x = names, ignore.case = T)) | temperature_Ch == 1){
+    if(temperature_Ch == 1 | any(grepl("Ch.1", x = names, ignore.case = T))){
       message("Date, temperature and time from Channel 1")
 
       date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
@@ -220,9 +220,8 @@ textFileConvert<-function(txt_file,
       time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.1", x = names, ignore.case = T)))
 
-    }else if(c(any(grepl("Ch.2", x = names, ignore.case = T)) |
-             temperature_Ch == 2) &&
-             !exists("date_name")){
+    }else if(temperature_Ch == 2 | c(any(grepl("Ch.2", x = names, ignore.case = T))
+                                     && !exists("date_name"))){
       message("Date, temperature and time from Channel 2")
       date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.2", x = names, ignore.case = T)))
@@ -233,9 +232,8 @@ textFileConvert<-function(txt_file,
       time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.2", x = names, ignore.case = T)))
 
-    }else if(c(any(grepl("Ch.3", x = names, ignore.case = T)) |
-             temperature_Ch == 3) &&
-             !exists("date_name")){
+    }else if(temperature_Ch == 3 | c(any(grepl("Ch.3", x = names, ignore.case = T))
+                                     && !exists("date_name"))){
       message("Date, temperature and time from Channel 3")
       date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.3", x = names, ignore.case = T)))
@@ -246,9 +244,8 @@ textFileConvert<-function(txt_file,
       time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.3", x = names, ignore.case = T)))
 
-    }else if(c(any(grepl("Ch.4", x = names, ignore.case = T)) |
-             temperature_Ch == 3) &&
-             !exists("date_name")){
+    }else if(temperature_Ch == 4 | c(any(grepl("Ch.4", x = names, ignore.case = T))
+                                     && !exists("date_name"))){
       message("Date, temperature and time from Channel 4")
       date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.4", x = names, ignore.case = T)))

@@ -17,7 +17,7 @@
 #' @param background_data logical. If this datafile is a background (background respiration file), indicate TRUE
 #' @param sda_data logical. If this datafile belong to SDA analysis, is a SDA data file, indicate TRUE
 #' @param name_extensionID add identifier to the original name of the file
-#' @param drop_ch exclude channel from analysis
+#' @param drop_ch exclude channel from analysis; default  = 0 (none)
 
 #' @return The output from \code{\link{print}}
 #' @export
@@ -45,7 +45,7 @@ SMR<-function(data,
               background_data = FALSE,
               sda_data = FALSE,
               name_extensionID = "",
-              drop_ch = NULL){
+              drop_ch = 0){
 
   if(!length(as.vector(date_format))==2){
     stop_function<-TRUE
@@ -579,7 +579,7 @@ SMR<-function(data,
 	  # print(data2)
 	}
 
-  if(!is.null(drop_ch)){
+  if(!drop_ch == 0){
     message("Channels [", drop_ch, "] are not analyzed", sep = "")
   }
 
