@@ -599,7 +599,6 @@ SMR<-function(data,
   # replace NA with zeros
   data1<-data1 %>%
     dplyr::mutate_at(c("Ch1_O2", "Ch2_O2", "Ch3_O2", "Ch4_O2"), ~replace(., is.na(.), 0))
-  print(tail(data1))
 
 
 	if(c(as.character(data1$Ch1_O2[1])=="--- " | as.character(data1$Ch1_O2[nrow(data1)])=="--- ")||

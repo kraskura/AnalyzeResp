@@ -19,7 +19,7 @@ SMR(
   background_data = FALSE,
   sda_data = FALSE,
   name_extensionID = "",
-  drop_ch = NULL
+  drop_ch = 0
 )
 }
 \arguments{
@@ -51,7 +51,7 @@ SMR(
 
 \item{name_extensionID}{add identifier to the original name of the file}
 
-\item{drop_ch}{exclude channel from analysis}
+\item{drop_ch}{exclude channel from analysis; default  = 0 (none)}
 }
 \value{
 The output from \code{\link{print}}

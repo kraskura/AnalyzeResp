@@ -123,21 +123,20 @@ SDA<-function(AnimalID,
     f.smr <- function(x)(m0*x)+b # smr function
 
 
-  # Calculate the area under the SMR for all types of SMR calculated in the MMr_SMR_analyze function
+  # Calculate the area under the SMR for all types of SMR calculated in the MMR_SMR_analyze function
   # 2-2 the EPOC cuttoff in the smoothed function / this is used also for the SMR block
   # providing end_SDA value manually (in minutes)
   if(is.na(end_SDA)){
     if (begin_smr_hr_zero==TRUE){
-      end_SDA <- newVal$init[(which(round(newVal$V2[2:nrow(newVal)], 3)<=b))[1]] # force the function to look beyond the first value, which is set to SMR level
+      end_SDA <- newVal$init[(which(round(newVal$V2[2:nrow(newVal)], 3)<=b))[1]] # force the function to look for the mo2 to return to the SMR level beyond the first value, which is manually set to SMR level
     }else{
-      end_SDA <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]]
+      end_SDA <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]] # find first time when smoothed function intersected SMR level
     }
     if(is.na(end_SDA)){
       end_SDA<-newVal$init[nrow(newVal)]
       message(paste("Smooth level spar:", spar, "MR does not reach the chosen SMR levels: ",b, ": end tie of SDA is the end of the trial"))
     }
   }
-
 
   #3 integrate SDA curve with to the provided end SDA time
   f.int = function(x) {integrate(f, lower=0, upper=end_SDA)$value}
@@ -155,9 +154,10 @@ SDA<-function(AnimalID,
   peak_SDA_max<-max(d$mo2_max[1:end_SDA_row])[1]
   peak_SDA_mean<-max(d$mo2_mean[1:end_SDA_row])[1]
 
+  # peak times in hours
   time_peak_SDA<-d$hour[which(d$mo2_min==peak_SDA)]
   time_peak_SDA_max<-d$hour[which(d$mo2_max==peak_SDA_max)[1]]
-  time_peak_SDA_mean<-d$hour[which(d$mo2_mean==peak_SDA_mean)[1]] # in h not saved in the dataframe
+  time_peak_SDA_mean<-d$hour[which(d$mo2_mean==peak_SDA_mean)[1]]
   percentSMR_peak_SDA<-round((peak_SDA/b)*100,2)
 
   values<-as.data.frame(t(c(as.character(d$ID[1]),
@@ -173,14 +173,21 @@ SDA<-function(AnimalID,
   SDAdata.temp<-rbind(SDAdata.temp,values)
   scale<-c(0.02,0.07,0.12,0.17,0.22)
 
-  plot(x=range(newVal$init), xlim=c(0,max(d$hour, na.rm=TRUE)+2), ylim=c(0,max(d$mo2_min, na.rm=TRUE)+2),type='n', ylab="MO2", xlab="time (h)")
+  plot(x=range(newVal$init),
+       xlim=c(0,max(d$hour, na.rm=TRUE)+0.2),
+       ylim=c(0,max(d$mo2_max, na.rm=TRUE)+0.2),
+       type='n',
+       ylab="MO2",
+       xlab="time (h)")
   points(d$hour,d$mo2_min, main=spar, col="grey50", pch=21)
+  lines(d$hour,d$mo2_max, col="grey88", pch=21)
   lines(newy[[1]], newy[[2]], col="black")
   abline(h=b, col="red",lty=1, lwd=1)
   abline(v=end_SDA, col="red", lty=2)
-  legend("topright", legend=paste("spar = ", spar, "\n blue diam: peak SDA mean \n red diam: peak SDA" ))
+  legend("topright", bty ="n",
+         legend=paste("Smoothing hourly min values; smooth level = ", spar, "\n blue diam: peak SDA mean \n red diam: peak SDA \n red dashed line = end SDA, solid = SMR" ), cex = 0.7)
   # text(x=(max(d$mo2_min)+50)-(0.01*(max(d$hour)+50)),y=(max(d$mo2_min)+2)-(scale[i]*(max(d$mo2_min)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
-  points(x=time_peak_SDA, y=peak_SDA, pch=23, col="red",cex=2)
+  points(x=time_peak_SDA, y=peak_SDA, pch=18, col="red",cex=1.5)
   points(x=time_peak_SDA_mean, y=peak_SDA_mean, pch=23, col="blue",cex=2)
   # text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2)+2)-(scale[i]*(max(d$mo2)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
 
@@ -577,7 +584,7 @@ SDA<-function(AnimalID,
 	# ******************************************************************************
 	# ******************************************************************************
   # SMR, mo2 overnight -----
-  # drop any unwanted channels
+  ## drop any unwanted channels -------
   if(!is.null(drop_ch[1])){
     n_ch_drop<-length(drop_ch)
     for(i in 1:n_ch_drop){
@@ -592,7 +599,7 @@ SDA<-function(AnimalID,
   }
 
 
-  ## choose what to keep and what not for the SMR
+  ## choose what to keep and what not for the SMR --------
   # 2) keep only > 2 min sections for SMR calculations any type  selected above (SMR, pre-, post-shallow slopes) and exclude "SMR-cut", "SMR-cut1", "SMR-cut2"
 	d_SMR.1<-d_SMR[d_SMR$n_min>=1,]
 	if (nrow(d_SMR.1)==0){
@@ -637,7 +644,7 @@ SDA<-function(AnimalID,
     }
   }
 
-
+  ## background corrections ------
   # START -- >>> background corrections SMR
 
   # MO2 values MR in mgO2/min/kg - background corrected
@@ -834,10 +841,13 @@ SDA<-function(AnimalID,
     }
   }
   ## end of SMR corrections for body size and background
-
   # END -- >>> background corrections SMR
+  #
+  # ***************************************
+  # ***************************************
 
-  # find SMR estimates using all methods provided by Chabot
+
+  # find SMR estimates using all methods provided by Chabot -----------
   # --- #
   # 1. frequency plot
 
@@ -933,21 +943,21 @@ SDA<-function(AnimalID,
 
   min_percPlot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
 			geom_point(size=1)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3)+
+		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
+		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
+		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
+		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_20perc]),], aes(x=min_start, y=mo2), colour="purple",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3, pch = 1)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3, pch = 1 )+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3, pch = 1)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_15perc]),], aes(x=min_start, y=mo2), colour="blue",size=3, pch = 1)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3, pch = 19)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3, pch = 19)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3, pch = 19)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_10perc]),], aes(x=min_start, y=mo2), colour="darkturquoise",size=3, pch = 19)+
 		  # geom_p# geom_line(size=0.5, alpha=0.5)+
 			theme_light()+
-			# ggtitle("10th percentile")+
+			ggtitle("15th = blue open circle, 10th = light blue filled circle")+
 			theme(legend.position="top")+
 		  ylab(mo2_lab)+
 		  xlab("Time in trial (min)")+
@@ -992,7 +1002,7 @@ SDA<-function(AnimalID,
 
 
     # START -->>> MLND
-    # loop for MLND function
+    # MLND function --------------
     if(MLND){
 
       mlnd.m1<-Mclust(mo2, G=1:4, verbose = verbose.MLND)
@@ -1138,8 +1148,6 @@ SDA<-function(AnimalID,
     # read about EM http://www.statisticshowto.com/em-algorithm-expectation-maximization/
 
 
-
-
     values_smr<-as.data.frame(t(c(filename.SMR, ID, Y.Ch, BW, t_min, t_max, t_mean, N_mo2,
                                   min10_mean$mean_mo2[i], min10_mean$sd_mo2[i], min10_mean$cv_mo2[i],
                                   quantile_smr[i,2],  quantile_smr[i,3], quantile_smr[i,4],
@@ -1202,6 +1210,7 @@ SDA<-function(AnimalID,
   write.csv(file=filename.smr, d_SMR, row.names=FALSE)
   write.csv(file=filename.MR, newdata.smr, row.names=FALSE)
 
+
   # message("Save SMR, and MR files")
   # return(newdata.smr)
 
@@ -1234,7 +1243,6 @@ SDA<-function(AnimalID,
     message("SMR analysis: using estimated SMR values from previosly analyzed provided data")
   }
 
-
   if (local_path | !dir.exists("SDA")){
     plotname.sda.data<-	paste(gsub('.{4}$', '', data.SDA[1]),"_SDA_hourly_PLOT.png", sep='')
     SDAdata_name<-paste(gsub('.{4}$', '', data.SDA[1]),"_SDA_analyzed.csv", sep='')
@@ -1248,22 +1256,26 @@ SDA<-function(AnimalID,
     SDAhrlydata_name_wDELAY<-paste("./SDA/csv_analyzed_SDA_hrly/", gsub('.{4}$', '', data.SDA[1]),"_SDA_hrly_wDELAY_analyzed.csv", sep='')
   }
 
-  # SDA
-  # 1. get the mean of each hour
+  # SDA calc ------------
+  # 1. get the mean of each hour ------
+
   d_SMR$hour<-as.factor(floor(d_SMR$min_start/60))
   d_SMR$ID<-as.factor(as.character(d_SMR$ID))
   d_SMR_original<-d_SMR
+
+
   # handling delay for SDA analysis
   # split data frames (full data set)
   if(length(unique(d_SMR$Ch))>1){
     Ch.data.sda.full<-split(d_SMR, d_SMR$Ch)
+
   }else{
     Ch.data.sda.full<-d_SMR
   }
 
   for(h in 1:length(Ch.data.sda.full)){
-    # as.data.frame(Ch.data.sda.full[[h]])
-    h.Ch.data<-data.frame(Ch.data.sda.full)
+
+    h.Ch.data<-data.frame(Ch.data.sda.full[[h]])
     names(h.Ch.data)<-names(d_SMR)
     h.Ch<-as.character(h.Ch.data$Ch[1])
     h.Ch.data<-h.Ch.data[c(h.Ch.data$min_start/60) >= handling_delay[as.numeric(substr(h.Ch, start=3, stop=3))] , ]
@@ -1282,8 +1294,8 @@ SDA<-function(AnimalID,
   d_SMR<-Ch.data.sda.full_temp
 
   d_SMRsum<-d_SMR %>%
-    group_by(Ch, ID, resp.V, bw, hour) %>%
-    summarize(mo2_mean = mean(mo2, na.rm=TRUE),
+    dplyr::group_by(Ch, ID, resp.V, bw, hour) %>%
+    dplyr::summarize(mo2_mean = mean(mo2, na.rm=TRUE),
               mo2_sd = sd(mo2, na.rm=TRUE),
               mo2_min = min(mo2, na.rm=TRUE),
               t_mean=mean(t_mean),
@@ -1333,7 +1345,7 @@ SDA<-function(AnimalID,
     Y.Ch<-as.character(Y0$Ch[1])
     d<-Y0
 
-    # peak SDA from different measurements
+    # peak SDA from different measurements -----------
     # peak_SDA_max<-max(Y0.full$mo2)[1] # if more than one value is "max" then take the first one, that is also used for time calculations
     # time_peak_SDA_max<-Y0.full$min_start[which(Y0.full$mo2==peak_SDA_max)] # in minutes
 
@@ -1396,7 +1408,6 @@ SDA<-function(AnimalID,
 
     # d$hour<-d$hour+0.5 # make a half hour because the first measurement and the first hour mean are both 0, fitting smooth spline one will be dropped
 
-
     if(begin_smr_hr_zero){ # starting measurement at the beginning of the file
       # zero.row<-d[1,]
       zero.row$mo2_mean<-b # replacing with the selected SMR value
@@ -1420,7 +1431,10 @@ SDA<-function(AnimalID,
 					par(mfrow=c(length(spars),1), mar=c(4,4,3,1)+0.5)
         }
         # spar,d, SDAdata, b, sda_threshold, end_SDA, begin_smr_hr_zero
-        SDAdata <- SDA.spar(spar = spars[n], d, SDAdata = SDAdata, b,
+        SDAdata <- SDA.spar(spar = spars[n],
+                            d,
+                            SDAdata = SDAdata,
+                            b,
                             sda_threshold = sda_threshold_level[2],
                             end_SDA = end_SDA,
                             begin_smr_hr_zero = begin_smr_hr_zero)
@@ -1446,7 +1460,7 @@ SDA<-function(AnimalID,
       end_SDA_absolute<-end_SDA_Ch[i]
       end_row<-which(d$hour== end_SDA_absolute)
     }
-    message(paste("   SDA ends at ", d$hour[end_row], " h", sep=""))
+    message(paste("SDA ends at ", d$hour[end_row], " h", sep=""))
 
     ### INTEGRATION CODE
     Full_SDA<-AUC(x=d$hour[1:end_row], y=d$mo2_min[1:end_row], method="trapezoid")
@@ -1505,11 +1519,9 @@ SDA<-function(AnimalID,
     geom_errorbar(ymin=d_SMRsum$mo2_mean-d_SMRsum$mo2_sd, ymax = d_SMRsum$mo2_mean+d_SMRsum$mo2_sd, alpha=0.5 )+
     theme_classic()+
     geom_hline(aes(yintercept=SMR), data=d_SMRsum, lty=1)+
-    # geom_hline(aes(yintercept=SMR*0.9), data=d_SMRsum, lty=2, colour="grey")+
-    # geom_hline(aes(yintercept=SMR*1.1), data=d_SMRsum, lty=2, colour="grey")+
-    ggtitle(paste(sda_threshold_level[1], " at (%): ", as.numeric(sda_threshold_level[2])*100, sep=""))+
+    ggtitle(paste(sda_threshold_level[1], " at (%): ", as.numeric(sda_threshold_level[2])*100, sep=""),
+            subtitle = "faint dots = all measurements, dark points = hourly means +/- sd , \n line = hourly min value")+
     ylab("grey = MO2 mean +/- SE, black = hourly minimum recorded MO2")+
-    # geom_points(aes(x=
     facet_wrap(.~ID, ncol=1, nrow=n_id, scales="free")
   if(begin_smr_hr_zero){
     # sda_hr_plot<- sda_hr_plot + geom_point(data=d_SMRsum_wDELAY, aes(y=mo2_min, x=hour), pch=21, size=1, fill="red", alpha=0.7)

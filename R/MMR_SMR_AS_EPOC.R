@@ -99,7 +99,7 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   DateTime_start<-m<-cycle_mmr<-cycle_type<-NULL
   back_m_prior1<-back_m_prior2<-back_m_prior3<-back_m_prior4<-NULL
   back_regression1<-back_regression2<-back_regression3<-back_regression4<-NULL
-  xpos<-ypos<-hjustvar<-vjustvar<-annotateText<-min_start<-quantiles<-mo2_perc<-smr_val<-smr_method<-NULL
+  xpos<-ypos<-hjustvar<-vjustvar<-annotateText<-min_start<-quantiles<-mo2_perc<-smr_val<-smr_method<-`%>%<-`<- min10_mean <-sd_mo2<-NULL
 
   ## recovery smoothing, only relevant withing this function
   ## # start of EPOC.spar plot function
@@ -1714,47 +1714,32 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		# 1. frequency plot
 		d_SMR$DateTime_start<-as.character(d_SMR$DateTime_start)
 
-		# p_freq<-ggplot(d_SMR, aes(x=mo2))+
-		# geom_histogram(bins = 60 , color = "black", fill = "gray") +
-		# facet_grid(Ch~.)+
-		# theme_classic()+
-		# ggtitle(bquote(Datafile: ~ .(data.SMR)))+
-		# xlab(mo2_lab)
-
-
-		# the lowest 10 values after removal of 5 lowest
-		a0<-d_SMR[,2:ncol(d_SMR)] %>%
+    # the lowest 10 values after removal of 5 lowest
+		# first get the lowest 15 values
+		min15<-d_SMR[,2:ncol(d_SMR)] %>%
 			dplyr::group_by(Ch)%>%
-			dplyr::slice_min(mo2, n = 15)%>%
-			arrange(Ch,mo2)
+			dplyr::slice_min(mo2, n = 15, with_ties = FALSE) %>%
+			arrange(Ch, mo2) # orders values
 		# If n is greater than the number of rows in the group (or prop > 1), the result will be silently truncated to the group size.
 
-		# the 5 lowest/ excluded
-		a00<-a0 %>%
-			dplyr::group_by(Ch)%>%
-			dplyr::slice_min(mo2, n = 5)%>%
-			arrange(Ch,mo2)
-
-		# the 10 lowest/ excluding the 5 lowest in the df
-		a<-a0 %>%
-			dplyr::group_by(Ch)%>%
-			dplyr::slice_min(mo2, n=10)%>%
-			arrange(Ch,mo2)
-
-		# print(c(nrow(a0), nrow(a00), nrow(a)))
-
-		min10_MO2<-as.data.frame(a)
+		min5<-min15 %>%
+      dplyr::group_by(Ch)%>%
+			dplyr::slice_min(mo2, n = 5, with_ties = FALSE) %>%
 
 		# detach(package:plyr)
-		min10_mean<-min10_MO2%>%
+		min10_mean<-min15%>%
 		  dplyr::group_by(Ch)%>%
-			summarize(mean_temp=mean(t_mean), sd_temp=sd(t_mean), mean_mo2=mean(mo2), sd_mo2=sd(mo2),
-			cv_mo2 = sd(mo2)/(sqrt(10)), n=length(mo2))
+			summarize(mean_temp=mean(tail(t_mean, n = 10)),
+			          sd_temp=sd(tail(t_mean, n = 10)),
+			          mean_mo2=mean(tail(mo2, n = 10)),
+			          sd_mo2=sd(tail(mo2, n =10)),
+			          n=length(tail(mo2, n=10)),
+			         	cv_mo2 = sd_mo2/n)
 
 		min10_plot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
 			geom_point(size=1)+
-			geom_point(data=a00, aes(x=min_start, y=mo2), color="red", pch=19, size=3)+
-			geom_point(data=min10_MO2, aes(x=min_start, y=mo2), colour="green4",size=3, alpha=0.7)+
+			geom_point(data=min5, aes(x=min_start, y=mo2), color="red", pch=19, size=3)+
+			geom_point(data=min15, aes(x=min_start, y=mo2), colour="green4",size=3, alpha=0.7)+
 			geom_line(linewidth=0.5, alpha=0.)+
 		  theme_light()+
 		  ggtitle("Lowest 10 values, excluding the 5 lowest values")+
@@ -1773,11 +1758,10 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
       quant15<-quantile(split_temp$mo2, 0.15, na.rm=FALSE)
       meanAll<-mean(split_temp$mo2, na.rm=FALSE)
 
-      a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "10%", as.numeric(quant10)))))
-      a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "15%", as.numeric(quant15)))))
-      a2<-rbind(a2,as.data.frame(t(c(as.character(split_temp$Ch[1]), "meanAll", as.numeric(meanAll)))))
+      a2<-rbind(a2, as.data.frame(t(c(as.character(split_temp$Ch[1]), "10%", as.numeric(quant10)))))
+      a2<-rbind(a2, as.data.frame(t(c(as.character(split_temp$Ch[1]), "15%", as.numeric(quant15)))))
+      a2<-rbind(a2, as.data.frame(t(c(as.character(split_temp$Ch[1]), "meanAll", as.numeric(meanAll)))))
     }
-
 
 
     colnames(a2)<-c("Ch","quantiles", "mo2_perc")
@@ -1810,17 +1794,17 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_meanAll]),], aes(x=min_start, y=mo2), pch=1,  colour="purple",size=3)+
 		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_meanAll]),], aes(x=min_start, y=mo2), pch=1,  colour="purple",size=3)+
 		  # geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_meanAll]),], aes(x=min_start, y=mo2), pch=1,  colour="purple",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_15perc]),], aes(x=min_start, y=mo2), pch=2,  colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_15perc]),], aes(x=min_start, y=mo2), pch=2,  colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_15perc]),], aes(x=min_start, y=mo2), pch=2,  colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_15perc]),], aes(x=min_start, y=mo2), pch=2,  colour="blue",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_10perc]),], aes(x=min_start, y=mo2), pch=3,  colour="darkturquoise",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_10perc]),], aes(x=min_start, y=mo2), pch=3,  colour="darkturquoise",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_10perc]),], aes(x=min_start, y=mo2), pch=3,  colour="darkturquoise",size=3)+
-		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_10perc]),], aes(x=min_start, y=mo2), pch=3,  colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_15perc]),], aes(x=min_start, y=mo2), pch=1,  colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_15perc]),], aes(x=min_start, y=mo2), pch=1,  colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_15perc]),], aes(x=min_start, y=mo2), pch=1,  colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_15perc]),], aes(x=min_start, y=mo2), pch=1,  colour="blue",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch1" & d_SMR$mo2<=a2$mo2_perc[row_ch1_10perc]),], aes(x=min_start, y=mo2), pch=19,  colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch2" & d_SMR$mo2<=a2$mo2_perc[row_ch2_10perc]),], aes(x=min_start, y=mo2), pch=19,  colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch3" & d_SMR$mo2<=a2$mo2_perc[row_ch3_10perc]),], aes(x=min_start, y=mo2), pch=19,  colour="darkturquoise",size=3)+
+		  geom_point(data=d_SMR[which(d_SMR$Ch=="Ch4" & d_SMR$mo2<=a2$mo2_perc[row_ch4_10perc]),], aes(x=min_start, y=mo2), pch=19,  colour="darkturquoise",size=3)+
 		  # geom_p# geom_line(size=0.5, alpha=0.5)+
 			theme_light()+
-			ggtitle("mean all points = dashed line, 15th = blue, 10th = light blue")+
+			ggtitle("mean all points = dashed line, 15th = blue open circle, 10th = light blue filled circle")+
 			theme(legend.position="top")+
 		  ylab(mo2_lab)+
 		  xlab("Time in trial (min)")+
@@ -2020,11 +2004,14 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
   		AS_smr_mlnd_overall <- mmr_overall - mlnd
 
     	values_smr<-as.data.frame(t(c(filename.SMR, ID, Y.Ch, BW, t_min, t_max, t_mean, N_mo2,
-  		min10_mean$mean_mo2[i], min10_mean$sd_mo2[i], min10_mean$cv_mo2[i], quantile_smr[i,2],  quantile_smr[i,3], quantile_smr[i,4],
+  		min10_mean$mean_mo2[i], min10_mean$sd_mo2[i], min10_mean$cv_mo2[i],
+  		quantile_smr[i,2],  quantile_smr[i,3], quantile_smr[i,4],
   		mlnd, CVmlnd, Nmlnd,
   		NA, mmr_overall,
   		NA, NA, NA, NA, NA,
-  		AS_smr_mean10minVal_overall, AS_SMR_low10quant_overall, AS_SMR_low15quant_overall, AS_SMR_meanAll_overall, AS_smr_mlnd_overall, #5
+  		AS_smr_mean10minVal_overall,
+  		AS_SMR_low10quant_overall,
+  		AS_SMR_low15quant_overall, AS_SMR_meanAll_overall, AS_smr_mlnd_overall, #5
   		NA, scaling_exponent_mmr, scaling_exponent_smr, common_mass)))#4
 
     	if(length(values_smr) == 33){
