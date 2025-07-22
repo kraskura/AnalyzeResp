@@ -766,8 +766,8 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
           !is.null(background_prior)){
 
           print(paste("back_m_prior", ch_available[i], sep=""))
-              print("here")
-              print(back_m_prior1)
+              # print("here")
+              # print(back_m_prior1)
 
           if(back_ch_post_names[[i]]==paste("back_m_post", ch_available[i], sep="")){
            # message("matching background Channels")
@@ -1719,12 +1719,14 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 		min15<-d_SMR[,2:ncol(d_SMR)] %>%
 			dplyr::group_by(Ch)%>%
 			dplyr::slice_min(mo2, n = 15, with_ties = FALSE) %>%
-			arrange(Ch, mo2) # orders values
+			arrange(Ch, mo2)  # orders values
 		# If n is greater than the number of rows in the group (or prop > 1), the result will be silently truncated to the group size.
 
+		# the minimum 5 values of the lowest 15
 		min5<-min15 %>%
       dplyr::group_by(Ch)%>%
 			dplyr::slice_min(mo2, n = 5, with_ties = FALSE) %>%
+      arrange(Ch, mo2)
 
 		# detach(package:plyr)
 		min10_mean<-min15%>%
@@ -1738,11 +1740,11 @@ MMR_SMR_AS_EPOC<-function(data.MMR = NULL,
 
 		min10_plot<-ggplot(data=d_SMR, aes(x=min_start, y=mo2))+
 			geom_point(size=1)+
-			geom_point(data=min5, aes(x=min_start, y=mo2), color="red", pch=19, size=3)+
 			geom_point(data=min15, aes(x=min_start, y=mo2), colour="green4",size=3, alpha=0.7)+
+			geom_point(data=min5, aes(x=min_start, y=mo2), color="red", pch=19, size=3)+
 			geom_line(linewidth=0.5, alpha=0.)+
 		  theme_light()+
-		  ggtitle("Lowest 10 values, excluding the 5 lowest values")+
+		  ggtitle("Lowest 10 values (green), after excluding the 5 lowest values (red)")+
 			theme(legend.position="top")+
 			facet_grid(Ch~.)+
 		  ylab(mo2_lab)+
