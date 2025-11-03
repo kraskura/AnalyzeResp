@@ -580,6 +580,7 @@ SMR<-function(data,
 	}
 
   if(!drop_ch == 0){
+
     message("Channels [", drop_ch, "] are not analyzed", sep = "")
   }
 

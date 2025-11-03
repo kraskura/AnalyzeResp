@@ -178,18 +178,20 @@ SDA<-function(AnimalID,
        ylim=c(0,max(d$mo2_max, na.rm=TRUE)+0.2),
        type='n',
        ylab="MO2",
-       xlab="time (h)")
-  points(d$hour,d$mo2_min, main=spar, col="grey50", pch=21)
-  lines(d$hour,d$mo2_max, col="grey88", pch=21)
-  lines(newy[[1]], newy[[2]], col="black")
+       xlab="time (h)",
+       main=spar)
+  lines(d$hour,d$mo2_min, col="grey50", lty = 2, lwd = 1) # hourly min
+  lines(d$hour,d$mo2_mean, col="grey50",lty = 1, lwd = 1 ) # hourly mean
+  lines(d$hour,d$mo2_max, col="grey50", lty = 2, lwd = 1) # hourly max
+  lines(newy[[1]], newy[[2]], col="black", size = 2) # smoothed
   abline(h=b, col="red",lty=1, lwd=1)
   abline(v=end_SDA, col="red", lty=2)
   legend("topright", bty ="n",
          legend=paste("Smoothing hourly min values; smooth level = ", spar, "\n blue diam: peak SDA mean \n red diam: peak SDA \n red dashed line = end SDA, solid = SMR" ), cex = 0.7)
   # text(x=(max(d$mo2_min)+50)-(0.01*(max(d$hour)+50)),y=(max(d$mo2_min)+2)-(scale[i]*(max(d$mo2_min)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
-  points(x=time_peak_SDA, y=peak_SDA, pch=18, col="red",cex=1.5)
-  points(x=time_peak_SDA_mean, y=peak_SDA_mean, pch=23, col="blue",cex=2)
-  # text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2)+2)-(scale[i]*(max(d$mo2)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
+  points(x=time_peak_SDA, y=peak_SDA, pch=23, col="green3",cex=2) # peak of min
+  points(x=time_peak_SDA_mean, y=peak_SDA_mean, pch=23, col="blue",cex=2) #peak of mean
+  points(x=time_peak_SDA_max, y=peak_SDA_max, pch=23, col="black",cex=2) #peak of mean  # text(x=(max(d$time_mo2)+50)-(0.01*(max(d$time_mo2)+50)),y=(max(d$mo2)+2)-(scale[i]*(max(d$mo2)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
 
   SDAdata<-rbind(SDAdata,SDAdata.temp)
 
