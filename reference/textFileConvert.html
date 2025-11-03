@@ -52,7 +52,7 @@
 <span>  salinity <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  atm_pressure <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  temperature <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  temperature_Ch <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  temperature_Ch <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  device <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>  file_extension_id <span class="op">=</span> <span class="st">""</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -119,7 +119,7 @@
 
 
 <dt id="arg-temperature-ch">temperature_Ch<a class="anchor" aria-label="anchor" href="#arg-temperature-ch"></a></dt>
-<dd><p>Numerical, select the channel to use for temperature recording. This is used only for 4-channel Firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is channel 1.</p></dd>
+<dd><p>Numerical, select the channel to use for temperature recording. This is used only for 4-channel Firesting, when probe/channel 1 was not plugged in and therefore has all values as "NA". default is 'NULL'0' which then chooses data from the first available channel</p></dd>
 
 
 <dt id="arg-device">device<a class="anchor" aria-label="anchor" href="#arg-device"></a></dt>
@@ -144,7 +144,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>
