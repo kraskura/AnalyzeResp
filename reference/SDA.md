@@ -1,0 +1,179 @@
+# estimates regressions for SDA (digestion) measurements
+
+Estimates metabolic performances associated with digestion (SDA refers
+to specific dynamic action, digestion costs). (updates in progress)
+
+## Usage
+
+``` r
+SDA(
+  AnimalID,
+  BW.animal,
+  resp.V,
+  r2_threshold_smr,
+  sda_threshold_level,
+  scaling_exponent_smr = 1,
+  date_format = c("%Y-%m-%d %H:%M:%S", "GMT"),
+  data.SDA = NULL,
+  analyzed_MR = NULL,
+  SMR_calc = TRUE,
+  SMR_vals = c(NULL, NULL, NULL, NULL),
+  drop_ch = NULL,
+  N_Ch = 4,
+  end_SDA_Ch = c(NA, NA, NA, NA),
+  MLND = TRUE,
+  verbose.MLND = FALSE,
+  background_prior = NULL,
+  background_post = NULL,
+  background_slope = NULL,
+  background.V = NULL,
+  match_background_Ch = FALSE,
+  background_gr = NULL,
+  local_path = TRUE,
+  handling_delay = c(0, 0, 0, 0),
+  begin_smr_hr_zero = FALSE
+)
+```
+
+## Arguments
+
+- AnimalID:
+
+  Indicates individual ID; must be a vector of 4 characters. When
+  missing, enter "NA"
+
+- BW.animal:
+
+  Indicates individual mass; must be a vector of 4 characters. When
+  missing, enter "0"
+
+- resp.V:
+
+  Indicated the volume (L) of respirometry chambers; must be a vector of
+  4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
+
+- r2_threshold_smr:
+
+  R2 threshold for SMR, measurements below the threshold are excluded
+
+- sda_threshold_level:
+
+  Indicates the threshold relevant to an individuals SMR to calculate
+  the end time of recovery (the time at which metabolic rate has
+  returned to sda_threshold). The default is the SMR level (1; At 100
+  percent SMR). To use 120 percent SMR as threshold for full digestion,
+  enter sda_threshold = 1.2.
+
+- scaling_exponent_smr:
+
+  Body mass scaling exponent to correct SMR values for body size.
+  MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient
+  \[the intercept\], and b = scaling exponent \[the power term\])
+
+- date_format:
+
+  The date format used in the original data files. Argument is passed to
+  strptime. default is c("%Y-%m-%d %H:%M:%S", "GMT").
+
+- data.SDA:
+
+  The name of the SDA data file (“…analyzed.csv”; a character string);
+  an output file from the SMR function.
+
+- analyzed_MR:
+
+  The name of the data file with estimated SMR values
+
+- SMR_calc:
+
+  Logical, indicates whether to calculate SMR from the present data
+  trend
+
+- SMR_vals:
+
+  allows a user to input their own SMR values
+
+- drop_ch:
+
+  Indicates which channel is dropped or entirely excluded from the
+  analysis. Must be a numerical vector, e.g., c(1,3)
+
+- N_Ch:
+
+  The number of channels of the FireSting. It must be either 4 or 8.
+
+- end_SDA_Ch:
+
+  Manually assigned end time (min) of digestion (SDA). The time can be
+  assigned for each channel independently; use a numerical vector of 4
+  variables, one for each channel (e.g., c(120, 120, NA, 180), for 2 h,
+  2h, SMR level, and 3 h SDA end times, respectively)
+
+- MLND:
+
+  Logical argument. If TRUE, SMR is estimated also using Mean Lowest
+  Normal Distribution analysis. More details in Chabot et al 2016.
+
+- verbose.MLND:
+
+  From MLND: A logical controlling if a text progress bar from MLND is
+  displayed during the fitting procedure. (see 'verbose' in mclust
+  package functions).
+
+- background_prior:
+
+  The name of the analyzed background “…analyzed.csv” file, an output
+  file from the SMR function (respiration in an empty respirometer
+  measured before the respirometry trial).
+
+- background_post:
+
+  The same as background_prior, only post respirometry trial
+
+- background_slope:
+
+  Manually assigned background slope used to correct metabolic rate in
+  all individuals. Provide numeric value in mgO2 L-1 h-1v
+
+- background.V:
+
+  Manually assigned respirometry chamber volumes (L). A vector with 4
+  numeric variables, one for each channel.
+
+- match_background_Ch:
+
+  Logical. If TRUE, the background respiration is estimated and applied
+  channel-specific. The background_prior and background_post are used to
+  estimate background respiration specific to each channel (or
+  individual), which then is used to correct each individual’s MO2
+  independently. By default, the mean background respiration rate from
+  all channels is calculated and applied to correct all individual’s MO2
+
+- background_gr:
+
+  Specify whether to assume that bacterial growth (thus respiration
+  rates) changed linearly or in exponentially across the duration of the
+  respirometry trial. Must specify either "linear" or "exp": metabolic
+  rate values across the given trial are corrected using the estimated
+  background values from the indicated growth curve. Both
+  background_prior and background_post must be provided to enable this.
+
+- local_path:
+
+  Logical. If TRUE (default) all returned files will be saved in the
+  local working directory.
+
+- handling_delay:
+
+  a delay of SDA due to handling, anesthesia, or any other experimental
+  factor. in hours
+
+- begin_smr_hr_zero:
+
+  logical. Whether to force the integral SDA costs still be calculated
+  from hour 0, that is assumed to be at SMR level (refer to
+  sda_threshold_level)
+
+## Value
+
+The output from [`print`](https://rdrr.io/r/base/print.html)

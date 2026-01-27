@@ -1,0 +1,62 @@
+# AnalyzeResp
+
+The data analysis functions are frequently updated, please make sure you
+have the latest version. (July 17, 2025)
+
+## Installation:
+
+The latest version of AnalyzeResp can be installed from
+[GitHub](https://github.com/) following:
+
+``` r
+install.packages("devtools") # if devtools is not installed
+devtools::install_github("kraskura/AnalyzeResp")
+library(AnalyzeResp)
+```
+
+*The older version of this code was shared with users as one R script*
+
+## To do:
+
+- Error messages when data missing (NA in all rows)
+
+- Error messages when all data are below r2 thresholds
+
+- Update the size of the figures (dpi option)
+
+- Update the date time issue on SDA
+
+- Remake MMR figures in ggplot
+
+- Revamp all templates and example vignettes
+
+- Update EPOC plots
+
+- Check if works: channel specific background with one background file
+
+- Get rid of scaling stuff
+
+- Incorporate/provide example code
+
+# Package index
+
+## All functions
+
+- [`MMR()`](https://kraskura.github.io/AnalyzeResp/reference/MMR.md) :
+  Estimates regressions for MMR.
+- [`MMR_SMR_AS_EPOC()`](https://kraskura.github.io/AnalyzeResp/reference/MMR_SMR_AS_EPOC.md)
+  : estimates individual specific metabolic rates and recovery
+- [`SDA()`](https://kraskura.github.io/AnalyzeResp/reference/SDA.md) :
+  estimates regressions for SDA (digestion) measurements
+- [`SMR()`](https://kraskura.github.io/AnalyzeResp/reference/SMR.md) :
+  Estimates regressions for automatically timed measurement cycles
+- [`csvSplit()`](https://kraskura.github.io/AnalyzeResp/reference/csvSplit.md)
+  : Function to split to csv files for independent analyses.
+- [`organizeAnalysisLocally()`](https://kraskura.github.io/AnalyzeResp/reference/organizeAnalysisLocally.md)
+  : convenient function to create a set of local working directories to
+  streamline workflow
+- [`slidingSlope()`](https://kraskura.github.io/AnalyzeResp/reference/slidingSlope.md)
+  : steepest slope analysis only
+- [`textFileConvert()`](https://kraskura.github.io/AnalyzeResp/reference/textFileConvert.md)
+  : filters and converts raw data files
+

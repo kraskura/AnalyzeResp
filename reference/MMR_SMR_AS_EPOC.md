@@ -1,0 +1,246 @@
+# estimates individual specific metabolic rates and recovery
+
+Estimates aerobic metabolic performances in animals: MMR, SMR, EPOC
+(recovery), and Absolute Aerobic Scope. Relies on outputs from SMR and
+MMR functions
+
+## Usage
+
+``` r
+MMR_SMR_AS_EPOC(
+  data.MMR = NULL,
+  data.SMR = NULL,
+  AnimalID,
+  BW.animal,
+  resp.V,
+  r2_threshold_smr,
+  r2_threshold_mmr,
+  min_length_mmr,
+  scaling_exponent_mmr = 1,
+  scaling_exponent_smr = 1,
+  common_mass = 1,
+  mo2_val_for_calc = "mo2_1kg",
+  date_format = c("%Y-%m-%d %H:%M:%S", "GMT"),
+  N_Ch = 4,
+  drop_ch = NULL,
+  MLND = FALSE,
+  verbose.MLND = FALSE,
+  calc_EPOC = TRUE,
+  SMR_vals = c(NULL, NULL, NULL, NULL),
+  epoc_threshold = 1,
+  epoc_smoothing_level = c(0.1, 0.3),
+  recovMMR_threshold = 0.5,
+  end_EPOC_Ch = c(NA, NA, NA, NA),
+  background_prior = NULL,
+  background_post = NULL,
+  background_during = NULL,
+  background_during_Ch = NULL,
+  background_slope = NULL,
+  background_slope_mmr = NULL,
+  background_V = NULL,
+  background_gr = NULL,
+  match_background_Ch = FALSE,
+  mmr_background = "trial_mean",
+  local_path = TRUE
+)
+```
+
+## Arguments
+
+- data.MMR:
+
+  The name of the MMR data file (“…analyzed.csv”; a character string);
+  an output file from the MMR function.
+
+- data.SMR:
+
+  The name of the SMR data file (“…analyzed.csv”; a character string);
+  an output file from the SMR function.
+
+- AnimalID:
+
+  Indicates individual ID; must be a vector of 4 characters. When
+  missing, enter "NA"
+
+- BW.animal:
+
+  Indicates individual mass; must be a vector of 4 characters. When
+  missing, enter "0"
+
+- resp.V:
+
+  Indicates the volume (L) of respirometry chambers; must be a vector of
+  4 numbers (e.g., c(1, 1, 1, 1), for four 1-L respirometers)
+
+- r2_threshold_smr:
+
+  R2 threshold for SMR, measurements below the threshold are excluded
+
+- r2_threshold_mmr:
+
+  R2 threshold for MMR, measurements below the threshold are excluded
+
+- min_length_mmr:
+
+  The duration of MMR steepest slope measurement; 180, 120, 90, 60
+  seconds (s), to use full length of cycle add 1
+
+- scaling_exponent_mmr:
+
+  Body mass scaling exponent to correct MMR values for body size.
+  MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient
+  \[the intercept\], and b = scaling exponent \[the power term\])
+
+- scaling_exponent_smr:
+
+  Body mass scaling exponent to correct SMR values for body size.
+  MR=aBM^b (MR = metabolic rate, BW = body mass, a = scaling coefficient
+  \[the intercept\], and b = scaling exponent \[the power term\])
+
+- common_mass:
+
+  Metabolic performances are often calculated per unit mass. Use this
+  argument to define what the standardized mass should be. (default is
+  MO2 mgO2kg-1^ min-1^, a common mass of 1 kg). Units = kg
+
+- mo2_val_for_calc:
+
+  Units of metabolic rates represented on export figures.
+  mo2_common_mass_kg (standardized MO2 to 1 kg fish using scaling
+  exponents provided; mg O2 min-1 kg-1), mo2_individual_kg (MO2 of the
+  whole individual, mgO2 min-1)
+
+- date_format:
+
+  The date format used in the original data files. Argument is passed to
+  strptime. default is c("%Y-%m-%d %H:%M:%S", "GMT").
+
+- N_Ch:
+
+  The number of channels of the oxygen meter. It must be either 4 or 8
+  (8 channel meter has 4 oxygen probes and 4 temperature probes)
+
+- drop_ch:
+
+  Indicates which channel is dropped or entirely excluded from the
+  analysis. Must be a numerical vector, e.g., c(1,3)
+
+- MLND:
+
+  Logical argument. If TRUE, SMR is estimated also using Mean Lowest
+  Normal Distribution analysis. More details in Chabot et al 2016
+
+- verbose.MLND:
+
+  From MLND: A logical controlling if a text progress bar from MLND is
+  displayed during the fitting procedure. (see 'verbose' in mclust
+  package functions).
+
+- calc_EPOC:
+
+  Logical. If both SMR and MMR files are provided, indicate whether or
+  not to evaluate recovery (i.e. EPOC, hourly recovery, etc.)
+
+- SMR_vals:
+
+  Channel specific SMR values for EPOC calculations (mgO2/kg/min)
+
+- epoc_threshold:
+
+  Indicates the threshold relevant to an individual’s SMR to calculate
+  the end time of recovery (the time at which metabolic rate has
+  returned to epoc_threshold). The default is the SMR level (1; At 100
+  percent SMR). To use 120 percent SMR as a recovery threshold, enter
+  epoc_threshold = 1.2.
+
+- epoc_smoothing_level:
+
+  specifically smoothing level for EPOC function. Argument is passed to
+  'spar' in smooth.spline function for calculation. epoc_smoothing_level
+  = 0 uses trapezpoid method.
+
+- recovMMR_threshold:
+
+  Short-term recovery threshold relevant to individual’s MMR. Indicates
+  the (percent) level of MMR to calculate recovery indices. The default
+  indicates 50 percent MMR, e.g., the time it takes to recover to 50
+  percent MMR (default). Enter 0.3 for 30 percent MMR, 0.8 for 80
+  percent MMR)
+
+- end_EPOC_Ch:
+
+  Manually assigned end time (min) of full recovery (EPOC). The time can
+  be assigned for each channel independently; use a numerical vector of
+  4 variables, one for each channel (e.g., c(120, 120, NA, 180), for 2
+  h, 2h, SMR level, and 3 h EPOC end times, respectively)
+
+- background_prior:
+
+  The name of the analyzed background “…analyzed.csv” file, an output
+  file from the SMR function (respiration in an empty respirometer
+  measured before the respirometry trial).
+
+- background_post:
+
+  The same as 'background_prior', only post the respirometry trial
+
+- background_during:
+
+  The same as 'background_prior', only during the respirometry trial
+  (i.e., side empty channel)
+
+- background_during_Ch:
+
+  The channel(s) in the file that indicate the background
+  respiration.The times must match the data recorded with the animal
+
+- background_slope:
+
+  Manually assigned background slope used to correct metabolic rate in
+  all individuals. Provide numeric value in mgO2 L-1 h-1
+
+- background_slope_mmr:
+
+  Manually assigned background slope used to correct MMR in all
+  individuals. Provide numeric value in mgO2 L-1 h-1
+
+- background_V:
+
+  Manually assigned respirometer volumes (L). A vector with 4 numeric
+  variables, one for each channel.
+
+- background_gr:
+
+  Specify whether to assume that bacterial growth (thus respiration
+  rates) changed linearly or in exponentially across the duration of the
+  respirometry trial. Must specify either "linear" or "exp": metabolic
+  rate values across the given trial are corrected using the estimated
+  background values from the indicated growth curve. Both
+  background_prior and background_post must be provided to enable this.
+
+- match_background_Ch:
+
+  Logical. If TRUE, the background respiration is estimated and applied
+  channel-specific. The background_prior and background_post are used to
+  estimate background respiration specific to each channel (or
+  individual), which then is used to correct each individual’s MO2
+  independently. By default, the mean background respiration rate from
+  all channels is calculated and applied to correct all individual’s MO2
+
+- mmr_background:
+
+  Specifies what background value should be used to correct MMR value.
+  Options: i) "back_prior" takes background respiration rate value
+  estimated from the background_prior file only, ii)"trial_mean" takes
+  background respiration rate value that is applied to the entire trial
+  (MMR and SMR, indistinguishable), iii) "back_gr", and iv) a defined
+  respiration rate value mgO2 L-1 h-1.
+
+- local_path:
+
+  Logical. If TRUE (default) all returned files will be saved in the
+  local working directory.
+
+## Value
+
+The output from [`print`](https://rdrr.io/r/base/print.html)
