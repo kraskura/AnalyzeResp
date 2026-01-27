@@ -4,9 +4,9 @@
 #' Uses to convert and format (strip from unused columns and rows) the raw '.txt' data file to produce a .csv file that is required for `MMR` and `SMR` functions.
 #'
 #' @param txt_file The name of the original “.txt” file from oxygen meter
-#' @param nrowSkip The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox" = 41; "PreSense_microplate" = 10, these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings
-#' @param type_file Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox", "PreSense_microplate"
-#' @param N_Ch The number of oxygen meter channels. Options include 2, 4, 8, 24. (microplate). If a 2-channel oxygen meter was used, this argument could be ignored, or enter 4
+#' @param nrowSkip The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox_2023" = 41; "PreSense_microplate" = 10, these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings
+#' @param type_file Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox_2023", "PreSense_microplate"
+#' @param N_Ch The number of oxygen meter channels that described the physical device, not how many channels were plugged in; this is an argument that describes hardware. Options include 2, 4, 8, 24. (microplate). If a 2-channel oxygen meter was used, this argument could be ignored, or enter 4
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param exclude_first_measurement_s DEPRECATED Nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)
 #' @param exclude_rows Rows to be excluded; used when there are unwanted NAs, or no sensor data. etc.
@@ -42,7 +42,7 @@ textFileConvert<-function(txt_file,
                           salinity = 0,
                           atm_pressure = 1,
                           temperature = NULL,
-                          temperature_Ch = 0,
+                          temperature_Ch = 1,
                           device = "A",
                           file_extension_id = ""){
 
@@ -312,7 +312,8 @@ textFileConvert<-function(txt_file,
     	new_csv$Ch4_O2<-d[,8]
     }
 
-  }else if(type_file == "Firesting_2023"){
+  }
+  else if(type_file == "Firesting_2023"){
 
     new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
 
@@ -394,7 +395,7 @@ textFileConvert<-function(txt_file,
 
     # date and time, and temperature from the first channel that has data
     if(temperature_Ch == 1 | any(grepl("Ch.1", x = names, ignore.case = T))){
-      message("Date, temperature and time from Channel 1")
+      message("Date, temperature and time from Channel 1; to change adjust argument 'temperature_Ch'")
 
       date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.1", x = names, ignore.case = T)))
@@ -405,9 +406,10 @@ textFileConvert<-function(txt_file,
       time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.1", x = names, ignore.case = T)))
 
-    }else if(temperature_Ch == 2 | c(any(grepl("Ch.2", x = names, ignore.case = T))
+    }
+    else if(temperature_Ch == 2 | c(any(grepl("Ch.2", x = names, ignore.case = T))
                                      && !exists("date_name"))){
-      message("Date, temperature and time from Channel 2")
+      message("Date, temperature and time from Channel 2; to change adjust argument 'temperature_Ch'")
       date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.2", x = names, ignore.case = T)))
       temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) &
@@ -417,9 +419,10 @@ textFileConvert<-function(txt_file,
       time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.2", x = names, ignore.case = T)))
 
-    }else if(temperature_Ch == 3 | c(any(grepl("Ch.3", x = names, ignore.case = T))
+    }
+    else if(temperature_Ch == 3 | c(any(grepl("Ch.3", x = names, ignore.case = T))
                                      && !exists("date_name"))){
-      message("Date, temperature and time from Channel 3")
+      message("Date, temperature and time from Channel 3; to change adjust argument 'temperature_Ch'")
       date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.3", x = names, ignore.case = T)))
       temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) &
@@ -429,9 +432,10 @@ textFileConvert<-function(txt_file,
       time_name<-which(c(grepl("Time", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.3", x = names, ignore.case = T)))
 
-    }else if(temperature_Ch == 4 | c(any(grepl("Ch.4", x = names, ignore.case = T))
+    }
+    else if(temperature_Ch == 4 | c(any(grepl("Ch.4", x = names, ignore.case = T))
                                      && !exists("date_name"))){
-      message("Date, temperature and time from Channel 4")
+      message("Date, temperature and time from Channel 4; to change adjust argument 'temperature_Ch'")
       date_name<-which(c(grepl("Date", x = names, fixed = T, useBytes = TRUE) &
                            grepl("Ch.4", x = names, ignore.case = T)))
       temp_name<-which(c(grepl("Temp", x = names, fixed = T, useBytes = TRUE) &
@@ -507,7 +511,8 @@ textFileConvert<-function(txt_file,
     	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2", "Ch2_temp", "Ch3_temp", "Ch4_temp")
     }
 
-  }else if(type_file == "Witrox_2023"){
+  }
+  else if(type_file == "Witrox_2023"){
       new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
       if(is.null(nrowSkip)){
         nrowSkip <-41
@@ -523,10 +528,10 @@ textFileConvert<-function(txt_file,
       O2_ch2_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 2", x = names, ignore.case = T, useBytes = TRUE)))
       O2_ch3_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 3", x = names, ignore.case = T, useBytes = TRUE)))
       O2_ch4_name<-which(c(grepl("Oxygen", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 4", x = names, ignore.case = T, useBytes = TRUE)))
-      temp_ch1_name<-which(c(grepl("temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 1", x = names, ignore.case = T, useBytes = TRUE)))
-      temp_ch2_name<-which(c(grepl("temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 2", x = names, ignore.case = T, useBytes = TRUE)))
-      temp_ch3_name<-which(c(grepl("temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 3", x = names, ignore.case = T, useBytes = TRUE)))
-      temp_ch4_name<-which(c(grepl("temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 4", x = names, ignore.case = T, useBytes = TRUE)))    	# d<-d[,1:15]
+      temp_ch1_name<-which(c(grepl("Temperature", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 1", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch2_name<-which(c(grepl("Temperature", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 2", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch3_name<-which(c(grepl("Temperature", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 3", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch4_name<-which(c(grepl("Temperature", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 4", x = names, ignore.case = T, useBytes = TRUE)))    	# d<-d[,1:15]
 
       new_csv<-d[, c(1:2)]
 
@@ -542,6 +547,7 @@ textFileConvert<-function(txt_file,
 
     	new_csv$Ch1_O2<-d[,O2_ch1_name]
     	if(is.null(temperature)){
+    	  print(d[,temp_ch1_name])
     	  if(temperature_Ch == 1){
     	    new_csv$Ch1_temp<-d[,temp_ch1_name]# temp Ch1 - but same for all
     	  }
@@ -570,7 +576,9 @@ textFileConvert<-function(txt_file,
     	new_csv$Ch4_O2<-d[,O2_ch4_name]
 
     	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
-    }else if(type_file == "PreSense_microplate"){
+
+    }
+  else if(type_file == "PreSense_microplate"){
 
       d<-as.data.frame(read_excel(txt_file, sheet = 1, skip = nrowSkip))
       # get the order of plates
@@ -736,7 +744,8 @@ textFileConvert<-function(txt_file,
       new_csv6<-new_csv6[-c(exclude_rows), ] # exclude unwanted times
     }
 
-  }else{ # has one output file
+  }
+  else{ # has one output file
     new_csv[c(3:ncol(new_csv))] <- sapply(new_csv[3:ncol(new_csv)],as.numeric)
     if(!is.null(exclude_rows)){
       # print("here")
@@ -905,7 +914,8 @@ textFileConvert<-function(txt_file,
             is.na(new_csv1$Ch3_O2) &
             is.na(new_csv1$Ch4_O2)) # all channel o2 is NA
 
-  }else{
+  }
+  else{
     # print(nrow(new_csv))
    new_csv<-new_csv[!(is.na(new_csv$Ch1_O2) &
             is.na(new_csv$Ch2_O2) &
@@ -928,7 +938,8 @@ textFileConvert<-function(txt_file,
     }else{
       write.csv(file=paste(gsub('.{4}$', '', txt_file), "_", device, file_extension_id, "_converted.csv", sep=''), new_csv, row.names=FALSE)
     }
-  } else if (local_path == FALSE & dir.exists("csv_files")){
+  }
+  else if (local_path == FALSE & dir.exists("csv_files")){
     if(type_file == "PreSense_microplate"){
       write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file),file_extension_id,  "1_converted.csv", sep=''), new_csv1, row.names=FALSE)
       write.csv(file=paste("./csv_files/", gsub('.{4}$', '', txt_file),file_extension_id, "2_converted.csv", sep=''), new_csv2, row.names=FALSE)

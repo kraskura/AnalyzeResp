@@ -142,9 +142,9 @@ SDA<-function(AnimalID,
   f.int = function(x) {integrate(f, lower=0, upper=end_SDA)$value}
   f.int.vec = Vectorize(f.int, vectorize.args='x')
   f.int.vec = Vectorize(f.int, vectorize.args='x')
-  full<-f.int.vec(end_SDA)
+  full<-f.int.vec(end_SDA) # integrated block of SDA from SDA smooth line to zero
   # SMR block
-  SMR<-integrate(f.smr, lower=0, upper=end_SDA)$value
+  SMR<-integrate(f.smr, lower=0, upper=end_SDA)$value # integrated SMR from SMR line to zero
   SDA_full<-round(full-SMR,3) # the costs of digestion
   MO2_full<-round(newVal$V2[which(newVal$init==end_SDA)],3)
 
@@ -1260,11 +1260,9 @@ SDA<-function(AnimalID,
 
   # SDA calc ------------
   # 1. get the mean of each hour ------
-
   d_SMR$hour<-as.factor(floor(d_SMR$min_start/60))
   d_SMR$ID<-as.factor(as.character(d_SMR$ID))
   d_SMR_original<-d_SMR
-
 
   # handling delay for SDA analysis
   # split data frames (full data set)
@@ -1295,7 +1293,7 @@ SDA<-function(AnimalID,
 
   d_SMR<-Ch.data.sda.full_temp
 
-  d_SMRsum<-d_SMR %>%
+  d_SMRsum<-d_SMR %>% # SDA file hourly summary
     dplyr::group_by(Ch, ID, resp.V, bw, hour) %>%
     dplyr::summarize(mo2_mean = mean(mo2, na.rm=TRUE),
               mo2_sd = sd(mo2, na.rm=TRUE),
@@ -1329,8 +1327,8 @@ SDA<-function(AnimalID,
   for(i in 1:length(unique(d_SMRsum$Ch))){
 
     if (length(unique(d_SMRsum$Ch))==1){
-      Y0<-d_SMRsum
-      Y0.full<-Ch.data.sda.full
+      Y0<-d_SMRsum # hourly SDA
+      Y0.full<-Ch.data.sda.full # full SDA every measurement
     }else{
       Y0<-as.data.frame(Ch.data.sda[i])
       Y0.full<-as.data.frame(Ch.data.sda.full[i])
@@ -1362,9 +1360,11 @@ SDA<-function(AnimalID,
       b<-SMR_vals[as.numeric(substr(Y.Ch, start=3, stop=3))]
       b<-b*as.numeric(sda_threshold_level[2])
 
+      message("Using provided SMR values for SDA calculations")
     }else{
       # either SMR_calc=TRUE in which case the newdata.smr will be the newly analyzed dataframe
       # or SMR_calc=FALSE in which case the newdata.smr will be the imported data frame (data.MR)
+
       smr.row<-newdata.smr[which(as.character(newdata.smr$Ch)==as.character(d$Ch[1])),]
       smr.row[,c(4:ncol(smr.row))] <- lapply(smr.row[,c(4:ncol(smr.row))], as.character)
       smr.row[,c(4:ncol(smr.row))] <- lapply(smr.row[,c(4:ncol(smr.row))], as.numeric)
@@ -1372,18 +1372,23 @@ SDA<-function(AnimalID,
       ID<-smr.row["ID"]
 
       if(sda_threshold_level[1]=="SMR_mean10minVal"){
+        message("Using calculated SMR values: SMR_mean10minVal")
         b<-as.numeric(round(smr.row["smr_mean10minVal"],2))
       }
       if(sda_threshold_level[1]=="SMR_low10quant"){
+        message("Using calculated SMR values: SMR_low10quant")
         b<-as.numeric(round(smr.row["SMR_low10quant"],2))
       }
       if(sda_threshold_level[1]=="SMR_low15quant"){
+        message("Using calculated SMR values: SMR_low15quant")
         b<-as.numeric(round(smr.row["SMR_low15quant"],2))
       }
       if(sda_threshold_level[1]=="SMR_low20quant"){
+        message("Using calculated SMR values: SMR_low20quant")
         b<-as.numeric(round(smr.row["SMR_low20quant"],2))
       }
       if(MLND & sda_threshold_level[1]=="smr_mlnd"){
+        message("Using calculated SMR values: smr_mlnd")
         b<-as.numeric(round(smr.row["smr_mlnd"],2))
       }
 
@@ -1426,6 +1431,7 @@ SDA<-function(AnimalID,
     }
 
     if(nrow(d)>=4){
+
       for (n in 1:length(spars)){
         # if (b<1) {next}
         if (n == 1) {
