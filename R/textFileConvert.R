@@ -43,7 +43,7 @@ textFileConvert<-function(txt_file,
                           atm_pressure = 1,
                           temperature = NULL,
                           temperature_Ch = 1,
-                          device = "A",
+                          device = "",
                           file_extension_id = ""){
 
 
@@ -329,35 +329,19 @@ textFileConvert<-function(txt_file,
   	  d<-read.delim(txt_file, skip = nrowSkip, check.names = FALSE, quote = "", comment.char = "") # 70
   	              # ) # depracted nov 27 2024 + exclude_first_measurement_s)
     }
-    # print(ncol(d))
 
     names<-iconv(x = d[1,], from = "", to = "UTF-8", sub = "byte")
-    # print(c("nrowSkip",nrowSkip))
-    # print(c("names",names))
-    # names <- gsub(x = (names0, pattern = "\\xb0",
-    #                  replacement = " ", useBytes = FALSE)
     names <- gsub(x = names, pattern = "<[0-9a-f]{2}>", replacement = "", perl = TRUE)
 
-    # print(d[1,])
-    # print(charToRaw(names))
-    # print(names)
-    # print(ncol(d))
-    # names <- gsub(x = colnames(d), pattern = "\xb0",
-    #                  replacement = " ", useBytes = TRUE)
-    # names <- gsub(x = colnames(d), pattern = "\xe9",
-    #                  replacement = " ", useBytes = TRUE)
     colnames(d) <- names
-    # colnames(d)<-d[1,]
-    # d<-d[-1,]
-    #
-    # print(ncol(d))
 
     # indicate how many devices are recorded on the file:
+    xxx <-any(c(grepl("[ Ch.", x = names, fixed = TRUE))) # no ABC devices.
     a<-any(c(grepl("[A Ch.", x = names, fixed = TRUE)))
     b<-any(c(grepl("[B Ch.", x = names, fixed = TRUE)))
     c<-any(c(grepl("[C Ch.", x = names, fixed = TRUE)))
 
-    if(a & !b & !c){
+    if(c(a & !b & !c) | xxx){
       message("One device on file")
     }
     if(a & b & !c){
@@ -367,6 +351,8 @@ textFileConvert<-function(txt_file,
       message("Three devices on file")
     }
 
+    d<-d[-1, ] # take our the first row that has the column names
+# print(d)
     # select the correct device
     d<-d[, which(c(grepl(paste("[", device, sep = ""), x = names, fixed = TRUE)))]
     names<-colnames(d)

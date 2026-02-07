@@ -20,7 +20,7 @@ textFileConvert(
   atm_pressure = 1,
   temperature = NULL,
   temperature_Ch = 1,
-  device = "A",
+  device = "",
   file_extension_id = ""
 )
 }

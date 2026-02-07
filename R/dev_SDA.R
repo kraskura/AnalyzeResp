@@ -105,13 +105,13 @@ SDA<-function(AnimalID,
     sda_threshold<-as.numeric(sda_threshold)
     d$hour<-as.numeric(as.character(d$hour))
 
-    d<-d[complete.cases(d),]
-    fit<-smooth.spline(d$hour,d$mo2_min, spar=spar)
-    f = function(x) {predict(fit, x)$y}
+    d<-d[complete.cases(d),] # full dataset
+    fit<-smooth.spline(d$hour,d$mo2_min, spar=spar) # smoothed dataset
+    f = function(x) {predict(fit, x)$y} # new predictions
 
     end<-round(d$hour[nrow(d)],1)
-    newx<-seq(0,end, by=0.1)
-    newy<-predict(fit, newx, deriv=0)
+    newx<-seq(0,end, by=0.1) # make very tiny timesteps for smoothing
+    newy<-predict(fit, newx, deriv=0) # predict smoothed line
     newy<-lapply(newy, as.numeric)
     newVal<-data.frame(Reduce(cbind,newy)) # creating dummy dataset with predicted values
 
@@ -123,20 +123,20 @@ SDA<-function(AnimalID,
     f.smr <- function(x)(m0*x)+b # smr function
 
 
-  # Calculate the area under the SMR for all types of SMR calculated in the MMR_SMR_analyze function
-  # 2-2 the EPOC cuttoff in the smoothed function / this is used also for the SMR block
-  # providing end_SDA value manually (in minutes)
-  if(is.na(end_SDA)){
-    if (begin_smr_hr_zero==TRUE){
-      end_SDA <- newVal$init[(which(round(newVal$V2[2:nrow(newVal)], 3)<=b))[1]] # force the function to look for the mo2 to return to the SMR level beyond the first value, which is manually set to SMR level
-    }else{
-      end_SDA <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]] # find first time when smoothed function intersected SMR level
-    }
+    # Calculate the area under the SMR for all types of SMR calculated in the MMR_SMR_analyze function
+    # 2-2 the EPOC cuttoff in the smoothed function / this is used also for the SMR block
+    # providing end_SDA value manually (in minutes)
     if(is.na(end_SDA)){
-      end_SDA<-newVal$init[nrow(newVal)]
-      message(paste("Smooth level spar:", spar, "MR does not reach the chosen SMR levels: ",b, ": end tie of SDA is the end of the trial"))
+      if (begin_smr_hr_zero==TRUE){
+        end_SDA <- newVal$init[(which(round(newVal$V2[2:nrow(newVal)], 3)<=b))[1]] # force the function to look for the mo2 to return to the SMR level beyond the first value, which is manually set to SMR level
+      }else{
+        end_SDA <- newVal$init[(which(round(newVal$V2, 3)<=b))[1]] # find first time when smoothed function intersected SMR level
+      }
+      if(is.na(end_SDA)){
+        end_SDA<-newVal$init[nrow(newVal)]
+        message(paste("Smooth level spar:", spar, "MR does not reach the chosen SMR levels: ",b, ": end tie of SDA is the end of the trial"))
+      }
     }
-  }
 
   #3 integrate SDA curve with to the provided end SDA time
   f.int = function(x) {integrate(f, lower=0, upper=end_SDA)$value}
@@ -180,14 +180,17 @@ SDA<-function(AnimalID,
        ylab="MO2",
        xlab="time (h)",
        main=spar)
-  lines(d$hour,d$mo2_min, col="grey50", lty = 2, lwd = 1) # hourly min
+  lines(d$hour,d$mo2_min, col="grey30", lty = 1, lwd = 1) # hourly min
   lines(d$hour,d$mo2_mean, col="grey50",lty = 1, lwd = 1 ) # hourly mean
-  lines(d$hour,d$mo2_max, col="grey50", lty = 2, lwd = 1) # hourly max
+  lines(d$hour,d$mo2_max, col="grey70", lty = 1, lwd = 1) # hourly max
   lines(newy[[1]], newy[[2]], col="black", size = 2) # smoothed
   abline(h=b, col="red",lty=1, lwd=1)
   abline(v=end_SDA, col="red", lty=2)
-  legend("topright", bty ="n",
-         legend=paste("Smoothing hourly min values; smooth level = ", spar, "\n blue diam: peak SDA mean \n red diam: peak SDA \n red dashed line = end SDA, solid = SMR" ), cex = 0.7)
+  legend("topright",
+         bty ="n",
+         legend=paste("Smoothing hourly min values; smooth level = ",
+                      spar, "\n blue diam: peak SDA mean \n red diam: peak SDA (max hourly val, not smoothed) \n red dashed line = end SDA \n red solid line = SMR"),
+         cex = 0.7)
   # text(x=(max(d$mo2_min)+50)-(0.01*(max(d$hour)+50)),y=(max(d$mo2_min)+2)-(scale[i]*(max(d$mo2_min)+2)), label=paste("EPOC=",EPOC_full,"/ ",smr_type, sep=""), cex=0.8, col=col_smr[i], pos=2)
   points(x=time_peak_SDA, y=peak_SDA, pch=23, col="green3",cex=2) # peak of min
   points(x=time_peak_SDA_mean, y=peak_SDA_mean, pch=23, col="blue",cex=2) #peak of mean
