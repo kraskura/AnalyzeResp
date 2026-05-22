@@ -1,4 +1,4 @@
 
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage(pkgname, " was last updated: Feb 7 2026 - minor bugs and SDA visuals")
+  packageStartupMessage(pkgname, " was last updated: May 22 2026 - added Witrox pre 2023 text convert options")
 }

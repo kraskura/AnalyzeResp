@@ -27,6 +27,7 @@
 #'
 #' @importFrom utils read.delim
 #' @importFrom readxl read_excel
+#' @importFrom lubridate mdy_hms
 #'
 textFileConvert<-function(txt_file,
                           type_file,

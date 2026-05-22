@@ -24,6 +24,7 @@ Imports:
   mclust,
   gridExtra,
   DescTools,
-  readxl
+  readxl,
+  lubridate
 URL: https://kraskura.github.io/AnalyzeResp/
 VignetteBuilder: utils

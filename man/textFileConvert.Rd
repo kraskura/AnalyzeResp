@@ -27,7 +27,7 @@ textFileConvert(
 \arguments{
 \item{txt_file}{The name of the original “.txt” file from oxygen meter}
 
-\item{type_file}{Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox_2023", "PreSense_microplate"}
+\item{type_file}{Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox_pre2023", "Witrox_2023", "PreSense_microplate"}
 
 \item{nrowSkip}{The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox_2023" = 41; "PreSense_microplate" = 10, these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings}
 
