@@ -1490,7 +1490,7 @@ SDA<-function(AnimalID,
     SDA_integral<- Full_SDA-SMRchunk
 
     integral_values<-as.data.frame(t(c(as.character(SDAdata$ID[nrow(SDAdata)]), b, "AUC",
-                                       SDA_integral, end_SDA_absolute,SMRchunk,
+                                       SDA_integral, end_SDA_absolute, SMRchunk,
                                        as.character(peak_SDA),
                                        as.character(time_peak_SDA),
                                        as.character(percentSMR_peak_SDA), NA,

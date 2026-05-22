@@ -5,7 +5,7 @@
 #'
 #' @param txt_file The name of the original “.txt” file from oxygen meter
 #' @param nrowSkip The number of rows to skip if the default does not work; the argument 'type_file' determines the default N rows to skip "Firesting_pre2023" = 19, "Firesting_2023" = 70, "Witrox_2023" = 41; "PreSense_microplate" = 10, these rows in raw txt file often contain calibration information, the IDs of the probes and other user defined settings
-#' @param type_file Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox_2023", "PreSense_microplate"
+#' @param type_file Indicates the type of software that was used to record raw data, options: "Firesting_pre2023", "Firesting_2023", "Witrox_pre2023", "Witrox_2023", "PreSense_microplate"
 #' @param N_Ch The number of oxygen meter channels that described the physical device, not how many channels were plugged in; this is an argument that describes hardware. Options include 2, 4, 8, 24. (microplate). If a 2-channel oxygen meter was used, this argument could be ignored, or enter 4
 #' @param local_path Logical. If TRUE (default) all returned files will be saved in the local working directory.
 #' @param exclude_first_measurement_s DEPRECATED Nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)
@@ -499,7 +499,7 @@ textFileConvert<-function(txt_file,
 
   }
   else if(type_file == "Witrox_2023"){
-      new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
+      # new_csv<-as.data.frame(matrix(nrow=0, ncol=8))
       if(is.null(nrowSkip)){
         nrowSkip <-41
       }
@@ -563,7 +563,77 @@ textFileConvert<-function(txt_file,
 
     	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
 
+  }
+  else if(type_file == "Witrox_pre2023"){
+      if(is.null(nrowSkip)){
+        nrowSkip <-12
+      }
+      d<-read.table(txt_file, skip = nrowSkip, # depracted nov 27 2024 + exclude_first_measurement_s)
+                    sep = "\t", skipNul = TRUE, blank.lines.skip = TRUE, header = FALSE)
+      colnames(d)<-d[1,]
+      d<-d[-1,]
+
+    	names<-colnames(d)
+
+      O2_ch1_name<-which(c(grepl("O2", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 1", x = names, ignore.case = T, useBytes = TRUE)))
+      O2_ch2_name<-which(c(grepl("O2", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 2", x = names, ignore.case = T, useBytes = TRUE)))
+      O2_ch3_name<-which(c(grepl("O2", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 3", x = names, ignore.case = T, useBytes = TRUE)))
+      O2_ch4_name<-which(c(grepl("O2", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 4", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch1_name<-which(c(grepl("Temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 1", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch2_name<-which(c(grepl("Temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 2", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch3_name<-which(c(grepl("Temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 3", x = names, ignore.case = T, useBytes = TRUE)))
+      temp_ch4_name<-which(c(grepl("Temp", x = names, ignore.case = T, useBytes = TRUE) & grepl("Ch 4", x = names, ignore.case = T, useBytes = TRUE)))    	# d<-d[,1:15]
+
+      d$dt_parsed <- mdy_hms(d[,1])
+
+      new_csv<-d[,c(1,2)]
+      # split
+      new_csv[,1] <- as.Date(d$dt_parsed)
+      new_csv[,2] <- format(d$dt_parsed, "%H:%M:%S")
+      colnames( new_csv)<-c("date", "time")
+      new_csv$time_sec<- sapply(strsplit(new_csv$time,":"),
+        function(x) {
+          x <- as.numeric(x)
+          x[3]+x[2]*60+x[1]*60*60
+        }
+      )
+      # get differential
+      new_csv$time_sec <- new_csv$time_sec - new_csv$time_sec[1]
+    	new_csv$Ch1_O2<-d[,O2_ch1_name]
+    if(N_Ch == 4 | N_Ch==2){
+
+    	new_csv$Ch1_O2<-d[,O2_ch1_name]
+    	if(is.null(temperature)){
+    	  if(temperature_Ch == 1){
+    	    new_csv$Ch1_temp<-d[,temp_ch1_name]# temp Ch1 - but same for all
+    	  }
+    	  if(temperature_Ch == 2){
+    	    new_csv$Ch1_temp<-d[,temp_ch2_name]# temp Ch1 - but same for all
+    	  }
+    	  if(temperature_Ch == 3){
+    	    new_csv$Ch1_temp<-d[,temp_ch3_name]# temp Ch1 - but same for all
+    	  }
+    	  if(temperature_Ch == 4){
+    	    new_csv$Ch1_temp<-d[,temp_ch4_name]# temp Ch1 - but same for all
+    	  }
+    	}else{
+    	  message("Using provided temperature, not recorded")
+    	  new_csv$Ch1_temp<-temperature
+    	}
+
+    	new_csv$Ch2_O2<-d[,O2_ch2_name]
+    	new_csv$Ch3_O2<-d[,O2_ch3_name]
+    	new_csv$Ch4_O2<-d[,O2_ch4_name]
+
+    	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
     }
+    	new_csv$Ch2_O2<-d[,O2_ch2_name]
+    	new_csv$Ch3_O2<-d[,O2_ch3_name]
+    	new_csv$Ch4_O2<-d[,O2_ch4_name]
+
+    	colnames(new_csv)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
+
+  }
   else if(type_file == "PreSense_microplate"){
 
       d<-as.data.frame(read_excel(txt_file, sheet = 1, skip = nrowSkip))
@@ -712,7 +782,6 @@ textFileConvert<-function(txt_file,
       colnames(new_csv6)<-c("date", "time", "time_sec", "Ch1_O2", "Ch1_temp", "Ch2_O2", "Ch3_O2", "Ch4_O2")
 
     }
-
   if(type_file == "PreSense_microplate"){ # has six output files
     new_csv1[c(3:ncol(new_csv1))] <- sapply(new_csv1[3:ncol(new_csv1)],as.numeric)
     new_csv2[c(3:ncol(new_csv2))] <- sapply(new_csv2[3:ncol(new_csv2)],as.numeric)
