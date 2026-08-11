@@ -9,6 +9,7 @@ The latest version of AnalyzeResp can be installed from
 [GitHub](https://github.com/) following:
 
 ``` r
+
 install.packages("devtools") # if devtools is not installed
 devtools::install_github("kraskura/AnalyzeResp")
 library(AnalyzeResp)

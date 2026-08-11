@@ -23,7 +23,7 @@ textFileConvert(
   atm_pressure = 1,
   temperature = NULL,
   temperature_Ch = 1,
-  device = "A",
+  device = "",
   file_extension_id = ""
 )
 ```
@@ -37,8 +37,8 @@ textFileConvert(
 - type_file:
 
   Indicates the type of software that was used to record raw data,
-  options: "Firesting_pre2023", "Firesting_2023", "Witrox_2023",
-  "PreSense_microplate"
+  options: "Firesting_pre2023", "Firesting_2023", "Witrox_pre2023",
+  "Witrox_2023", "PreSense_microplate"
 
 - nrowSkip:
 
@@ -79,8 +79,9 @@ textFileConvert(
 
 - units_from:
 
-  default NULL, options:"mg/L", "PP", "pct". passed down to
-  rM::DO.unit.convert arg. DO.units.in
+  default NULL, options:"mg/L", "PP", "pct", "mmol/L". passed down to
+  rM::DO.unit.convert arg. DO.units.in. Note that "mmol/L" can be only
+  used to go to "mg/L".
 
 - units_to:
 

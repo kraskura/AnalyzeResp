@@ -11,9 +11,9 @@ SMR(
   data,
   cycle_start,
   cycle_end,
-  first_cycle,
   chop_start,
   chop_end,
+  first_cycle = "flush",
   N_Ch = 4,
   date_format = c("%m/%d/%Y %H:%M:%S", "GMT"),
   inventory_data = NULL,
@@ -42,11 +42,6 @@ SMR(
   The time (min) of auto cycle; end of the measurement (relative to min
   0)
 
-- first_cycle:
-
-  whether the first cycle is a flush or metabolic rate measurement.
-  provide either: "flush" or "measurement"
-
 - chop_start:
 
   The time (min) to be chopped off at the start of each measurement
@@ -55,6 +50,11 @@ SMR(
 - chop_end:
 
   The time (min) to be chopped off at the end of each measurement cycle
+
+- first_cycle:
+
+  whether the first cycle is a flush or metabolic rate measurement.
+  provide either: "flush" or "measure"
 
 - N_Ch:
 

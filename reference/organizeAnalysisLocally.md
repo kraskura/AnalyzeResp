@@ -9,6 +9,7 @@ analysis).
 
 ``` r
 organizeAnalysisLocally(
+  path.location = "./",
   SMR.folder = TRUE,
   MMR.folder = TRUE,
   SDA.folder = TRUE,
@@ -18,6 +19,10 @@ organizeAnalysisLocally(
 ```
 
 ## Arguments
+
+- path.location:
+
+  The path at which the analysis will be performed
 
 - SMR.folder:
 
