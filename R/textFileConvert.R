@@ -11,7 +11,7 @@
 #' @param exclude_first_measurement_s DEPRECATED Nov 2024: use 'exclude_measurement_s' (see documentation), The number measurement point to be excluded from the beginning of the file (in addition to the nrowSkip argument)
 #' @param exclude_rows Rows to be excluded; used when there are unwanted NAs, or no sensor data. etc.
 #' @param convert_units Logical (FALSE = default). If true, the function is passed to rMR function DO.unit.convert to convert O2 content units.
-#' @param units_from default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.in
+#' @param units_from default NULL, options:"mg/L", "PP", "pct", "mmol/L". passed down to rM::DO.unit.convert arg. DO.units.in.  Note that "mmol/L" can be only used to go to "mg/L".
 #' @param units_to = default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.out
 #' @param channels = c(1,2,3,4), indicate which channels the unit conversion will be applied to
 #' @param salinity = 0, passed down to rMR::DO.unit.convert arg. salinity (must be in "pp.thou")
@@ -205,7 +205,7 @@ textFileConvert<-function(txt_file,
 
           if (DO.units.in == "pct"){
               DO.pct <- x / 100
-          }else{
+          }else if (DO.units.in != "mmol/L"){
               eq.o2.in <- Eq.Ox.conc(temp.C = temp.C, elevation.m = NULL,
                                      bar.press = bar.press,
                                      bar.units = bar.units.out,
@@ -217,7 +217,7 @@ textFileConvert<-function(txt_file,
 
           if (DO.units.out == "pct"){
               DO.conc <- DO.pct * 100
-          }else{
+          }else if (DO.units.in != "mmol/L"){
               eq.o2.out <- Eq.Ox.conc(temp.C, bar.units = bar.units.out,
                                       bar.press = bar.press,
                                       out.DO.meas = DO.units.out,
@@ -226,6 +226,14 @@ textFileConvert<-function(txt_file,
               DO.conc <- DO.pct * eq.o2.out
           }
 
+        # kk edition. may 24, 2026
+        if (DO.units.in == "mmol/L"){
+          if(DO.units.out == "mg/L"){
+            DO.conc <- x * 31.998
+          }else{
+            stop("Cannot complete unit conversion request: mmol/L can only be be used to to convert to mg/L")
+          }
+        }
           return(DO.conc)
       }
 

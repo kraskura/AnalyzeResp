@@ -8,10 +8,12 @@
 #' @param SDA.folder create a local SDA folder, default = TRUE
 #' @param MMR_SMR_AS_EPOC.folder create a local MMR_SMR_AS_EPOC.folder, default = TRUE
 #' @param BACK_RESP.folder create a local BACK_RESP.folder, default = TRUE
+#' @param path.location The path at which the analysis will be performed
 #'
 #' @return The output from \code{\link{print}}
 #' @export
-organizeAnalysisLocally <- function (SMR.folder = TRUE,
+organizeAnalysisLocally <- function (path.location = "./",
+                                     SMR.folder = TRUE,
                                      MMR.folder = TRUE,
                                      SDA.folder = TRUE,
                                      MMR_SMR_AS_EPOC.folder = TRUE,

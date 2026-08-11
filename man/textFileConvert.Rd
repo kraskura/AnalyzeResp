@@ -41,7 +41,7 @@ textFileConvert(
 
 \item{convert_units}{Logical (FALSE = default). If true, the function is passed to rMR function DO.unit.convert to convert O2 content units.}
 
-\item{units_from}{default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.in}
+\item{units_from}{default NULL, options:"mg/L", "PP", "pct", "mmol/L". passed down to rM::DO.unit.convert arg. DO.units.in.  Note that "mmol/L" can be only used to go to "mg/L".}
 
 \item{units_to}{= default NULL, options:"mg/L", "PP", "pct". passed down to rM::DO.unit.convert arg. DO.units.out}
 

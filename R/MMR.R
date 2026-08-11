@@ -33,7 +33,6 @@
 #' @import utils
 #' @importFrom dplyr group_by
 #' @importFrom dplyr summarize
-#' @importFrom pryr %<a-%
 #' @importFrom magrittr %<>%
 #' @importFrom plotrix ablineclip
 #'

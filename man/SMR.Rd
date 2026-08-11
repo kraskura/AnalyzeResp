@@ -8,9 +8,9 @@ SMR(
   data,
   cycle_start,
   cycle_end,
-  first_cycle,
   chop_start,
   chop_end,
+  first_cycle = "flush",
   N_Ch = 4,
   date_format = c("\%m/\%d/\%Y \%H:\%M:\%S", "GMT"),
   inventory_data = NULL,
@@ -29,11 +29,11 @@ SMR(
 
 \item{cycle_end}{The time (min) of auto cycle; end of the measurement (relative to min 0)}
 
-\item{first_cycle}{whether the first cycle is a flush or metabolic rate measurement. provide either: "flush" or "measurement"}
-
 \item{chop_start}{The time (min) to be chopped off at the start of each measurement cycle}
 
 \item{chop_end}{The time (min) to be chopped off at the end of each measurement cycle}
+
+\item{first_cycle}{whether the first cycle is a flush or metabolic rate measurement. provide either: "flush" or "measure"}
 
 \item{N_Ch}{The number of channels of the oxygen meter. It must be either 4 or 8. 8-Channel oxygen meter has 4 temperature and 4 oxygen sensors. The microplate reader files have 4 at this step.}
 

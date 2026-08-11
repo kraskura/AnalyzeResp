@@ -18,7 +18,6 @@ Imports:
   utils,
   dplyr,
   magrittr,
-  pryr,
   tidyr,
   plotrix,
   mclust,

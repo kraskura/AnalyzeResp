@@ -5,6 +5,7 @@
 \title{convenient function to create a set of local working directories to streamline workflow}
 \usage{
 organizeAnalysisLocally(
+  path.location = "./",
   SMR.folder = TRUE,
   MMR.folder = TRUE,
   SDA.folder = TRUE,
@@ -13,6 +14,8 @@ organizeAnalysisLocally(
 )
 }
 \arguments{
+\item{path.location}{The path at which the analysis will be performed}
+
 \item{SMR.folder}{create a local SMR folder, default = TRUE}
 
 \item{MMR.folder}{create a local MMR folder, default = TRUE}
